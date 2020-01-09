@@ -1,0 +1,12 @@
+[package]
+name = "perlmod-test"
+version = "0.1.0"
+authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
+edition = "2018"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+failure = "0.1"
+perlmod = { path = "../perlmod", features = [ "exporter" ] }

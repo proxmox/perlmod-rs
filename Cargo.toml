@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "perlmod",
+    "perlmod-macro",
+    "perlmod-test",
+]
