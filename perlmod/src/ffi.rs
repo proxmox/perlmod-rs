@@ -1,4 +1,4 @@
-//! Unsafe ffi code we use.
+//! Unsafe ffi code.
 //!
 //! You should not use this code directly. This is used by the binding generator to implement xsubs
 //! for exported functions.

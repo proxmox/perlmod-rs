@@ -1,11 +1,18 @@
+//! Serde serializer for perl values.
+
 use serde::{ser, Serialize};
 
 use crate::error::Error;
 use crate::Value;
 use crate::{array, hash};
 
+/// Perl [`Value`](crate::Value) serializer.
 pub struct Serializer;
 
+/// Serialize data into a perl [`Value`](crate::Value).
+///
+/// Note that in theory it should be safe to send such values to different threads as long as their
+/// reference count is exactly one.
 pub fn to_value<T>(value: &T) -> Result<Value, Error>
 where
     T: Serialize,
@@ -13,15 +20,18 @@ where
     value.serialize(&mut Serializer)
 }
 
+/// Serde map & struct serialization helper.
 pub struct SerHash {
     hash: hash::Hash,
     key: Option<Value>,
 }
 
+/// Serde sequence serialization helper.
 pub struct SerArray {
     array: array::Array,
 }
 
+/// Serde variant serialization helper.
 pub struct SerVariant<T> {
     hash: hash::Hash,
     inner: T,

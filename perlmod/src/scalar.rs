@@ -1,3 +1,5 @@
+//! Module containing the [`Scalar`] and [`Mortal`] types.
+
 use bitflags::bitflags;
 
 use crate::ffi::{self, SV};
@@ -118,6 +120,7 @@ impl core::ops::DerefMut for Scalar {
     }
 }
 
+/// A value which has been pushed to perl's "mortal stack".
 #[repr(transparent)]
 pub struct Mortal(*mut SV);
 

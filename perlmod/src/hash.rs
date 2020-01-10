@@ -1,3 +1,5 @@
+//! Module dealing with perl [`Hash`]es. (`HV` pointers).
+
 use std::convert::TryFrom;
 
 use crate::error::CastError;
@@ -168,6 +170,11 @@ impl std::fmt::Debug for Hash {
     }
 }
 
+/// An iterator over a perl array.
+///
+/// Perl hashes have an integrated iterator. Perl goes to great lengths to make it impossible to
+/// properly iterate over a hash without messing with the hash's internal state, so contrary to the
+/// array iterator, this iterator always references an existing [`Hash`].
 pub struct Iter<'a> {
     hash: &'a Hash,
 }

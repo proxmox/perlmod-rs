@@ -1,3 +1,5 @@
+//! Module dealing with perl [`Array`]s. (`AV` pointers).
+
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 
@@ -166,6 +168,11 @@ impl std::fmt::Debug for Array {
     }
 }
 
+/// An iterator over a perl array.
+///
+/// Technically the iterator always holds a reference count on the `AV` pointer, but we still
+/// distinguish between an iterator going over a borrowed [`Array`] and one coming from
+/// [`IntoIterator`](std::iter::IntoIterator).
 pub struct Iter<'a> {
     array: Array,
     at: usize,

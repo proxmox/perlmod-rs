@@ -1,3 +1,5 @@
+//! Serde deserializer for perl values.
+
 use serde::de::{self, DeserializeOwned, DeserializeSeed, MapAccess, SeqAccess, Visitor};
 
 use crate::error::Error;
@@ -5,11 +7,13 @@ use crate::scalar::Type;
 use crate::Value;
 use crate::{array, ffi, hash};
 
+/// Perl [`Value`](crate::Value) deserializer.
 pub struct Deserializer {
     input: Value,
     option_allowed: bool,
 }
 
+/// Deserialize a perl [`Value`](crate::Value).
 pub fn from_value<T>(input: Value) -> Result<T, Error>
 where
     T: DeserializeOwned,
@@ -457,6 +461,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
     }
 }
 
+/// Serde `MapAccess` intermediate type.
 pub struct HashAccess<'a> {
     hash: &'a hash::Hash,
     entry: *mut ffi::HE,
@@ -526,6 +531,7 @@ impl<'de, 'a> MapAccess<'de> for HashAccess<'a> {
     }
 }
 
+/// Serde `SeqAccess` intermediate type.
 pub struct ArrayAccess<'a> {
     iter: array::Iter<'a>,
 }

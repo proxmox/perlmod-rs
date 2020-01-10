@@ -1,3 +1,6 @@
+//! The [`Value`] type is a generic perl value reference distinguishing between its types
+//! automatically.
+
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
