@@ -255,10 +255,75 @@ BEGIN {
 
 const MODULE_TAIL: &str = "}\n";
 
-fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenStream, Error> {
-    let args = attribs::ModuleAttrs::try_from(attr)?;
+struct Export {
+    rust_name: Ident,
+    xs_name: Ident,
+    file_name: String,
+}
 
-    let mut module_source = format!("package {};\n{}", args.package_name, MODULE_HEAD);
+struct Package {
+    attrs: attribs::ModuleAttrs,
+    exported: Vec<Export>,
+}
+
+impl Package {
+    fn with_attrs(attr: AttributeArgs) -> Result<Self, Error> {
+        Ok(Self {
+            attrs: attribs::ModuleAttrs::try_from(attr)?,
+            exported: Vec::new(),
+        })
+    }
+
+    fn export_named(&mut self, rust_name: Ident, xs_name: Ident, file_name: String) {
+        self.exported.push(Export {
+            rust_name,
+            xs_name,
+            file_name,
+        });
+    }
+
+    fn export_direct(&mut self, name: Ident, file_name: String) {
+        let xs_name = Ident::new(&format!("xs_{}", name), name.span());
+        self.exported.push(Export {
+            rust_name: name,
+            xs_name,
+            file_name,
+        });
+    }
+
+    fn write(&self) -> Result<(), Error> {
+        let mut source = format!("package {};\n{}", self.attrs.package_name, MODULE_HEAD);
+
+        for export in &self.exported {
+            source = format!(
+                "{}    newXS('{}', '{}', \"{}\");\n",
+                source,
+                export.rust_name,
+                export.xs_name,
+                export.file_name.replace('"', "\\\""),
+            );
+        }
+
+        source.push_str(MODULE_TAIL);
+
+        if let Some(lib) = &self.attrs.lib_name {
+            source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib));
+        } else {
+            source = source.replace("{{LIB_NAME}}", LIB_NAME_DEFAULT);
+        }
+
+        let path = std::path::Path::new(&self.attrs.file_name);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, source.as_bytes())?;
+
+        Ok(())
+    }
+}
+
+fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenStream, Error> {
+    let mut package = Package::with_attrs(attr)?;
 
     if let Some((_brace, ref mut items)) = module.content {
         for item in items.iter_mut() {
@@ -288,9 +353,11 @@ fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenS
                     if let Some(attribs) = attribs {
                         let func = handle_function(attribs, func)?;
                         *item = syn::Item::Verbatim(func.tokens);
-                        module_source = format!(
-                            "{}    newXS('{}', '{}', 'src/FIXME.rs');\n",
-                            module_source, func.rust_name, func.xs_name,
+
+                        package.export_named(
+                            func.rust_name,
+                            func.xs_name,
+                            "src/FIXME.rs".to_string(),
                         );
                     } else {
                         *item = syn::Item::Fn(func);
@@ -301,19 +368,7 @@ fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenS
         }
     }
 
-    module_source.push_str(MODULE_TAIL);
-
-    if let Some(lib) = args.lib_name {
-        module_source = module_source.replace("{{LIB_NAME}}", &format!("('{}')", lib));
-    } else {
-        module_source = module_source.replace("{{LIB_NAME}}", LIB_NAME_DEFAULT);
-    }
-
-    let path = std::path::Path::new(&args.file_name);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(path, module_source.as_bytes())?;
+    package.write()?;
 
     Ok(quote! { #module })
 }
