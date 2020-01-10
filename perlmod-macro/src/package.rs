@@ -1,17 +1,21 @@
+use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::env;
+use std::fs::File;
+use std::path::PathBuf;
 
 use failure::Error;
 
-use proc_macro2::Ident;
+use proc_macro2::{Ident, Span};
 
 use syn::parse::Parse;
 use syn::punctuated::Punctuated;
 use syn::AttributeArgs;
 use syn::Token;
 
-use crate::attribs::ModuleAttrs;
+use toml::Value;
 
-const LIB_NAME_DEFAULT: &str = r#"($pkg =~ /(?:^|::)([^:]+)$/)"#;
+use crate::attribs::ModuleAttrs;
 
 const MODULE_HEAD: &str = r#"
 use strict;
@@ -104,7 +108,8 @@ impl Package {
         if let Some(lib) = &self.attrs.lib_name {
             source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib));
         } else {
-            source = source.replace("{{LIB_NAME}}", LIB_NAME_DEFAULT);
+            let lib_name = get_default_lib_name(Span::call_site())?;
+            source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib_name));
         }
 
         let file_name = self
@@ -202,5 +207,57 @@ impl Parse for ExportItem {
         } else {
             Ok(ExportItem::Direct(name))
         }
+    }
+}
+
+fn read_cargo_toml(why: Span) -> Result<HashMap<String, Value>, syn::Error> {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+        .map_err(|err| format_err!(why, "failed to get CARGO_MANIFEST_DIR variable: {}", err))?;
+    let cargo_toml_path = PathBuf::from(manifest_dir).join("Cargo.toml");
+
+    use std::io::Read;
+    let mut content = String::new();
+    File::open(cargo_toml_path)
+        .map_err(|err| format_err!(why, "failed to open Cargo.toml: {}", err))?
+        .read_to_string(&mut content)
+        .map_err(|err| format_err!(why, "failed to read Cargo.toml: {}", err))?;
+
+    toml::from_str(&content).map_err(|err| format_err!(why, "failed to parse Cargo.toml: {}", err))
+}
+
+static mut LIB_NAME: Option<String> = None;
+pub fn get_default_lib_name(why: Span) -> Result<&'static str, syn::Error> {
+    unsafe {
+        if let Some(name) = &LIB_NAME {
+            return Ok(&name);
+        }
+    }
+
+    let cargo = read_cargo_toml(why)?;
+
+    let package = cargo
+        .get("package")
+        .ok_or_else(|| format_err!(
+            why,
+            "did not find a [package] section in Cargo.toml, try to specify the library name manually",
+        ))?;
+
+    let name = package.get("name").ok_or_else(|| {
+        format_err!(
+        why,
+        "failed to find the package name in Cargo.toml, try to specify the library name manually",
+    )
+    })?;
+
+    let name = name.as_str().ok_or_else(|| {
+        format_err!(
+            why,
+            "package name in Cargo.toml is not a string, try to specify the library name manually",
+        )
+    })?;
+
+    unsafe {
+        LIB_NAME = Some(name.replace('-', "_"));
+        return Ok(&LIB_NAME.as_ref().unwrap());
     }
 }

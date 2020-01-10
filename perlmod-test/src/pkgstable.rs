@@ -17,7 +17,7 @@ fn func_b(a: u32) -> Result<u32, Error> {
 perlmod::make_package! {
     package "RSPM::Foo";
 
-    lib "perlmod_test";
+    //lib "perlmod_test";
 
     subs {
         foo,
