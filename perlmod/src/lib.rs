@@ -6,6 +6,9 @@
 //! The underlying machinery for these macros is contained in this crate and provides ways to
 //! serialize and deserialize data between perl and rust.
 //!
+//! For now, see the [`make_package!`] macro for all the details, since as of the time of writing
+//! this, we're only at rust 1.40.
+//!
 //! [`package`]: attr.package.html
 //! [`export`]: attr.export.html
 //! [`make_package!`]: macro.make_package.html
