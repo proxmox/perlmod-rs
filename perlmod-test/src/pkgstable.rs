@@ -21,6 +21,6 @@ perlmod::make_package! {
 
     subs {
         foo,
-        xs_bar as bar,
+        xs_a as b, // func_b's exported xsub was renamed to xs_a, and in perl it's called b
     }
 }
