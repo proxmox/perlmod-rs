@@ -39,7 +39,29 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
     }
 }
 
-/// Macro for starting a perl "package".
+/// Attribute for making a perl "package" out of a rust module.
+///
+/// This can be used on an inline module (rust version 1.42 or later), and hopefully in the future
+/// as an inline attribute (`#![package(name = "Some::Package")]`).
+///
+/// ```
+/// // 'lib' and 'file' are optional. We use 'file' here to prevent doc tests from writing out the
+/// // file.
+/// #[package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
+/// mod an_unused_name {
+///     use failure::{bail, Error};
+///
+///     // This function can be used like `RSPM::Foo::foo(1, 2);` in perl.
+///     #[export]
+///     fn foo(a: u32, b: u32) -> Result<u32, Error> {
+///         if a == 42 {
+///             bail!("dying on magic number");
+///         }
+///
+///         Ok(a + b)
+///     }
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let attr = parse_macro_input!(attr as AttributeArgs);
@@ -47,7 +69,8 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     handle_error(item.clone(), perlmod_impl(attr, item)).into()
 }
 
-/// Macro to generate an exported xsub for a function.
+/// Attribute to export a function so that it can be installed as an `xsub` in perl. See the
+/// [`make_package!`] macro for a usage example.
 #[proc_macro_attribute]
 pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let attr = parse_macro_input!(attr as AttributeArgs);
