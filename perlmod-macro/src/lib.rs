@@ -47,7 +47,7 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
 /// ```
 /// // 'lib' and 'file' are optional. We use 'file' here to prevent doc tests from writing out the
 /// // file.
-/// #[package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
+/// #[perlmod::package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
 /// mod an_unused_name {
 ///     use failure::{bail, Error};
 ///
@@ -90,7 +90,9 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 /// This macro always has to be used in conjunction with the [`export!]` macro, like this:
 ///
 /// ```
+/// # mod testmod {
 /// use failure::{bail, Error};
+/// use perlmod::export;
 ///
 /// #[export]
 /// fn sum_except_42(a: u32, b: u32) -> Result<u32, Error> {
@@ -107,7 +109,7 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 ///     Ok(2 * a)
 /// }
 ///
-/// make_package! {
+/// perlmod::make_package! {
 ///     // First we need to specify the package, similar to perl's syntax:
 ///     package "RSPM::DocTest1";
 ///
@@ -117,7 +119,7 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 ///
 ///     // An optional output file name can be specified as follows:
 ///     // (we use this here to prevent doc tests from creating files...)
-///     file_name "/dev/null";
+///     file "/dev/null";
 ///
 ///     // The list of xsubs we want to export:
 ///     subs {
@@ -130,6 +132,7 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 ///         xs_sub_name as double_the_number,
 ///     }
 /// }
+/// # }
 /// ```
 #[proc_macro]
 pub fn make_package(item: TokenStream_1) -> TokenStream_1 {
