@@ -108,6 +108,12 @@ impl StackMark {
         }
     }
 
+    /// Shrink the perl stack to this mark.
+    ///
+    /// # Safety
+    ///
+    /// This is only valid if the mark is still valid (smaller than `PL_stack_sp`) and all values
+    /// still remaining on the stack are mortal (which should normally be the case anyway).
     pub unsafe fn set_stack(self) {
         RSPL_stack_shrink_to(self.0);
     }
@@ -138,10 +144,21 @@ impl Iterator for StackIter {
     }
 }
 
+/// Pop the current argument marker off of the argument marker stack.
+///
+/// # Safety
+///
+/// Read up on `PL_markstack_ptr` in perlguts. This is equivalent to `*PL_markstack_ptr--` in C.
 pub unsafe fn pop_arg_mark() -> StackMark {
     StackMark(RSPL_pop_markstack_ptr())
 }
 
+/// Push a value to the stack.
+///
+/// # Safety
+///
+/// Read up on mortals and the stack and when it is legal to put a value onto it. Typically a
+/// mortal value with no more references to it to avoid leaking if they aren't used later on.
 pub unsafe fn stack_push_raw(value: *mut SV) {
     RSPL_stack_resize_by(1);
     *RSPL_stack_sp() = value;
@@ -153,6 +170,57 @@ pub fn stack_push(value: crate::Mortal) {
     }
 }
 
-pub unsafe fn croak(sv: *mut SV) {
+/// This calls perl's `croak_sv`.
+///
+/// # Safety
+///
+/// This seems to perform a `longjmp` and is thus never truly safe in rust code. You really want to
+/// limit this to the top entry point of your rust call stack in a separate `extern "C" fn` where
+/// no rust values with `Drop` handlers or anything similar are active.
+///
+/// The `perlmod_macro`'s `export` attribute typically creates 2 wrapper functions of the form:
+///
+/// ```no_run
+/// # use serde::Serialize;
+///
+/// # #[derive(Serialize)]
+/// # struct Output;
+///
+/// # fn code_to_extract_parameters() {}
+/// # fn actual_rust_function(_arg: ()) -> Result<Output, failure::Error> { Ok(Output) }
+/// #[no_mangle]
+/// pub extern "C" fn exported_name(cv: &::perlmod::ffi::CV) {
+///     unsafe {
+///         match private_implementation_name(cv) {
+///             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
+///             Err(sv) => ::perlmod::ffi::croak(sv),
+///         }
+///     }
+/// }
+///
+/// #[inline(never)]
+/// fn private_implementation_name(
+///     _cv: &::perlmod::ffi::CV,
+/// ) -> Result<*mut ::perlmod::ffi::SV, *mut ::perlmod::ffi::SV> {
+///     let args = code_to_extract_parameters();
+///     // ...
+///     let result = match actual_rust_function(args) {
+///         Ok(output) => output,
+///         Err(err) => {
+///             return Err(::perlmod::Value::new_string(&err.to_string())
+///                 .into_mortal()
+///                 .into_raw());
+///         }
+///     };
+///
+///     match ::perlmod::to_value(&result) {
+///         Ok(value) => Ok(value.into_mortal().into_raw()),
+///         Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
+///             .into_mortal()
+///             .into_raw()),
+///     }
+/// }
+/// ```
+pub unsafe fn croak(sv: *mut SV) -> ! {
     RSPL_croak_sv(sv);
 }

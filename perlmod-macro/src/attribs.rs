@@ -22,8 +22,8 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
             match arg {
                 syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
                     path,
-                    eq_token: _,
                     lit: syn::Lit::Str(litstr),
+                    ..
                 })) => {
                     if path.is_ident("name") {
                         package_name = Some(litstr.value());
@@ -64,8 +64,8 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
             match arg {
                 syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
                     path,
-                    eq_token: _,
                     lit: syn::Lit::Str(litstr),
+                    ..
                 })) => {
                     if path.is_ident("name") {
                         xs_name = Some(Ident::new(&litstr.value(), litstr.span()));

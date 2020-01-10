@@ -107,6 +107,7 @@ pub fn handle_function(attr: FunctionAttrs, func: syn::ItemFn) -> Result<XSub, E
             }
         }
 
+        #[inline(never)]
         fn #impl_xs_name(
             _cv: &::perlmod::ffi::CV,
         ) -> Result<*mut ::perlmod::ffi::SV, *mut ::perlmod::ffi::SV> {
