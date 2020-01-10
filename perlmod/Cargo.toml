@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
 build = "build.rs"
+license = "Apache-2.0 OR MIT"
+categories = [ "API bindings" ]
+keywords = [ "ffi", "perl" ]
+maintenance = { status = "experimental" }
 
 [dependencies]
 bitflags = "1.2.1"

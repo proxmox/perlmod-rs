@@ -3,6 +3,10 @@ name = "perlmod-macro"
 version = "0.1.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
+license = "Apache-2.0 OR MIT"
+categories = [ "API bindings" ]
+keywords = [ "ffi", "perl" ]
+maintenance = { status = "experimental" }
 
 [lib]
 proc-macro = true
