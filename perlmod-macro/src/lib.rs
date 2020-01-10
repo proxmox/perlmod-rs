@@ -2,15 +2,18 @@ extern crate proc_macro;
 extern crate proc_macro2;
 
 use std::convert::TryFrom;
+use std::iter::IntoIterator;
 
 use failure::Error;
 
 use proc_macro::TokenStream as TokenStream_1;
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, TokenStream};
 
 use quote::quote;
+use syn::parse::Parser;
 use syn::parse_macro_input;
-use syn::AttributeArgs;
+use syn::punctuated::Punctuated;
+use syn::{AttributeArgs, Token};
 
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
@@ -21,6 +24,8 @@ macro_rules! bail {
     ($span:expr => $($msg:tt)*) => { return Err(format_err!($span => $($msg)*).into()) };
     ($span:expr, $($msg:tt)*) => { return Err(format_err!($span, $($msg)*).into()) };
 }
+
+mod attribs;
 
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
@@ -41,7 +46,7 @@ struct XSub {
     tokens: TokenStream,
 }
 
-/// Macro for exporting rust functions as perl xsubs.
+/// Macro for starting a perl "package".
 #[proc_macro_attribute]
 pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let attr = parse_macro_input!(attr as AttributeArgs);
@@ -49,20 +54,33 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     handle_error(item.clone(), perlmod_impl(attr, item)).into()
 }
 
+/// Macro to generate an exported xsub for a function.
+#[proc_macro_attribute]
+pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
+    let attr = parse_macro_input!(attr as AttributeArgs);
+    let item: TokenStream = item.into();
+    handle_error(item.clone(), export_impl(attr, item)).into()
+}
+
 fn perlmod_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
     let item: syn::Item = syn::parse2(item)?;
 
     match item {
-        syn::Item::Fn(func) => {
-            let func = handle_function(func)?;
-            Ok(func.tokens)
-        }
+        syn::Item::Fn(func) => bail!(func => "did you mean to use the 'export' macro?"),
         syn::Item::Mod(module) => handle_module(attr, module),
         _ => bail!(item => "expected module or function"),
     }
 }
 
-fn handle_function(func: syn::ItemFn) -> Result<XSub, Error> {
+fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
+    let func: syn::ItemFn = syn::parse2(item)?;
+
+    let attr = attribs::FunctionAttrs::try_from(attr)?;
+    let func = handle_function(attr, func)?;
+    Ok(func.tokens)
+}
+
+fn handle_function(attr: attribs::FunctionAttrs, func: syn::ItemFn) -> Result<XSub, Error> {
     //let vis = core::mem::replace(&mut func.vis, syn::Visibility::Inherited);
     //if let syn::Visibility::Public(_) = vis {
     //    // ok
@@ -80,7 +98,9 @@ fn handle_function(func: syn::ItemFn) -> Result<XSub, Error> {
     }
 
     let name = &sig.ident;
-    let xs_name = Ident::new(&format!("xs_{}", name), name.span());
+    let xs_name = attr
+        .xs_name
+        .unwrap_or_else(|| Ident::new(&format!("xs_{}", name), name.span()));
     let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
 
     let mut extract_arguments = TokenStream::new();
@@ -235,57 +255,8 @@ BEGIN {
 
 const MODULE_TAIL: &str = "}\n";
 
-struct ModuleArgs {
-    package_name: String,
-    file_name: String,
-    lib_name: Option<String>,
-}
-
-impl TryFrom<AttributeArgs> for ModuleArgs {
-    type Error = syn::Error;
-
-    fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
-        let mut package_name = None;
-        let mut file_name = None;
-        let mut lib_name = None;
-
-        for arg in args {
-            match arg {
-                syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
-                    path,
-                    eq_token: _,
-                    lit: syn::Lit::Str(litstr),
-                })) => {
-                    if path.is_ident("name") {
-                        package_name = Some(litstr.value());
-                    } else if path.is_ident("file") {
-                        file_name = Some(litstr.value());
-                    } else if path.is_ident("lib") {
-                        lib_name = Some(litstr.value());
-                    } else {
-                        bail!(path => "unknown argument");
-                    }
-                }
-                _ => bail!(Span::call_site(), "unexpected attribute argument"),
-            }
-        }
-
-        let package_name = package_name
-            .ok_or_else(|| format_err!(Span::call_site(), "missing 'package' argument"))?;
-
-        let file_name =
-            file_name.unwrap_or_else(|| format!("{}.pm", package_name.replace("::", "/")));
-
-        Ok(Self {
-            package_name,
-            file_name,
-            lib_name,
-        })
-    }
-}
-
 fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenStream, Error> {
-    let args = ModuleArgs::try_from(attr)?;
+    let args = attribs::ModuleAttrs::try_from(attr)?;
 
     let mut module_source = format!("package {};\n{}", args.package_name, MODULE_HEAD);
 
@@ -293,11 +264,29 @@ fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenS
         for item in items.iter_mut() {
             match core::mem::replace(item, syn::Item::Verbatim(TokenStream::new())) {
                 syn::Item::Fn(mut func) => {
-                    let count = func.attrs.len();
-                    func.attrs.retain(|attr| !attr.path.is_ident("export"));
+                    let mut attribs = None;
+                    for attr in std::mem::replace(&mut func.attrs, Default::default()) {
+                        if attr.path.is_ident("export") {
+                            if attribs.is_some() {
+                                bail!(attr => "multiple 'export' attributes not allowed");
+                            }
+
+                            let args: AttributeArgs =
+                                Punctuated::<syn::NestedMeta, Token![,]>::parse_terminated
+                                    .parse2(attr.tokens)?
+                                    .into_iter()
+                                    .collect();
+
+                            attribs = Some(attribs::FunctionAttrs::try_from(args)?);
+                        } else {
+                            // retain the attribute
+                            func.attrs.push(attr);
+                        }
+                    }
+
                     // if we removed an #[export] macro this is an exported function:
-                    if count != func.attrs.len() {
-                        let func = handle_function(func)?;
+                    if let Some(attribs) = attribs {
+                        let func = handle_function(attribs, func)?;
                         *item = syn::Item::Verbatim(func.tokens);
                         module_source = format!(
                             "{}    newXS('{}', '{}', 'src/FIXME.rs');\n",
