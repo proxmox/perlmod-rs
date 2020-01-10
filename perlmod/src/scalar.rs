@@ -8,13 +8,8 @@ use crate::Value;
 /// This keeps a reference to a value which lives in the perl interpreter.
 /// This derefs to a `ScalarRef` which implements most of the basic functionality common to all
 /// `SV` related types.
-///
-/// This implements `Send` but not `Sync`, because it is effectively the same as an `Arc` to a
-/// value which is inherently `Send` but not `Sync`.
 #[repr(transparent)]
 pub struct Scalar(*mut SV);
-
-unsafe impl Send for Scalar {}
 
 impl Scalar {
     /// Turn this into a "mortal" value. This will move this value's owned reference onto the
