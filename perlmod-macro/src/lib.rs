@@ -1,3 +1,7 @@
+//! Proc macros and attributes for the `perlmod` crate.
+//!
+//! See the `perlmod` crate's documentation for deatails.
+
 extern crate proc_macro;
 extern crate proc_macro2;
 
