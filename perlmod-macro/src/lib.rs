@@ -55,12 +55,12 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     handle_error(item.clone(), export_impl(attr, item)).into()
 }
 
-// /// Proc macro to create a perl package file for rust functions.
-// #[proc_macro]
-// pub fn make_package(item: TokenStream_1) -> TokenStream_1 {
-//     let item: TokenStream = item.into();
-//     handle_error(item.clone(), make_package_impl(attr, item)).into()
-// }
+/// Proc macro to create a perl package file for rust functions.
+#[proc_macro]
+pub fn make_package(item: TokenStream_1) -> TokenStream_1 {
+    let item: TokenStream = item.into();
+    handle_error(item.clone(), make_package_impl(item)).into()
+}
 
 fn perlmod_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
     let item: syn::Item = syn::parse2(item)?;
@@ -78,4 +78,10 @@ fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Er
     let attr = attribs::FunctionAttrs::try_from(attr)?;
     let func = function::handle_function(attr, func)?;
     Ok(func.tokens)
+}
+
+fn make_package_impl(item: TokenStream) -> Result<TokenStream, Error> {
+    let pkg: package::Package = syn::parse2(item)?;
+    pkg.write()?;
+    Ok(TokenStream::new())
 }

@@ -6,7 +6,7 @@ use syn::AttributeArgs;
 
 pub struct ModuleAttrs {
     pub package_name: String,
-    pub file_name: String,
+    pub file_name: Option<String>,
     pub lib_name: Option<String>,
 }
 
@@ -41,9 +41,6 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
 
         let package_name = package_name
             .ok_or_else(|| format_err!(Span::call_site(), "missing 'package' argument"))?;
-
-        let file_name =
-            file_name.unwrap_or_else(|| format!("{}.pm", package_name.replace("::", "/")));
 
         Ok(Self {
             package_name,

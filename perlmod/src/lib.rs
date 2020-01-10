@@ -26,4 +26,4 @@ pub mod value;
 pub use value::Value;
 
 #[cfg(feature = "exporter")]
-pub use perlmod_macro::package;
+pub use perlmod_macro::{export, make_package, package};

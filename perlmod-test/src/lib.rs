@@ -1,13 +1,12 @@
-#[perlmod::package(name = "RSPM::Foo", lib = "perlmod_test")]
-mod export {
-    use failure::{bail, Error};
+#[cfg(feature = "rust142")]
+/// The fhe following requires rust 1.42 to work, as custom attributes on inline modules has only
+/// been stabilized then.
+mod pkg142;
 
-    #[export]
-    fn foo(a: u32, b: u32) -> Result<u32, Error> {
-        if a == 42 {
-            bail!("dying on magic number");
-        }
+#[cfg(feature = "rustmuchlater")]
+/// The following is what we ideally want to reach with future rust versions. It is technically
+/// possible on nightly with #![feature(custom_inner_attributes)]
+mod pkginline;
 
-        Ok(a + b)
-    }
-}
+/// This is possible on stable rust with some 1.3x already.
+mod pkgstable;
