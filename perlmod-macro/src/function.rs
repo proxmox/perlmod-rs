@@ -1,6 +1,6 @@
 use failure::Error;
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, TokenStream, Span};
 
 use quote::quote;
 
@@ -94,6 +94,11 @@ pub fn handle_function(attr: FunctionAttrs, func: syn::ItemFn) -> Result<XSub, E
         }
     }
 
+    let too_many_args_error = syn::LitStr::new(
+        &format!("too many parameters for function '{}', (expected {})", name, sig.inputs.len()),
+        Span::call_site(),
+    );
+
     let tokens = quote! {
         #func
 
@@ -115,6 +120,12 @@ pub fn handle_function(attr: FunctionAttrs, func: syn::ItemFn) -> Result<XSub, E
             let mut args = argmark.iter();
 
             #extract_arguments
+
+            if args.next().is_some() {
+                return Err(::perlmod::Value::new_string(#too_many_args_error)
+                    .into_mortal()
+                    .into_raw());
+            }
 
             drop(args);
 
