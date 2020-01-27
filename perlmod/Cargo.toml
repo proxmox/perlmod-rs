@@ -7,6 +7,8 @@ build = "build.rs"
 license = "Apache-2.0 OR MIT"
 categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
+
+[badge]
 maintenance = { status = "experimental" }
 
 [dependencies]
