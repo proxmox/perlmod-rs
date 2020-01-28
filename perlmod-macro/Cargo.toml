@@ -6,6 +6,8 @@ edition = "2018"
 license = "Apache-2.0 OR MIT"
 categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
+
+[badges]
 maintenance = { status = "experimental" }
 
 [lib]
