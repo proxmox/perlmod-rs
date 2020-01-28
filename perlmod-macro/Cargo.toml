@@ -16,7 +16,7 @@ failure = "0.1"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = [ "full" ] }
-toml = "0.4.10"
+toml = "0.5.5"
 
 [dev-dependencies]
 perlmod = { path = "../perlmod" }
