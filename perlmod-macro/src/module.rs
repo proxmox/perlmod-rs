@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::iter::IntoIterator;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro2::TokenStream;
 

@@ -1,6 +1,6 @@
 #![perlmod::package(name = "RSPM::Foo", lib = "perlmod_test")]
 
-use failure::{bail, Error};
+use anyhow::{bail, Error};
 
 #[export]
 fn foo(a: u32, b: u32) -> Result<u32, Error> {

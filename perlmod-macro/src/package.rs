@@ -4,7 +4,7 @@ use std::env;
 use std::fs::File;
 use std::path::PathBuf;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro2::{Ident, Span};
 

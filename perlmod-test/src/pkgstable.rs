@@ -1,4 +1,4 @@
-use failure::{bail, Error};
+use anyhow::{bail, Error};
 
 #[perlmod::export]
 fn foo(a: u32, b: u32) -> Result<u32, Error> {

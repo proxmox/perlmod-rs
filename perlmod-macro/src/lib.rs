@@ -7,7 +7,7 @@ extern crate proc_macro2;
 
 use std::convert::TryFrom;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
@@ -53,7 +53,7 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
 /// // file.
 /// #[perlmod::package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
 /// mod an_unused_name {
-///     use failure::{bail, Error};
+///     use anyhow::{bail, Error};
 ///
 ///     // This function can be used like `RSPM::Foo::foo(1, 2);` in perl.
 ///     #[export]
@@ -95,7 +95,7 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 ///
 /// ```
 /// # mod testmod {
-/// use failure::{bail, Error};
+/// use anyhow::{bail, Error};
 /// use perlmod::export;
 ///
 /// #[export]

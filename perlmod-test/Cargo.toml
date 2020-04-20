@@ -8,5 +8,5 @@ edition = "2018"
 crate-type = [ "cdylib" ]
 
 [dependencies]
-failure = "0.1"
+anyhow = "1.0"
 perlmod = { path = "../perlmod", features = [ "exporter" ] }
