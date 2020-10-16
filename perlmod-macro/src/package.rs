@@ -126,6 +126,10 @@ impl Package {
 
         Ok(())
     }
+
+    pub fn mangle_package_name(&self) -> String {
+        self.attrs.mangle_package_name()
+    }
 }
 
 mod kw {

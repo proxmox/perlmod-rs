@@ -15,6 +15,7 @@ use crate::package::Package;
 
 pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenStream, Error> {
     let mut package = Package::with_attrs(attr)?;
+    let mangled_package_name = package.mangle_package_name();
 
     if let Some((_brace, ref mut items)) = module.content {
         for item in items.iter_mut() {
@@ -42,7 +43,11 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
 
                     // if we removed an #[export] macro this is an exported function:
                     if let Some(attribs) = attribs {
-                        let func = crate::function::handle_function(attribs, func)?;
+                        let func = crate::function::handle_function(
+                            attribs,
+                            func,
+                            Some(&mangled_package_name),
+                        )?;
                         *item = syn::Item::Verbatim(func.tokens);
 
                         package.export_named(

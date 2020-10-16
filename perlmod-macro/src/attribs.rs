@@ -50,6 +50,20 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
     }
 }
 
+impl ModuleAttrs {
+    pub fn mangle_package_name(&self) -> String {
+        let mut out = String::with_capacity(self.package_name.len());
+        for ch in self.package_name.chars() {
+            if ch.is_ascii_alphabetic() || ch.is_ascii_digit() {
+                out.push(ch);
+            } else {
+                out.push('_');
+            }
+        }
+        out
+    }
+}
+
 pub struct FunctionAttrs {
     pub xs_name: Option<Ident>,
 }

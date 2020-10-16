@@ -12,7 +12,11 @@ pub struct XSub {
     pub tokens: TokenStream,
 }
 
-pub fn handle_function(attr: FunctionAttrs, func: syn::ItemFn) -> Result<XSub, Error> {
+pub fn handle_function(
+    attr: FunctionAttrs,
+    func: syn::ItemFn,
+    mangled_package_name: Option<&str>,
+) -> Result<XSub, Error> {
     //let vis = core::mem::replace(&mut func.vis, syn::Visibility::Inherited);
     //if let syn::Visibility::Public(_) = vis {
     //    // ok
@@ -32,7 +36,10 @@ pub fn handle_function(attr: FunctionAttrs, func: syn::ItemFn) -> Result<XSub, E
     let name = &sig.ident;
     let xs_name = attr
         .xs_name
-        .unwrap_or_else(|| Ident::new(&format!("xs_{}", name), name.span()));
+        .unwrap_or_else(|| match mangled_package_name {
+            None => Ident::new(&format!("xs_{}", name), name.span()),
+            Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
+        });
     let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
 
     let mut extract_arguments = TokenStream::new();

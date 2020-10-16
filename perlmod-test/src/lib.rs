@@ -1,4 +1,3 @@
-#[cfg(feature = "rust142")]
 /// The fhe following requires rust 1.42 to work, as custom attributes on inline modules has only
 /// been stabilized then.
 mod pkg142;
