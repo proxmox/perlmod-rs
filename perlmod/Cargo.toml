@@ -12,7 +12,6 @@ keywords = [ "ffi", "perl" ]
 maintenance = { status = "experimental" }
 
 [dependencies]
-anyhow = "1.0"
 bitflags = "1.2.1"
 libc = "0.2"
 perlmod-macro = { path = "../perlmod-macro", optional = true }
