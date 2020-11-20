@@ -6,6 +6,7 @@ edition = "2018"
 license = "Apache-2.0 OR MIT"
 categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
+description = "perl package macros to create perl package bindings from rust at compile time"
 
 [badges]
 maintenance = { status = "experimental" }
