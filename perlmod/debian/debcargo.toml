@@ -1,0 +1,12 @@
+overlay = "."
+crate_src_path = ".."
+whitelist = [ "src/glue.c" ]
+
+[source]
+# TODO
+vcs_git = ""
+vcs_browser = ""
+maintainer = "Proxmox Support Team <support@proxmox.com>"
+
+[packages.lib]
+depends = [ "perl (>= 5.28.1)" ]

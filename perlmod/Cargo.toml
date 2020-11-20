@@ -9,6 +9,8 @@ categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
 description = "ffi & serde code for limited interaction with perl code"
 
+exclude = [ "debian" ]
+
 [badges]
 maintenance = { status = "experimental" }
 

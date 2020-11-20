@@ -8,6 +8,8 @@ categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
 description = "perl package macros to create perl package bindings from rust at compile time"
 
+exclude = [ "debian" ]
+
 [badges]
 maintenance = { status = "experimental" }
 

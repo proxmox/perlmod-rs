@@ -1,0 +1,5 @@
+rust-perlmod (0.1.0-1) UNRELEASED; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Nov 2020 09:34:03 +0100
