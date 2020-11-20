@@ -68,4 +68,10 @@ fn main() {
 
     // now build the static library:
     cc.file("src/glue.c").compile("libglue.a");
+
+    // the debian package should include src/glue.c
+    println!(
+        "dh-cargo:deb-built-using=glue=1={}",
+        env::var("CARGO_MANIFEST_DIR").unwrap()
+    );
 }
