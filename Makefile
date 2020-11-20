@@ -21,6 +21,10 @@ dinstall:
 	./build.sh $*
 	touch $@
 
+builddeps: $(foreach c,$(CRATES), $c-builddeps)
+%-builddeps:
+	BUILDCMD="mk-build-deps" ./build.sh $*
+
 .PHONY: check
 check:
 	cargo test
