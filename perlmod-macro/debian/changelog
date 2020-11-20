@@ -1,5 +1,5 @@
-rust-perlmod-macro (0.1.0-1) UNRELEASED; urgency=medium
+rust-perlmod-macro (0.1.0-1) stable; urgency=medium
 
   * initial packaging
 
- -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Nov 2020 09:34:03 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Nov 2020 13:55:25 +0100
