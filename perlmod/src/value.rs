@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ffi::{self, SV};
 use crate::scalar::ScalarRef;
+use crate::Error;
 use crate::{Array, Hash, Scalar};
 
 /// A higher level value. This is basically an `SV` already cast to `AV` or `HV` for arrays and
@@ -56,6 +57,36 @@ impl Value {
         T: std::ops::Deref<Target = ScalarRef>,
     {
         Value::Reference(unsafe { Scalar::from_raw_move(ffi::RSPL_newRV_inc(value.sv())) })
+    }
+
+    /// Bless a value into a package. This turns the value into a reference and forwards to
+    /// [`Value::bless_ref`].
+    pub fn bless_value(&self, package: &str) -> Result<Value, Error> {
+        self.clone_ref().bless_ref(package)
+    }
+
+    /// Bless a reference into a package. The `Value` must be a reference.
+    pub fn bless_ref(&self, package: &str) -> Result<Value, Error> {
+        let value = match self {
+            Value::Reference(v) => v,
+            _ => Error::fail("trying to bless a non-reference")?,
+        };
+
+        let pkgsv = Scalar::new_string(package);
+        let stash = unsafe { ffi::RSPL_gv_stashsv(pkgsv.sv(), 0) };
+        if stash.is_null() {
+            return Err(Error(format!("failed to find package {:?}", package)));
+        }
+
+        let value = unsafe { ffi::RSPL_sv_bless(value.sv(), stash) };
+        if value.is_null() {
+            return Err(Error(format!(
+                "failed to bless value into package {:?}",
+                package
+            )));
+        }
+
+        Ok(Value::Reference(unsafe { Scalar::from_raw_move(value) }))
     }
 
     /// Take over a raw `SV` value, assuming that we then own a reference to it.

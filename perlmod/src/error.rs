@@ -1,16 +1,12 @@
-#[derive(Debug)]
+use thiserror::Error as ThisError;
+
+#[derive(ThisError, Debug)]
+#[error("wrong type")]
 pub struct CastError;
 
-impl std::fmt::Display for CastError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "wrong type")
-    }
-}
-
-impl std::error::Error for CastError {}
-
-#[derive(Clone, Debug)]
-pub struct Error(String);
+#[derive(ThisError, Clone, Debug)]
+#[error("error: {0}")]
+pub struct Error(pub(crate) String);
 
 impl Error {
     #[inline]
@@ -23,14 +19,6 @@ impl Error {
         Err(Self(s.to_string()))
     }
 }
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "error: {}", self.0)
-    }
-}
-
-impl std::error::Error for Error {}
 
 impl serde::de::Error for Error {
     fn custom<T: std::fmt::Display>(msg: T) -> Self {

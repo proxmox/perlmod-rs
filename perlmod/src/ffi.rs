@@ -91,6 +91,9 @@ extern "C" {
     pub fn RSPL_hv_iternext(hv: *mut HV) -> *mut HE;
     pub fn RSPL_hv_iterkeysv(he: *mut HE) -> *mut SV;
     pub fn RSPL_hv_iterval(hv: *mut HV, he: *mut HE) -> *mut SV;
+
+    pub fn RSPL_gv_stashsv(name: *const SV, flags: i32) -> *mut HV;
+    pub fn RSPL_sv_bless(sv: *mut SV, stash: *mut HV) -> *mut SV;
 }
 
 /// Argument marker for the stack.

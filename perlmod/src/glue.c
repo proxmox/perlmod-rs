@@ -270,6 +270,14 @@ extern SV* RSPL_hv_iterval(HV *hv, HE *he) {
     return hv_iterval(hv, he);
 }
 
+extern HV* RSPL_gv_stashsv(SV *name, int32_t flags) {
+    return gv_stashsv(name, flags);
+}
+
+extern SV* RSPL_sv_bless(SV *sv, HV *stash) {
+    return sv_bless(sv, stash);
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef

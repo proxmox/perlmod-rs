@@ -14,6 +14,7 @@
 //! [`make_package!`]: macro.make_package.html
 
 pub(crate) mod error;
+pub use error::Error;
 
 pub mod de;
 pub mod ffi;
