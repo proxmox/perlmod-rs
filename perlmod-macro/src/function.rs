@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use proc_macro2::{Ident, TokenStream, Span};
+use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
 
@@ -17,13 +17,6 @@ pub fn handle_function(
     func: syn::ItemFn,
     mangled_package_name: Option<&str>,
 ) -> Result<XSub, Error> {
-    //let vis = core::mem::replace(&mut func.vis, syn::Visibility::Inherited);
-    //if let syn::Visibility::Public(_) = vis {
-    //    // ok
-    //} else {
-    //    bail!(func.sig.fn_token => "only public functions can be exported as xsubs");
-    //}
-
     let sig = &func.sig;
     if !sig.generics.params.is_empty() {
         bail!(&sig.generics => "generic functions cannot be exported as xsubs");
@@ -34,12 +27,10 @@ pub fn handle_function(
     }
 
     let name = &sig.ident;
-    let xs_name = attr
-        .xs_name
-        .unwrap_or_else(|| match mangled_package_name {
-            None => Ident::new(&format!("xs_{}", name), name.span()),
-            Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
-        });
+    let xs_name = attr.xs_name.unwrap_or_else(|| match mangled_package_name {
+        None => Ident::new(&format!("xs_{}", name), name.span()),
+        Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
+    });
     let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
 
     let mut extract_arguments = TokenStream::new();
@@ -102,9 +93,28 @@ pub fn handle_function(
     }
 
     let too_many_args_error = syn::LitStr::new(
-        &format!("too many parameters for function '{}', (expected {})", name, sig.inputs.len()),
+        &format!(
+            "too many parameters for function '{}', (expected {})",
+            name,
+            sig.inputs.len()
+        ),
         Span::call_site(),
     );
+
+    let handle_return = if attr.raw_return {
+        quote! {
+            Ok(result.into_mortal().into_raw())
+        }
+    } else {
+        quote! {
+            match ::perlmod::to_value(&result) {
+                Ok(value) => Ok(value.into_mortal().into_raw()),
+                Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
+                    .into_mortal()
+                    .into_raw()),
+            }
+        }
+    };
 
     let tokens = quote! {
         #func
@@ -151,12 +161,7 @@ pub fn handle_function(
                 }
             };
 
-            match ::perlmod::to_value(&result) {
-                Ok(value) => Ok(value.into_mortal().into_raw()),
-                Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
-                    .into_mortal()
-                    .into_raw()),
-            }
+            #handle_return
         }
     };
 

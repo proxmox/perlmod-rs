@@ -6,7 +6,6 @@ use anyhow::Error;
 use proc_macro2::TokenStream;
 
 use quote::quote;
-use syn::parse::Parser;
 use syn::punctuated::Punctuated;
 use syn::{AttributeArgs, Token};
 

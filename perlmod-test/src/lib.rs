@@ -9,3 +9,6 @@ mod pkginline;
 
 /// This is possible on stable rust with some 1.3x already.
 mod pkgstable;
+
+/// A test for blessed values.
+mod bless;

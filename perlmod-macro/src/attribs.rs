@@ -66,6 +66,7 @@ impl ModuleAttrs {
 
 pub struct FunctionAttrs {
     pub xs_name: Option<Ident>,
+    pub raw_return: bool,
 }
 
 impl TryFrom<AttributeArgs> for FunctionAttrs {
@@ -73,6 +74,7 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
 
     fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
         let mut xs_name = None;
+        let mut raw_return = false;
 
         for arg in args {
             match arg {
@@ -87,10 +89,20 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                         bail!(path => "unknown argument");
                     }
                 }
+                syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
+                    if path.is_ident("raw_return") {
+                        raw_return = true;
+                    } else {
+                        bail!(path => "unknown attribute");
+                    }
+                }
                 _ => bail!(Span::call_site(), "unexpected attribute argument"),
             }
         }
 
-        Ok(Self { xs_name })
+        Ok(Self {
+            xs_name,
+            raw_return,
+        })
     }
 }
