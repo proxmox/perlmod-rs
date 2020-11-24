@@ -28,11 +28,15 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                                 bail!(attr => "multiple 'export' attributes not allowed");
                             }
 
-                            let args: AttributeArgs =
-                                Punctuated::<syn::NestedMeta, Token![,]>::parse_terminated
-                                    .parse2(attr.tokens)?
-                                    .into_iter()
-                                    .collect();
+                            let args: AttributeArgs = if attr.tokens.is_empty() {
+                                Default::default()
+                            } else {
+                                attr.parse_args_with(
+                                    Punctuated::<syn::NestedMeta, Token![,]>::parse_terminated,
+                                )?
+                                .into_iter()
+                                .collect()
+                            };
 
                             attribs = Some(FunctionAttrs::try_from(args)?);
                         } else {
