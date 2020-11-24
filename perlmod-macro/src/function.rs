@@ -109,6 +109,14 @@ pub fn handle_function(
         }
     }
 
+    let has_return_value = match &func.sig.output {
+        syn::ReturnType::Default => false,
+        syn::ReturnType::Type(_arrow, ty) => match &**ty {
+            syn::Type::Tuple(tuple) => !tuple.elems.is_empty(),
+            _ => true,
+        },
+    };
+
     let too_many_args_error = syn::LitStr::new(
         &format!(
             "too many parameters for function '{}', (expected {})",
@@ -118,38 +126,84 @@ pub fn handle_function(
         Span::call_site(),
     );
 
-    let handle_return = if attr.raw_return {
-        quote! {
-            Ok(result.into_mortal().into_raw())
-        }
-    } else {
-        quote! {
-            match ::perlmod::to_value(&result) {
-                Ok(value) => Ok(value.into_mortal().into_raw()),
-                Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
-                    .into_mortal()
-                    .into_raw()),
+    let mut handle_return;
+    let return_type;
+    let wrapper_func;
+    if has_return_value {
+        return_type = quote! { *mut ::perlmod::ffi::SV };
+
+        handle_return = quote! {
+            let result = match #name(#passed_arguments) {
+                Ok(output) => output,
+                Err(err) => {
+                    return Err(::perlmod::Value::new_string(&err.to_string())
+                        .into_mortal()
+                        .into_raw());
+                }
+            };
+        };
+
+        if attr.raw_return {
+            handle_return.extend(quote! {
+                Ok(result.into_mortal().into_raw())
+            });
+        } else {
+            handle_return.extend(quote! {
+                match ::perlmod::to_value(&result) {
+                    Ok(value) => Ok(value.into_mortal().into_raw()),
+                    Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
+                        .into_mortal()
+                        .into_raw()),
+                }
+            });
+        };
+
+        wrapper_func = quote! {
+            #[no_mangle]
+            pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                unsafe {
+                    match #impl_xs_name(cv) {
+                        Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
+                        Err(sv) => ::perlmod::ffi::croak(sv),
+                    }
+                }
             }
+        };
+    } else {
+        return_type = quote! { () };
+
+        if attr.raw_return {
+            bail!(&attr.raw_return => "raw_return attribute is illegal without a return value");
         }
-    };
+
+        handle_return = quote! {
+            #name(#passed_arguments);
+
+            Ok(())
+        };
+
+        wrapper_func = quote! {
+            #[no_mangle]
+            pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                unsafe {
+                    match #impl_xs_name(cv) {
+                        Ok(()) => (),
+                        Err(sv) => ::perlmod::ffi::croak(sv),
+                    }
+                }
+            }
+        };
+    }
 
     let tokens = quote! {
         #func
 
-        #[no_mangle]
-        pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
-            unsafe {
-                match #impl_xs_name(cv) {
-                    Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
-                    Err(sv) => ::perlmod::ffi::croak(sv),
-                }
-            }
-        }
+        #wrapper_func
 
         #[inline(never)]
         fn #impl_xs_name(
             _cv: &::perlmod::ffi::CV,
-        ) -> Result<*mut ::perlmod::ffi::SV, *mut ::perlmod::ffi::SV> {
+        ) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
             let argmark = unsafe { ::perlmod::ffi::pop_arg_mark() };
             let mut args = argmark.iter();
 
@@ -168,15 +222,6 @@ pub fn handle_function(
             unsafe {
                 argmark.set_stack();
             }
-
-            let result = match #name(#passed_arguments) {
-                Ok(output) => output,
-                Err(err) => {
-                    return Err(::perlmod::Value::new_string(&err.to_string())
-                        .into_mortal()
-                        .into_raw());
-                }
-            };
 
             #handle_return
         }

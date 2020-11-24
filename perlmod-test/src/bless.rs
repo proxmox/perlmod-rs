@@ -14,9 +14,7 @@ mod export {
     }
 
     #[export]
-    fn something(#[raw] value: Value) -> Result<(), Error> {
+    fn something(#[raw] value: Value) {
         println!("Called something!");
-
-        Ok(())
     }
 }
