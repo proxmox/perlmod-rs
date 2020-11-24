@@ -24,31 +24,31 @@ use DynaLoader ();
 
 my $LIB;
 
-sub __load_shared_lib {
-    return if $LIB;
-
-    my ($pkg) = @_;
-
-    my $auto_path = ($pkg =~ s!::!/!gr);
-    my ($mod_name) = {{LIB_NAME}};
-
-    my @dirs = (map "-L$_/auto/$auto_path", @INC);
-    my (@mod_files) = DynaLoader::dl_findfile(@dirs, '-L./target/debug', $mod_name);
-    die "failed to locate shared library for '$pkg' (lib${mod_name}.so)\n" if !@mod_files;
-
-    $LIB = DynaLoader::dl_load_file($mod_files[0])
-        or die "failed to load library '$mod_files[0]'\n";
-}
-
-sub newXS {
-    my ($perl_func_name, $full_symbol_name, $filename) = @_;
-
-    my $sym  = DynaLoader::dl_find_symbol($LIB, $full_symbol_name);
-    die "failed to locate '$full_symbol_name'\n" if !defined $sym;
-    DynaLoader::dl_install_xsub($perl_func_name, $sym, $filename);
-}
-
 BEGIN {
+    my sub newXS {
+        my ($perl_func_name, $full_symbol_name, $filename) = @_;
+
+        my $sym  = DynaLoader::dl_find_symbol($LIB, $full_symbol_name);
+        die "failed to locate '$full_symbol_name'\n" if !defined $sym;
+        DynaLoader::dl_install_xsub($perl_func_name, $sym, $filename);
+    }
+
+    my sub __load_shared_lib {
+        return if $LIB;
+
+        my ($pkg) = @_;
+
+        my $auto_path = ($pkg =~ s!::!/!gr);
+        my ($mod_name) = {{LIB_NAME}};
+
+        my @dirs = (map "-L$_/auto/$auto_path", @INC);
+        my (@mod_files) = DynaLoader::dl_findfile(@dirs, '-L./target/debug', $mod_name);
+        die "failed to locate shared library for '$pkg' (lib${mod_name}.so)\n" if !@mod_files;
+
+        $LIB = DynaLoader::dl_load_file($mod_files[0])
+            or die "failed to load library '$mod_files[0]'\n";
+    }
+
     __load_shared_lib(__PACKAGE__);
 "#;
 
