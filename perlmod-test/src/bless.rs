@@ -12,4 +12,11 @@ mod export {
         Ok(hash)
         //Ok(this.bless("RSPM::Bless")?)
     }
+
+    #[export]
+    fn something(#[raw] value: Value) -> Result<(), Error> {
+        println!("Called something!");
+
+        Ok(())
+    }
 }

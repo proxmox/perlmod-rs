@@ -14,19 +14,18 @@ pub struct XSub {
 
 pub fn handle_function(
     attr: FunctionAttrs,
-    func: syn::ItemFn,
+    mut func: syn::ItemFn,
     mangled_package_name: Option<&str>,
 ) -> Result<XSub, Error> {
-    let sig = &func.sig;
-    if !sig.generics.params.is_empty() {
-        bail!(&sig.generics => "generic functions cannot be exported as xsubs");
+    if !func.sig.generics.params.is_empty() {
+        bail!(&func.sig.generics => "generic functions cannot be exported as xsubs");
     }
 
-    if sig.asyncness.is_some() {
-        bail!(&sig.asyncness => "async fns cannot be exported as xsubs");
+    if func.sig.asyncness.is_some() {
+        bail!(&func.sig.asyncness => "async fns cannot be exported as xsubs");
     }
 
-    let name = &sig.ident;
+    let name = func.sig.ident.clone();
     let xs_name = attr.xs_name.unwrap_or_else(|| match mangled_package_name {
         None => Ident::new(&format!("xs_{}", name), name.span()),
         Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
@@ -36,10 +35,22 @@ pub fn handle_function(
     let mut extract_arguments = TokenStream::new();
     let mut deserialized_arguments = TokenStream::new();
     let mut passed_arguments = TokenStream::new();
-    for arg in &sig.inputs {
+    for arg in &mut func.sig.inputs {
+        let mut raw_arg = false;
+
         let pat_ty = match arg {
             syn::FnArg::Receiver(_) => bail!(arg => "cannot export self-taking methods as xsubs"),
-            syn::FnArg::Typed(pt) => pt,
+            syn::FnArg::Typed(ref mut pt) => {
+                pt.attrs.retain(|attr| {
+                    if attr.path.is_ident("raw") {
+                        raw_arg = true;
+                        false
+                    } else {
+                        true
+                    }
+                });
+                &*pt
+            }
         };
 
         let arg_name = match &*pat_ty.pat {
@@ -74,16 +85,22 @@ pub fn handle_function(
             };
         });
 
-        deserialized_arguments.extend(quote! {
-            let #deserialized_name: #arg_type = match ::perlmod::from_value(#extracted_name) {
-                Ok(data) => data,
-                Err(err) => {
-                    return Err(::perlmod::Value::new_string(&err.to_string())
-                        .into_mortal()
-                        .into_raw());
-                }
-            };
-        });
+        if raw_arg {
+            deserialized_arguments.extend(quote! {
+                let #deserialized_name = #extracted_name;
+            });
+        } else {
+            deserialized_arguments.extend(quote! {
+                let #deserialized_name: #arg_type = match ::perlmod::from_value(#extracted_name) {
+                    Ok(data) => data,
+                    Err(err) => {
+                        return Err(::perlmod::Value::new_string(&err.to_string())
+                            .into_mortal()
+                            .into_raw());
+                    }
+                };
+            });
+        }
 
         if passed_arguments.is_empty() {
             passed_arguments.extend(quote! { #deserialized_name });
@@ -96,7 +113,7 @@ pub fn handle_function(
         &format!(
             "too many parameters for function '{}', (expected {})",
             name,
-            sig.inputs.len()
+            func.sig.inputs.len()
         ),
         Span::call_site(),
     );
