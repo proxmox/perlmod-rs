@@ -17,4 +17,9 @@ mod export {
     fn something(#[raw] value: Value) {
         println!("Called something!");
     }
+
+    #[export]
+    fn DESTROY(#[raw] this: Value) {
+        println!("Value dropped!");
+    }
 }
