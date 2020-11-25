@@ -68,16 +68,23 @@ impl Value {
     /// Bless a reference into a package. The `Value` must be a reference.
     pub fn bless(&self, package: &str) -> Result<Value, Error> {
         let pkgsv = Scalar::new_string(package);
+        self.bless_sv(&pkgsv)
+    }
+
+    pub fn bless_sv(&self, pkgsv: &ScalarRef) -> Result<Value, Error> {
         let stash = unsafe { ffi::RSPL_gv_stashsv(pkgsv.sv(), 0) };
         if stash.is_null() {
-            return Err(Error(format!("failed to find package {:?}", package)));
+            return Err(Error(format!(
+                "failed to find package {:?}",
+                pkgsv.pv_utf8()
+            )));
         }
 
         let value = unsafe { ffi::RSPL_sv_bless(self.sv(), stash) };
         if value.is_null() {
             return Err(Error(format!(
                 "failed to bless value into package {:?}",
-                package
+                pkgsv.pv_utf8()
             )));
         }
 
