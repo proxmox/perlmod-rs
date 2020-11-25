@@ -1,9 +1,11 @@
 use thiserror::Error as ThisError;
 
+/// Error returned by `TryFrom` implementations between `Scalar`, `Array` and `Hash`.
 #[derive(ThisError, Debug)]
 #[error("wrong type")]
 pub struct CastError;
 
+/// Generic errors from the perlmod crate.
 #[derive(ThisError, Clone, Debug)]
 #[error("error: {0}")]
 pub struct Error(pub(crate) String);
