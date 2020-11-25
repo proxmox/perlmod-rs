@@ -1,8 +1,12 @@
 //! Module containing the [`Scalar`] and [`Mortal`] types.
 
+use std::convert::TryInto;
+use std::mem;
+
 use bitflags::bitflags;
 
 use crate::ffi::{self, SV};
+use crate::Error;
 use crate::Value;
 
 /// An owned reference to a perl value.
@@ -95,6 +99,12 @@ impl Scalar {
                 s.len() as libc::size_t,
             ))
         }
+    }
+
+    /// Convenience method to create a new raw pointer value. Note that pointers are stored as
+    /// arbitrary "byte strings" and any such byte string value can be interpreted as a raw pointer.
+    pub fn new_pointer<T>(s: *mut T) -> Self {
+        Self::new_bytes(&(s as usize).to_ne_bytes())
     }
 }
 
@@ -243,6 +253,21 @@ impl ScalarRef {
             let ptr = ffi::RSPL_SvPVbyte(self.sv(), &mut len) as *const u8;
             std::slice::from_raw_parts(ptr, len)
         }
+    }
+
+    /// Interpret the byte string as a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// The user is responsible for making sure the underlying pointer is correct.
+    pub unsafe fn pv_raw<T>(&self) -> Result<*mut T, Error> {
+        let bytes = self.pv_bytes();
+
+        let bytes: [u8; mem::size_of::<usize>()] = bytes
+            .try_into()
+            .map_err(|err| Error(format!("invalid value for pointer: {}", err)))?;
+
+        Ok(usize::from_ne_bytes(bytes) as *mut T)
     }
 
     /// Create another owned reference to this value.

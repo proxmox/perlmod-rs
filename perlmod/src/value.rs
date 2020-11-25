@@ -50,6 +50,12 @@ impl Value {
         Value::Scalar(Scalar::new_bytes(s))
     }
 
+    /// Convenience method to create a new raw pointer value. Note that pointers are stored as
+    /// arbitrary "byte strings" and any such byte string value can be interpreted as a raw pointer.
+    pub fn new_pointer<T>(s: *mut T) -> Self {
+        Self::new_bytes(&(s as usize).to_ne_bytes())
+    }
+
     /// Create an actual perl reference to the value. (The equivalent of perl's backslash
     /// operator).
     pub fn new_ref<T>(value: &T) -> Self
