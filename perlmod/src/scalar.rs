@@ -12,8 +12,8 @@ use crate::Value;
 /// An owned reference to a perl value.
 ///
 /// This keeps a reference to a value which lives in the perl interpreter.
-/// This derefs to a `ScalarRef` which implements most of the basic functionality common to all
-/// `SV` related types.
+/// This derefs to a [`ScalarRef`] which implements most of the basic functionality common to all
+/// [`SV`] related types.
 #[repr(transparent)]
 pub struct Scalar(*mut SV);
 
@@ -26,15 +26,15 @@ impl Scalar {
         Mortal(unsafe { ffi::RSPL_sv_2mortal(self.into_raw()) })
     }
 
-    /// Turn this into a raw `SV` transferring control of one reference count.
+    /// Turn this into a raw [`SV`] transferring control of one reference count.
     pub fn into_raw(self) -> *mut SV {
         let ptr = self.0;
         core::mem::forget(self);
         ptr
     }
 
-    /// Create a wrapping `Scalar` from an `SV` pointer. The `Scalar` takes over the owned
-    /// reference from the passed `SV`, which means it must not be a mortal reference.
+    /// Create a wrapping [`Scalar`] from an [`SV`] pointer. The [`Scalar`] takes over the owned
+    /// reference from the passed [`SV`], which means it must not be a mortal reference.
     ///
     /// # Safety
     ///
@@ -42,12 +42,12 @@ impl Scalar {
     /// of one reference.
     ///
     /// The caller must ensure that it is safe to decrease the reference count later on, or use
-    /// `into_raw()` instead of letting the `Scalar` get dropped.
+    /// [`into_raw()`](Scalar::into_raw) instead of letting the [`Scalar`] get dropped.
     pub unsafe fn from_raw_move(ptr: *mut SV) -> Self {
         Self(ptr)
     }
 
-    /// Increase the reference count on an `SV` pointer.
+    /// Increase the reference count on an [`SV`] pointer.
     ///
     /// # Safety
     ///
@@ -218,17 +218,17 @@ impl ScalarRef {
         }
     }
 
-    /// Coerce to a double value. (perlxs SvNV).
+    /// Coerce to a double value. (perlxs `SvNV`).
     pub fn nv(&self) -> f64 {
         unsafe { ffi::RSPL_SvNV(self.sv()) }
     }
 
-    /// Coerce to an integer value. (perlxs SvIV).
+    /// Coerce to an integer value. (perlxs `SvIV`).
     pub fn iv(&self) -> isize {
         unsafe { ffi::RSPL_SvIV(self.sv()) }
     }
 
-    /// Coerce to an utf8 string value. (perlxs SvPVutf8)
+    /// Coerce to an utf8 string value. (perlxs `SvPVutf8`)
     pub fn pv_utf8(&self) -> &str {
         unsafe {
             let mut len: libc::size_t = 0;
@@ -237,7 +237,7 @@ impl ScalarRef {
         }
     }
 
-    /// Coerce to a string without utf8 encoding. (perlxs SvPV)
+    /// Coerce to a string without utf8 encoding. (perlxs `SvPV`)
     pub fn pv_string_bytes(&self) -> &[u8] {
         unsafe {
             let mut len: libc::size_t = 0;
@@ -246,7 +246,7 @@ impl ScalarRef {
         }
     }
 
-    /// Coerce to a byte-string. (perlxs SvPVbyte)
+    /// Coerce to a byte-string. (perlxs `SvPVbyte`)
     pub fn pv_bytes(&self) -> &[u8] {
         unsafe {
             let mut len: libc::size_t = 0;
@@ -290,12 +290,12 @@ impl ScalarRef {
         unsafe { Scalar::from_raw_ref(self.sv()) }
     }
 
-    /// Convenience check for SVt_NULL
+    /// Convenience check for `SVt_NULL`
     pub fn is_undef(&self) -> bool {
         0 == unsafe { ffi::RSPL_type_flags(self.sv()) }
     }
 
-    /// Turn this into a `Value`.
+    /// Turn this into a [`Value`].
     pub fn into_value(self) -> Value {
         Value::from_scalar(self.clone_ref())
     }
