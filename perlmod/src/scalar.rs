@@ -256,11 +256,7 @@ impl ScalarRef {
     }
 
     /// Interpret the byte string as a raw pointer.
-    ///
-    /// # Safety
-    ///
-    /// The user is responsible for making sure the underlying pointer is correct.
-    pub unsafe fn pv_raw<T>(&self) -> Result<*mut T, Error> {
+    pub fn pv_raw<T>(&self) -> Result<*mut T, Error> {
         let bytes = self.pv_bytes();
 
         let bytes: [u8; mem::size_of::<usize>()] = bytes
@@ -268,6 +264,25 @@ impl ScalarRef {
             .map_err(|err| Error(format!("invalid value for pointer: {}", err)))?;
 
         Ok(usize::from_ne_bytes(bytes) as *mut T)
+    }
+
+    /// Interpret the byte string as a pointer and return it as a reference for convenience.
+    ///
+    /// # Safety
+    ///
+    /// The user is responsible for making sure the underlying pointer is correct.
+    pub unsafe fn pv_ref<T>(&self) -> Result<&T, Error> {
+        self.pv_raw().map(|p| unsafe { &*p })
+    }
+
+    /// Interpret the byte string as a pointer and return it as a mutable reference for
+    /// convenience.
+    ///
+    /// # Safety
+    ///
+    /// The user is responsible for making sure the underlying pointer is correct.
+    pub unsafe fn pv_mut_ref<T>(&self) -> Result<&mut T, Error> {
+        self.pv_raw().map(|p| unsafe { &mut *p })
     }
 
     /// Create another owned reference to this value.
