@@ -3,26 +3,31 @@
 //! You should not use this code directly. This is used by the binding generator to implement xsubs
 //! for exported functions.
 
+/// Raw perl subroutine pointer value. This should not be used directly.
 #[repr(C)]
 pub struct CV {
     _ffi: usize,
 }
 
+/// Raw scalar-ish perl value. This should not be used directly.
 #[repr(C)]
 pub struct SV {
     _ffi: usize,
 }
 
+/// Raw perl array value. This should not be used directly.
 #[repr(C)]
 pub struct AV {
     _ffi: usize,
 }
 
+/// Raw perl hash value. This should not be used directly.
 #[repr(C)]
 pub struct HV {
     _ffi: usize,
 }
 
+/// Raw perl hash entry iterator. This should not be used directly.
 #[repr(C)]
 pub struct HE {
     _ffi: usize,
@@ -122,6 +127,7 @@ impl StackMark {
     }
 }
 
+/// Iterator over the stack up to the [`StackMark`].
 pub struct StackIter {
     at: usize,
     end: usize,

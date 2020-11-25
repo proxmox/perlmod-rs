@@ -1,4 +1,4 @@
-//! Module dealing with perl [`Hash`]es. (`HV` pointers).
+//! Module dealing with perl [`Hash`](crate::Hash)es. ([`HV`](crate::ffi::HV) pointers).
 
 use std::convert::TryFrom;
 
@@ -174,7 +174,7 @@ impl std::fmt::Debug for Hash {
 ///
 /// Perl hashes have an integrated iterator. Perl goes to great lengths to make it impossible to
 /// properly iterate over a hash without messing with the hash's internal state, so contrary to the
-/// array iterator, this iterator always references an existing [`Hash`].
+/// array iterator, this iterator always references an existing [`Hash`](crate::Hash).
 pub struct Iter<'a> {
     hash: &'a Hash,
 }

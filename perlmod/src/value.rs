@@ -10,8 +10,8 @@ use crate::scalar::ScalarRef;
 use crate::Error;
 use crate::{Array, Hash, Scalar};
 
-/// A higher level value. This is basically an `SV` already cast to `AV` or `HV` for arrays and
-/// hashes.
+/// A higher level value. This is basically an [`SV`] already cast to [`AV`](crate::ffi::AV) or
+/// [`HV`](crate::ffi::HV) for arrays and hashes.
 pub enum Value {
     Scalar(Scalar),
     Reference(Scalar),

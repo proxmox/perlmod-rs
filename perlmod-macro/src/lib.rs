@@ -74,7 +74,7 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 }
 
 /// Attribute to export a function so that it can be installed as an `xsub` in perl. See the
-/// [`package!`] macro for a usage example.
+/// [`package!`](macro@package) macro for a usage example.
 #[proc_macro_attribute]
 pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let attr = parse_macro_input!(attr as AttributeArgs);

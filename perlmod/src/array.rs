@@ -1,4 +1,4 @@
-//! Module dealing with perl [`Array`]s. (`AV` pointers).
+//! Module dealing with perl [`Array`](crate::Array)s. ([`AV`](crate::ffi::AV) pointers).
 
 use std::convert::TryFrom;
 use std::marker::PhantomData;
@@ -21,18 +21,18 @@ impl Array {
         unsafe { Self::from_raw_move(ffi::RSPL_newAV()) }
     }
 
-    /// Turn this into a `Scalar`. The underlying perl value does not change, this is a pure type
+    /// Turn this into a [`Scalar`]. The underlying perl value does not change, this is a pure type
     /// cast down to a less specific "pointer" type.
     pub fn into_scalar(self) -> Scalar {
         self.0
     }
 
-    /// Get the internal perl value as a low-level `AV` pointer.
+    /// Get the internal perl value as a low-level [`AV`] pointer.
     pub fn av(&self) -> *mut AV {
         self.0.sv() as *mut AV
     }
 
-    /// "Downcast" a `Scalar` into an `Array`.
+    /// "Downcast" a [`Scalar`] into an [`Array`].
     ///
     /// # Safety
     ///
@@ -41,7 +41,7 @@ impl Array {
         Self(scalar)
     }
 
-    /// Take over a raw `AV` value, assuming that we then own a reference to it.
+    /// Take over a raw [`AV`] value, assuming that we then own a reference to it.
     ///
     /// # Safety
     ///
@@ -49,13 +49,13 @@ impl Array {
     /// of one reference.
     ///
     /// The caller must ensure that it is safe to decrease the reference count later on, or use
-    /// `into_raw()` instead of letting the `Array` get dropped.
+    /// [`into_raw()`](Value::into_raw()) instead of letting the [`Array`] get dropped.
     pub unsafe fn from_raw_move(ptr: *mut AV) -> Self {
         Self(Scalar::from_raw_move(ptr as *mut SV))
     }
 
-    /// Create a new reference to an existing `AV` value. This will increase the value's reference
-    /// count.
+    /// Create a new reference to an existing [`AV`] value. This will increase the value's
+    /// reference count.
     ///
     /// # Safety
     ///
@@ -170,7 +170,7 @@ impl std::fmt::Debug for Array {
 
 /// An iterator over a perl array.
 ///
-/// Technically the iterator always holds a reference count on the `AV` pointer, but we still
+/// Technically the iterator always holds a reference count on the [`AV`] pointer, but we still
 /// distinguish between an iterator going over a borrowed [`Array`] and one coming from
 /// [`IntoIterator`](std::iter::IntoIterator).
 pub struct Iter<'a> {
