@@ -7,8 +7,5 @@ mod pkg142;
 /// possible on nightly with #![feature(custom_inner_attributes)]
 mod pkginline;
 
-/// This is possible on stable rust with some 1.3x already.
-mod pkgstable;
-
 /// A test for blessed values.
 mod bless;

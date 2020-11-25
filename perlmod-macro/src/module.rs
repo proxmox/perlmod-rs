@@ -55,6 +55,7 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
 
                         package.export_named(
                             func.rust_name,
+                            func.perl_name,
                             func.xs_name,
                             "src/FIXME.rs".to_string(),
                         );

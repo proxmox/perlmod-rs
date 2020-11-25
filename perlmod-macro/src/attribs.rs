@@ -64,7 +64,9 @@ impl ModuleAttrs {
     }
 }
 
+#[derive(Default)]
 pub struct FunctionAttrs {
+    pub perl_name: Option<Ident>,
     pub xs_name: Option<Ident>,
     pub raw_return: bool,
 }
@@ -73,8 +75,7 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
     type Error = syn::Error;
 
     fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
-        let mut xs_name = None;
-        let mut raw_return = false;
+        let mut attrs = FunctionAttrs::default();
 
         for arg in args {
             match arg {
@@ -83,15 +84,17 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                     lit: syn::Lit::Str(litstr),
                     ..
                 })) => {
-                    if path.is_ident("name") {
-                        xs_name = Some(Ident::new(&litstr.value(), litstr.span()));
+                    if path.is_ident("xs_name") {
+                        attrs.xs_name = Some(Ident::new(&litstr.value(), litstr.span()));
+                    } else if path.is_ident("name") {
+                        attrs.perl_name = Some(Ident::new(&litstr.value(), litstr.span()));
                     } else {
                         bail!(path => "unknown argument");
                     }
                 }
                 syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
                     if path.is_ident("raw_return") {
-                        raw_return = true;
+                        attrs.raw_return = true;
                     } else {
                         bail!(path => "unknown attribute");
                     }
@@ -100,9 +103,6 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
             }
         }
 
-        Ok(Self {
-            xs_name,
-            raw_return,
-        })
+        Ok(attrs)
     }
 }

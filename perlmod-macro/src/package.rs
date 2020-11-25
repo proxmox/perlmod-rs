@@ -8,10 +8,7 @@ use anyhow::Error;
 
 use proc_macro2::{Ident, Span};
 
-use syn::parse::Parse;
-use syn::punctuated::Punctuated;
 use syn::AttributeArgs;
-use syn::Token;
 
 use toml::Value;
 
@@ -56,6 +53,7 @@ const MODULE_TAIL: &str = "}\n";
 
 struct Export {
     rust_name: Ident,
+    perl_name: Option<Ident>,
     xs_name: Ident,
     file_name: String,
 }
@@ -73,18 +71,16 @@ impl Package {
         })
     }
 
-    pub fn export_named(&mut self, rust_name: Ident, xs_name: Ident, file_name: String) {
+    pub fn export_named(
+        &mut self,
+        rust_name: Ident,
+        perl_name: Option<Ident>,
+        xs_name: Ident,
+        file_name: String,
+    ) {
         self.exported.push(Export {
             rust_name,
-            xs_name,
-            file_name,
-        });
-    }
-
-    pub fn export_direct(&mut self, name: Ident, file_name: String) {
-        let xs_name = Ident::new(&format!("xs_{}", name), name.span());
-        self.exported.push(Export {
-            rust_name: name,
+            perl_name,
             xs_name,
             file_name,
         });
@@ -97,7 +93,7 @@ impl Package {
             source = format!(
                 "{}    newXS('{}', '{}', \"{}\");\n",
                 source,
-                export.rust_name,
+                export.perl_name.as_ref().unwrap_or(&export.rust_name),
                 export.xs_name,
                 export.file_name.replace('"', "\\\""),
             );
@@ -129,88 +125,6 @@ impl Package {
 
     pub fn mangle_package_name(&self) -> String {
         self.attrs.mangle_package_name()
-    }
-}
-
-mod kw {
-    syn::custom_keyword!(package);
-    syn::custom_keyword!(lib);
-    syn::custom_keyword!(file);
-    syn::custom_keyword!(subs);
-}
-
-impl Parse for Package {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let mut pkg = Package {
-            attrs: ModuleAttrs {
-                package_name: String::new(),
-                file_name: None,
-                lib_name: None,
-            },
-            exported: Vec::new(),
-        };
-
-        // `package "Package::Name";` comes first
-        let _pkg: kw::package = input.parse()?;
-        let package: syn::LitStr = input.parse()?;
-        let _semicolon: Token![;] = input.parse()?;
-        pkg.attrs.package_name = package.value();
-
-        // `lib "lib_name";` optionally comes second
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::lib) {
-            let _lib: kw::lib = input.parse()?;
-            let lib: syn::LitStr = input.parse()?;
-            pkg.attrs.lib_name = Some(lib.value());
-            let _semicolon: Token![;] = input.parse()?;
-        }
-        drop(lookahead);
-
-        // `file "File/Name.pm";` optionally comes third
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::file) {
-            let _file: kw::file = input.parse()?;
-            let file: syn::LitStr = input.parse()?;
-            pkg.attrs.file_name = Some(file.value());
-            let _semicolon: Token![;] = input.parse()?;
-        }
-        drop(lookahead);
-
-        // `sub { ... }` must follow:
-        let _sub: kw::subs = input.parse()?;
-        let content;
-        let _brace_token: syn::token::Brace = syn::braced!(content in input);
-        let items: Punctuated<ExportItem, Token![,]> =
-            content.parse_terminated(ExportItem::parse)?;
-
-        for item in items {
-            match item {
-                ExportItem::Direct(name) => pkg.export_direct(name, "src/FIXME.rs".to_string()),
-                ExportItem::Named(name, as_name) => {
-                    pkg.export_named(as_name, name, "src/FIXME.rs".to_string());
-                }
-            }
-        }
-
-        Ok(pkg)
-    }
-}
-
-enum ExportItem {
-    Direct(Ident),
-    Named(Ident, Ident),
-}
-
-impl Parse for ExportItem {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let name: Ident = input.parse()?;
-        let lookahead = input.lookahead1();
-        if lookahead.peek(syn::token::As) {
-            let _as: syn::token::As = input.parse()?;
-            Ok(ExportItem::Named(name, input.parse()?))
-        } else {
-            Ok(ExportItem::Direct(name))
-        }
     }
 }
 

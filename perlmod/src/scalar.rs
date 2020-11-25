@@ -272,7 +272,7 @@ impl ScalarRef {
     ///
     /// The user is responsible for making sure the underlying pointer is correct.
     pub unsafe fn pv_ref<T>(&self) -> Result<&T, Error> {
-        self.pv_raw().map(|p| unsafe { &*p })
+        self.pv_raw().map(|p| &*p)
     }
 
     /// Interpret the byte string as a pointer and return it as a mutable reference for
@@ -282,7 +282,7 @@ impl ScalarRef {
     ///
     /// The user is responsible for making sure the underlying pointer is correct.
     pub unsafe fn pv_mut_ref<T>(&self) -> Result<&mut T, Error> {
-        self.pv_raw().map(|p| unsafe { &mut *p })
+        self.pv_raw().map(|p| &mut *p)
     }
 
     /// Create another owned reference to this value.

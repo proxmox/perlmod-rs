@@ -26,8 +26,8 @@ mod export {
         println!("Called something!");
     }
 
-    #[export]
-    fn DESTROY(#[raw] this: Value) {
+    #[export(name = "DESTROY")]
+    fn destroy(#[raw] this: Value) {
         match this
             .dereference()
             .ok_or_else(|| format_err!("not a reference"))

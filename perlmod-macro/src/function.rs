@@ -8,6 +8,7 @@ use crate::attribs::FunctionAttrs;
 
 pub struct XSub {
     pub rust_name: Ident,
+    pub perl_name: Option<Ident>,
     pub xs_name: Ident,
     pub tokens: TokenStream,
 }
@@ -201,6 +202,7 @@ pub fn handle_function(
         #wrapper_func
 
         #[inline(never)]
+        #[allow(non_snake_case)]
         fn #impl_xs_name(
             _cv: &::perlmod::ffi::CV,
         ) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
@@ -229,6 +231,7 @@ pub fn handle_function(
 
     Ok(XSub {
         rust_name: name.to_owned(),
+        perl_name: attr.perl_name.clone(),
         xs_name,
         tokens,
     })
