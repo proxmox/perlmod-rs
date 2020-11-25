@@ -66,6 +66,67 @@ impl Value {
     }
 
     /// Bless a reference into a package. The `Value` must be a reference.
+    ///
+    /// Note that a blessed value in perl can have a destructor (a `DESTROY` sub), and keeps track
+    /// of references, so one can implement a class package like this:
+    ///
+    /// ```
+    /// // 'lib' and 'file' are optional. We use 'file' here to prevent doc tests from writing out
+    /// // the file.
+    /// #[perlmod::package(name = "RSPM::MyThing", lib = "bless_doctest", file="/dev/null")]
+    /// mod export {
+    ///     # use perlmod::{Error, Value};
+    ///
+    ///     struct MyThing {
+    ///         content: String,
+    ///     }
+    ///
+    ///     #[export(raw_return)]
+    ///     fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
+    ///         let mut ptr = Box::new(MyThing { content });
+    ///
+    ///         // create a pointer value
+    ///         let value = Value::new_pointer::<MyThing>(&mut *ptr);
+    ///
+    ///         // create a reference to it:
+    ///         let value = Value::new_ref(&value);
+    ///
+    ///         // use the the provided class name as perl passes it along when using
+    ///         // `RSPM::MyThing->new()`. Alternatively this could be hardcoded and
+    ///         // `RSPM::MyThing::new()` (without an arrow) would be used instead.
+    ///         let this = value.bless_sv(&class)?;
+    ///
+    ///         // From here on out perl will call our destructor defined below, so
+    ///         // it's time to drop our reference to it!
+    ///         let _perl = Box::leak(ptr);
+    ///
+    ///         Ok(this)
+    ///     }
+    ///
+    ///     #[export]
+    ///     fn something(#[raw] this: Value) {
+    ///         let _ = this; // see the `DESTROY` sub below for how to access this.
+    ///         println!("Example method callable via $foo->something()!");
+    ///     }
+    ///
+    ///     #[export(name = "DESTROY")]
+    ///     fn destroy(#[raw] this: Value) {
+    ///         match this
+    ///             .dereference()
+    ///             .ok_or_else(|| Error::new("not a reference"))
+    ///             .and_then(|this| Ok(this.pv_raw()?))
+    ///         {
+    ///             Ok(ptr) => {
+    ///                 let value = unsafe { Box::<MyThing>::from_raw(ptr) };
+    ///                 println!("Dropping value {:?}", value.content);
+    ///             }
+    ///             Err(err) => {
+    ///                 println!("DESTROY called with invalid pointer: {}", err);
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn bless(&self, package: &str) -> Result<Value, Error> {
         let pkgsv = Scalar::new_string(package);
         self.bless_sv(&pkgsv)
