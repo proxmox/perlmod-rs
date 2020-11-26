@@ -20,7 +20,7 @@ pub mod ffi;
 pub mod ser;
 
 #[doc(inline)]
-pub use de::from_value;
+pub use de::{from_ref_value, from_value};
 #[doc(inline)]
 pub use ser::to_value;
 

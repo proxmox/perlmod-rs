@@ -92,14 +92,15 @@ pub fn handle_function(
             });
         } else {
             deserialized_arguments.extend(quote! {
-                let #deserialized_name: #arg_type = match ::perlmod::from_value(#extracted_name) {
-                    Ok(data) => data,
-                    Err(err) => {
-                        return Err(::perlmod::Value::new_string(&err.to_string())
-                            .into_mortal()
-                            .into_raw());
-                    }
-                };
+                let #deserialized_name: #arg_type =
+                    match ::perlmod::from_ref_value(&#extracted_name) {
+                        Ok(data) => data,
+                        Err(err) => {
+                            return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw());
+                        }
+                    };
             });
         }
 

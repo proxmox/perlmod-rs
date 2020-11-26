@@ -1,6 +1,8 @@
 //! Serde deserializer for perl values.
 
-use serde::de::{self, DeserializeOwned, DeserializeSeed, MapAccess, SeqAccess, Visitor};
+use std::marker::PhantomData;
+
+use serde::de::{self, Deserialize, DeserializeSeed, MapAccess, SeqAccess, Visitor};
 
 use crate::error::Error;
 use crate::scalar::Type;
@@ -8,26 +10,43 @@ use crate::Value;
 use crate::{array, ffi, hash};
 
 /// Perl [`Value`](crate::Value) deserializer.
-struct Deserializer {
+struct Deserializer<'de> {
     input: Value,
     option_allowed: bool,
+    _lifetime: PhantomData<&'de Value>,
 }
 
 /// Deserialize a perl [`Value`](crate::Value).
+///
+/// Note that this causes all the underlying data to be copied recursively.
 pub fn from_value<T>(input: Value) -> Result<T, Error>
 where
-    T: DeserializeOwned,
+    T: serde::de::DeserializeOwned,
 {
-    let mut deserializer = Deserializer::from_value(input);
+    let mut deserializer = Deserializer::<'static>::from_value(input);
     let out = T::deserialize(&mut deserializer)?;
     Ok(out)
 }
 
-impl Deserializer {
+/// Deserialize a reference to a perl [`Value`](crate::Value).
+///
+/// Note that this causes all the underlying data to be copied recursively, except for data
+/// deserialized to `&[u8]`, which will reference the original value.
+pub fn from_ref_value<'de, T>(input: &'de Value) -> Result<T, Error>
+where
+    T: Deserialize<'de>,
+{
+    let mut deserializer = Deserializer::<'de>::from_value(input.clone_ref());
+    let out = T::deserialize(&mut deserializer)?;
+    Ok(out)
+}
+
+impl<'deserializer> Deserializer<'deserializer> {
     pub fn from_value(input: Value) -> Self {
         Deserializer {
             input,
             option_allowed: true,
+            _lifetime: PhantomData,
         }
     }
 
@@ -60,9 +79,7 @@ impl Deserializer {
         self.sanity_check()?;
         Ok(&self.input)
     }
-}
 
-impl Deserializer {
     /// deserialize_any, preferring a string value
     fn deserialize_any_string<'de, V>(&mut self, visitor: V) -> Result<V::Value, Error>
     where
@@ -148,7 +165,7 @@ impl Deserializer {
     }
 }
 
-impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
+impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -312,7 +329,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
                     use crate::scalar::Flags;
 
                     if flags.contains(Flags::STRING) {
-                        visitor.visit_bytes(value.pv_bytes())
+                        let bytes = value.pv_bytes();
+                        let bytes: &'de [u8] =
+                            unsafe { std::slice::from_raw_parts(bytes.as_ptr(), bytes.len()) };
+                        visitor.visit_borrowed_bytes(bytes)
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::INTEGER) {
