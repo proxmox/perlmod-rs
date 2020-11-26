@@ -8,7 +8,7 @@ use crate::Value;
 use crate::{array, ffi, hash};
 
 /// Perl [`Value`](crate::Value) deserializer.
-pub struct Deserializer {
+struct Deserializer {
     input: Value,
     option_allowed: bool,
 }
@@ -28,13 +28,6 @@ impl Deserializer {
         Deserializer {
             input,
             option_allowed: true,
-        }
-    }
-
-    pub fn from_some_value(input: Value) -> Self {
-        Deserializer {
-            input,
-            option_allowed: false,
         }
     }
 

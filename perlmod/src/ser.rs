@@ -7,7 +7,7 @@ use crate::Value;
 use crate::{array, hash};
 
 /// Perl [`Value`](crate::Value) serializer.
-pub struct Serializer;
+struct Serializer;
 
 /// Serialize data into a perl [`Value`](crate::Value).
 ///
@@ -21,18 +21,18 @@ where
 }
 
 /// Serde map & struct serialization helper.
-pub struct SerHash {
+struct SerHash {
     hash: hash::Hash,
     key: Option<Value>,
 }
 
 /// Serde sequence serialization helper.
-pub struct SerArray {
+struct SerArray {
     array: array::Array,
 }
 
 /// Serde variant serialization helper.
-pub struct SerVariant<T> {
+struct SerVariant<T> {
     hash: hash::Hash,
     inner: T,
 }
