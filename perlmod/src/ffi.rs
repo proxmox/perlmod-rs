@@ -99,6 +99,11 @@ extern "C" {
 
     pub fn RSPL_gv_stashsv(name: *const SV, flags: i32) -> *mut HV;
     pub fn RSPL_sv_bless(sv: *mut SV, stash: *mut HV) -> *mut SV;
+
+    pub fn RSPL_ENTER();
+    pub fn RSPL_SAVETMPS();
+    pub fn RSPL_FREETMPS();
+    pub fn RSPL_LEAVE();
 }
 
 /// Argument marker for the stack.
@@ -232,4 +237,25 @@ pub fn stack_push(value: crate::Mortal) {
 /// ```
 pub unsafe fn croak(sv: *mut SV) -> ! {
     RSPL_croak_sv(sv);
+}
+
+/// Create a pseudo-block for mortals & temps to be freed after it.
+/// This calls `ENTER; SAVETMPS;` before and `FREETMPS; LEAVE;` after the provided closure.
+pub fn pseudo_block<F, R>(func: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    unsafe {
+        RSPL_ENTER();
+        RSPL_SAVETMPS();
+    }
+
+    let res = func();
+
+    unsafe {
+        RSPL_FREETMPS();
+        RSPL_LEAVE();
+    }
+
+    res
 }

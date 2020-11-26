@@ -278,6 +278,22 @@ extern SV* RSPL_sv_bless(SV *sv, HV *stash) {
     return sv_bless(sv, stash);
 }
 
+extern void RSPL_ENTER() {
+    ENTER;
+}
+
+extern void RSPL_SAVETMPS() {
+    SAVETMPS;
+}
+
+extern void RSPL_FREETMPS() {
+    FREETMPS;
+}
+
+extern void RSPL_LEAVE() {
+    LEAVE;
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef
