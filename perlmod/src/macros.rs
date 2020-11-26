@@ -10,7 +10,7 @@
 /// Usage:
 /// ```ignore
 /// // complete:
-/// destructor!(MyType : "My::RS::Package" {
+/// destructor!(MyType : "My::RS::Package" => {
 ///     Err(err) => { eprintln!("DESTROY called with invalid pointer: {}", err); }
 /// });
 ///
@@ -20,7 +20,8 @@
 /// });
 ///
 /// // simple case with default error case (which is the above example case)
-/// destructor!(MyType : "My::RS::Package");
+/// // the class name can also reference a constant.
+/// destructor!(MyType : CLASSNAME);
 ///
 /// // simple less-safe case without checking the reference type.
 /// destructor!(MyType);
@@ -44,9 +45,9 @@
 /// ```
 #[macro_export]
 macro_rules! destructor {
-    ($ty:ty : $package:literal) => {
+    ($ty:ty : $package:expr) => {
         $crate::destructor! {
-            $ty : $package {
+            $ty : $package => {
                 Err(err) => {
                     eprintln!("DESTROY called with invalid pointer: {}", err);
                 }
@@ -54,7 +55,7 @@ macro_rules! destructor {
         }
     };
 
-    ($ty:ty : $package:literal {
+    ($ty:ty : $package:expr => {
         Err($errname:ident) => $on_err:expr
     }) => {
         #[perlmod::export(name = "DESTROY")]

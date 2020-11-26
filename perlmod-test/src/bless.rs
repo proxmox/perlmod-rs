@@ -4,6 +4,8 @@ mod export {
 
     use perlmod::Value;
 
+    const CLASSNAME: &str = "RSPM::Bless";
+
     struct Bless {
         content: String,
     }
@@ -22,10 +24,10 @@ mod export {
 
     #[export]
     fn something(#[raw] this: Value) -> Result<(), Error> {
-        let this = unsafe { this.from_blessed_box::<Bless>("RSPM::Bless")? };
+        let this = unsafe { this.from_blessed_box::<Bless>(CLASSNAME)? };
         println!("Called something on Bless {{ {:?} }}!", this.content);
         Ok(())
     }
 
-    perlmod::destructor! { Bless : "RSPM::Bless" }
+    perlmod::destructor! { Bless : CLASSNAME }
 }
