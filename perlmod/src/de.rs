@@ -81,7 +81,7 @@ impl Deserializer {
                     use crate::scalar::Flags;
 
                     if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_utf8())
+                        visitor.visit_str(value.pv_string_utf8())
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::INTEGER) {
@@ -113,7 +113,7 @@ impl Deserializer {
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_utf8())
+                        visitor.visit_str(value.pv_string_utf8())
                     } else {
                         visitor.visit_unit()
                     }
@@ -141,7 +141,7 @@ impl Deserializer {
                     } else if flags.contains(Flags::INTEGER) {
                         visitor.visit_i64(value.iv() as i64)
                     } else if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_utf8())
+                        visitor.visit_str(value.pv_string_utf8())
                     } else {
                         visitor.visit_unit()
                     }
@@ -277,11 +277,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::STRING) {
-                        let s = value.pv_utf8();
+                        let s = value.pv_string_utf8();
                         let mut chars = s.chars();
                         match chars.next() {
                             Some(ch) if chars.next().is_none() => visitor.visit_char(ch),
-                            _ => visitor.visit_str(value.pv_utf8()),
+                            _ => visitor.visit_str(value.pv_string_utf8()),
                         }
                     } else {
                         visitor.visit_unit()

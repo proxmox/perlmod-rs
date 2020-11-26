@@ -229,7 +229,7 @@ impl ScalarRef {
     }
 
     /// Coerce to an utf8 string value. (perlxs `SvPVutf8`)
-    pub fn pv_utf8(&self) -> &str {
+    pub fn pv_string_utf8(&self) -> &str {
         unsafe {
             let mut len: libc::size_t = 0;
             let ptr = ffi::RSPL_SvPVutf8(self.sv(), &mut len) as *const u8;
@@ -238,7 +238,7 @@ impl ScalarRef {
     }
 
     /// Coerce to a string without utf8 encoding. (perlxs `SvPV`)
-    pub fn pv_string_bytes(&self) -> &[u8] {
+    pub fn pv_bytes(&self) -> &[u8] {
         unsafe {
             let mut len: libc::size_t = 0;
             let ptr = ffi::RSPL_SvPV(self.sv(), &mut len) as *const u8;
@@ -246,12 +246,18 @@ impl ScalarRef {
         }
     }
 
-    /// Coerce to a byte-string. (perlxs `SvPVbyte`)
-    pub fn pv_bytes(&self) -> &[u8] {
+    /// Coerce to a byte-string, downgrading from utf-8. (perlxs `SvPVbyte`)
+    ///
+    /// May fail if there are values which don't fit into bytes in the contained utf-8 string, in
+    /// which case `None` is returned.
+    pub fn pv_utf8_to_bytes(&self) -> Option<&[u8]> {
         unsafe {
             let mut len: libc::size_t = 0;
             let ptr = ffi::RSPL_SvPVbyte(self.sv(), &mut len) as *const u8;
-            std::slice::from_raw_parts(ptr, len)
+            if ptr.is_null() {
+                return None;
+            }
+            Some(std::slice::from_raw_parts(ptr, len))
         }
     }
 
@@ -314,7 +320,7 @@ impl std::fmt::Debug for ScalarRef {
         match self.ty() {
             Type::Scalar(flags) => {
                 if flags.intersects(Flags::STRING) {
-                    Debug::fmt(self.pv_utf8(), f)
+                    Debug::fmt(self.pv_string_utf8(), f)
                 } else if flags.intersects(Flags::INTEGER) {
                     write!(f, "{}", self.iv())
                 } else if flags.intersects(Flags::DOUBLE) {
@@ -341,7 +347,7 @@ impl serde::Serialize for Scalar {
         match self.ty() {
             Type::Scalar(flags) => {
                 if flags.contains(Flags::STRING) {
-                    serializer.serialize_str(self.pv_utf8())
+                    serializer.serialize_str(self.pv_string_utf8())
                 } else if flags.contains(Flags::DOUBLE) {
                     serializer.serialize_f64(self.nv())
                 } else if flags.contains(Flags::INTEGER) {

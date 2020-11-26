@@ -137,7 +137,7 @@ impl Value {
         if stash.is_null() {
             return Err(Error(format!(
                 "failed to find package {:?}",
-                pkgsv.pv_utf8()
+                pkgsv.pv_string_utf8()
             )));
         }
 
@@ -145,7 +145,7 @@ impl Value {
         if value.is_null() {
             return Err(Error(format!(
                 "failed to bless value into package {:?}",
-                pkgsv.pv_utf8()
+                pkgsv.pv_string_utf8()
             )));
         }
 
