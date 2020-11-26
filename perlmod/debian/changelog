@@ -1,3 +1,23 @@
+rust-perlmod (0.2.0-1) stable; urgency=medium
+
+  * add convenience methods for raw pointer types
+
+  * support blessed values
+
+  * support deserializing by reference to allow `&[u8]` parameters
+    introduces: perlmod::from_ref_value(&Value)
+
+  * improve documentation and examples
+
+  * make `SvPVbyte` in `Value`s safe by checking whether they can be converted
+    first (otherwise it could potentially trigger a `longjmp`)
+
+  * add `destructor!` convenience macro
+
+  * `Serializer` and `Deserializer` & helper types are now private
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 26 Nov 2020 13:51:51 +0100
+
 rust-perlmod (0.1.0-1) stable; urgency=medium
 
   * initial packaging

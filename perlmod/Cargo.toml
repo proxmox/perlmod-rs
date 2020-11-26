@@ -1,6 +1,6 @@
 [package]
 name = "perlmod"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
 build = "build.rs"
@@ -17,7 +17,7 @@ maintenance = { status = "experimental" }
 [dependencies]
 bitflags = "1.2.1"
 libc = "0.2"
-perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.1" }
+perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.2" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
 

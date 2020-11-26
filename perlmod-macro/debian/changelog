@@ -1,3 +1,24 @@
+rust-perlmod-macro (0.2.0-1) stable; urgency=medium
+
+  * fix `#[export(name = ...)]` to name the actual perl function instead of
+    the rust function
+
+  * support returning raw non-serialized `Value` types via
+    `#[export(raw_return)]`
+
+  * support raw non-deserialized parameters via the `#[raw]`
+
+  * support`&[u8]` parameters by switching to perlmod::from_ref_value for 
+    parameters
+
+  * drop `make_package!`
+
+  * mark the `newXS` and `__load_shared_lib` functions in the generated
+    perl files as `my sub` and move them into the `BEGIN` block for better
+    namespacing
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 26 Nov 2020 13:53:49 +0100
+
 rust-perlmod-macro (0.1.0-1) stable; urgency=medium
 
   * initial packaging
