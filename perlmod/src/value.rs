@@ -224,6 +224,46 @@ impl Value {
             None
         }
     }
+
+    /// Check that the value is a reference and if so, assume it is a reference to a boxed rust
+    /// type and return a reference to it.
+    ///
+    /// # Safety
+    ///
+    /// This is mainly a helper to be used for blessed values. This only checks that the value
+    /// itself is any kind of reference, then assumes it contains something resembling a pointer
+    /// (see [`Value::pv_raw`]), and if so, simply casts it to `T`.
+    pub unsafe fn from_ref_box<T>(&self) -> Result<&T, Error> {
+        let ptr = self
+            .dereference()
+            .ok_or_else(|| Error::new("not a reference"))?
+            .pv_raw()?;
+        Ok(&*(ptr as *const T))
+    }
+
+    /// Check that the value is a reference and blessed into a particular package name. If so,
+    /// assume it is a referenced to a boxed rust type and return a reference to it.
+    ///
+    /// # Safety
+    ///
+    /// See [`Value::from_ref_box`]. This additionally uses [`Value::reftype`] to check that the
+    /// passed value was indeed blessed into the provided `package` name. Other than that, it
+    /// cannot verify the the contained pointer is truly a `T`.
+    pub unsafe fn from_blessed_box<'a, T>(&'a self, package: &'_ str) -> Result<&'a T, Error> {
+        let ptr = self
+            .dereference()
+            .ok_or_else(|| Error::new("not a reference"))?;
+
+        let reftype = ptr.reftype(true);
+        if reftype != package {
+            return Err(Error::new_owned(format!(
+                "value not blessed into {:?} (`ref` returned {:?})",
+                package, reftype,
+            )));
+        }
+
+        Ok(&*(ptr.pv_raw()? as *const T))
+    }
 }
 
 impl From<Scalar> for Value {

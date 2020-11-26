@@ -305,6 +305,24 @@ impl ScalarRef {
     pub fn into_value(self) -> Value {
         Value::from_scalar(self.clone_ref())
     }
+
+    /// Get the reference type for this value. (Similar to `ref` in perl).
+    ///
+    /// If `blessed` is true and the value is a blessed reference, the package name will be
+    /// returned, otherwise the scalar type (`"SCALAR"`, `"ARRAY"`, ...) will be returned.
+    pub fn reftype(&self, blessed: bool) -> &'static str {
+        let ptr = unsafe { ffi::RSPL_sv_reftype(self.sv(), if blessed { 1 } else { 0 }) };
+
+        if ptr.is_null() {
+            "<UNKNOWN>"
+        } else {
+            unsafe {
+                std::ffi::CStr::from_ptr(ptr)
+                    .to_str()
+                    .unwrap_or("<NON-UTF8-CLASSNAME>")
+            }
+        }
+    }
 }
 
 impl std::fmt::Debug for Scalar {

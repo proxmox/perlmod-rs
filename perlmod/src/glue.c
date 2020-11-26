@@ -297,6 +297,10 @@ extern void RSPL_LEAVE() {
     LEAVE;
 }
 
+extern const char* RSPL_sv_reftype(const SV *const sv, const int ob) {
+    return sv_reftype(sv, ob);
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef

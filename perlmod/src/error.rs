@@ -17,6 +17,11 @@ impl Error {
     }
 
     #[inline]
+    pub fn new_owned(s: String) -> Self {
+        Self(s)
+    }
+
+    #[inline]
     pub fn fail<T>(s: &str) -> Result<T, Self> {
         Err(Self(s.to_string()))
     }

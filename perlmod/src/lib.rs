@@ -12,6 +12,9 @@
 pub(crate) mod error;
 pub use error::Error;
 
+#[macro_use]
+mod macros;
+
 pub mod de;
 pub mod ffi;
 pub mod ser;

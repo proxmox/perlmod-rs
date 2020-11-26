@@ -105,6 +105,8 @@ extern "C" {
     pub fn RSPL_SAVETMPS();
     pub fn RSPL_FREETMPS();
     pub fn RSPL_LEAVE();
+
+    pub fn RSPL_sv_reftype(sv: *const SV, ob: libc::c_int) -> *const libc::c_char;
 }
 
 /// Argument marker for the stack.

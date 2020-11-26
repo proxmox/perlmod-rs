@@ -1,6 +1,6 @@
 #[perlmod::package(name = "RSPM::Bless", lib = "perlmod_test")]
 mod export {
-    use anyhow::{format_err, Error};
+    use anyhow::Error;
 
     use perlmod::Value;
 
@@ -21,34 +21,11 @@ mod export {
     }
 
     #[export]
-    fn something(#[raw] value: Value) {
-        let _ = value; // ignore for now
-        println!("Called something!");
+    fn something(#[raw] this: Value) -> Result<(), Error> {
+        let this = unsafe { this.from_blessed_box::<Bless>("RSPM::Bless")? };
+        println!("Called something on Bless {{ {:?} }}!", this.content);
+        Ok(())
     }
 
-    #[export(name = "DESTROY")]
-    fn destroy(#[raw] this: Value) {
-        match this
-            .dereference()
-            .ok_or_else(|| format_err!("not a reference"))
-            .and_then(|this| Ok(this.pv_raw()?))
-        {
-            Ok(ptr) => {
-                let value = unsafe { Box::<Bless>::from_raw(ptr) };
-                println!("Dropping value {:?}", value.content);
-            }
-            Err(err) => {
-                println!("DESTROY called with invalid pointer: {}", err);
-            }
-        }
-    }
+    perlmod::destructor! { Bless : "RSPM::Bless" }
 }
-
-// Example:
-// use RSPM::Bless;
-// my $foo = RSPM::Bless::new("Some Content");
-// $foo->something(); // works
-//
-// output:
-// Called something!
-// Dropping value "Some Content"
