@@ -31,7 +31,8 @@ where
 /// Deserialize a reference to a perl [`Value`](crate::Value).
 ///
 /// Note that this causes all the underlying data to be copied recursively, except for data
-/// deserialized to `&[u8]`, which will reference the original value.
+/// deserialized to `&[u8]` or `&str`, which will reference the "original" value (whatever that
+/// means for perl).
 pub fn from_ref_value<'de, T>(input: &'de Value) -> Result<T, Error>
 where
     T: Deserialize<'de>,
@@ -91,7 +92,8 @@ impl<'deserializer> Deserializer<'deserializer> {
                     use crate::scalar::Flags;
 
                     if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_string_utf8())
+                        let s = unsafe { str_set_wrong_lifetime(value.pv_string_utf8()) };
+                        visitor.visit_borrowed_str(s)
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::INTEGER) {
@@ -123,7 +125,8 @@ impl<'deserializer> Deserializer<'deserializer> {
                     } else if flags.contains(Flags::DOUBLE) {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_string_utf8())
+                        let s = unsafe { str_set_wrong_lifetime(value.pv_string_utf8()) };
+                        visitor.visit_borrowed_str(s)
                     } else {
                         visitor.visit_unit()
                     }
@@ -151,7 +154,8 @@ impl<'deserializer> Deserializer<'deserializer> {
                     } else if flags.contains(Flags::INTEGER) {
                         visitor.visit_i64(value.iv() as i64)
                     } else if flags.contains(Flags::STRING) {
-                        visitor.visit_str(value.pv_string_utf8())
+                        let s = unsafe { str_set_wrong_lifetime(value.pv_string_utf8()) };
+                        visitor.visit_borrowed_str(s)
                     } else {
                         visitor.visit_unit()
                     }
@@ -163,6 +167,14 @@ impl<'deserializer> Deserializer<'deserializer> {
             Value::Reference(_) => unreachable!(),
         }
     }
+}
+
+/// We use this only for `Value`s in our deserializer. We know this works because serde says the
+/// lifetime needs to only live as long as the serializer, and we feed our serializer with the data
+/// from a borrowed Value (keeping references to all the contained data within perl), which lives
+/// longer than the deserializer.
+unsafe fn str_set_wrong_lifetime<'a, 'b>(s: &'a str) -> &'b str {
+    std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.as_ptr(), s.len()))
 }
 
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
@@ -291,7 +303,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                         let mut chars = s.chars();
                         match chars.next() {
                             Some(ch) if chars.next().is_none() => visitor.visit_char(ch),
-                            _ => visitor.visit_str(value.pv_string_utf8()),
+                            _ => {
+                                let s = unsafe { str_set_wrong_lifetime(value.pv_string_utf8()) };
+                                visitor.visit_borrowed_str(s)
+                            }
                         }
                     } else {
                         visitor.visit_unit()
