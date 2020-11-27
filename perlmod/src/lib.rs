@@ -42,4 +42,23 @@ pub use value::Value;
 
 #[cfg(feature = "exporter")]
 #[doc(inline)]
-pub use perlmod_macro::{export, package};
+pub use perlmod_macro::package;
+
+#[cfg(feature = "exporter")]
+#[doc(inline)]
+/// Attribute to export a function so that it can be installed as an `xsub` in perl. See the
+/// [`package!`](macro@package) macro for a usage example.
+///
+/// This macro can optionally take a `raw_return` argument specifying that the return type, which
+/// must be a [`Value`], will be returned as is, and not go through serialization.
+///
+/// Additionally, function parameters can also use the following attributes:
+///
+/// * `#[raw]` with a parameter of type [`Value`]: The parameter will be passed as
+///   is and not go through deserialization.
+/// * `#[try_from_ref]`: Instead of regular deserialization, `TryFrom::try_from(&Value)` will be
+///   used.
+///
+///   Implementing the `TryFrom` trait accordingly can make using blessed references more
+///   convenient, but at the cost of hiding underlying `unsafe` code.
+pub use perlmod_macro::export;

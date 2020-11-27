@@ -13,6 +13,36 @@ pub struct XSub {
     pub tokens: TokenStream,
 }
 
+#[derive(Default)]
+struct ArgumentAttrs {
+    raw: bool,
+    try_from_ref: bool,
+}
+
+impl ArgumentAttrs {
+    fn handle_path(&mut self, path: &syn::Path) -> bool {
+        if path.is_ident("raw") {
+            self.raw = true;
+        } else if path.is_ident("try_from_ref") {
+            self.try_from_ref = true;
+        } else {
+            return false;
+        }
+
+        true
+    }
+
+    fn validate(&self, span: Span) -> Result<(), Error> {
+        if self.raw && self.try_from_ref {
+            bail!(
+                span,
+                "`raw` and `try_from_ref` attributes are mutually exclusive"
+            );
+        }
+        Ok(())
+    }
+}
+
 pub fn handle_function(
     attr: FunctionAttrs,
     mut func: syn::ItemFn,
@@ -37,19 +67,15 @@ pub fn handle_function(
     let mut deserialized_arguments = TokenStream::new();
     let mut passed_arguments = TokenStream::new();
     for arg in &mut func.sig.inputs {
-        let mut raw_arg = false;
+        let mut argument_attrs = ArgumentAttrs::default();
 
         let pat_ty = match arg {
             syn::FnArg::Receiver(_) => bail!(arg => "cannot export self-taking methods as xsubs"),
             syn::FnArg::Typed(ref mut pt) => {
-                pt.attrs.retain(|attr| {
-                    if attr.path.is_ident("raw") {
-                        raw_arg = true;
-                        false
-                    } else {
-                        true
-                    }
-                });
+                pt.attrs
+                    .retain(|attr| !argument_attrs.handle_path(&attr.path));
+                use syn::spanned::Spanned;
+                argument_attrs.validate(pt.span())?;
                 &*pt
             }
         };
@@ -86,9 +112,21 @@ pub fn handle_function(
             };
         });
 
-        if raw_arg {
+        if argument_attrs.raw {
             deserialized_arguments.extend(quote! {
                 let #deserialized_name = #extracted_name;
+            });
+        } else if argument_attrs.try_from_ref {
+            deserialized_arguments.extend(quote! {
+                let #deserialized_name: #arg_type =
+                    match ::std::convert::TryFrom::try_from(&#extracted_name) {
+                        Ok(arg) => arg,
+                        Err(err) => {
+                            return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw());
+                        }
+                    };
             });
         } else {
             deserialized_arguments.extend(quote! {

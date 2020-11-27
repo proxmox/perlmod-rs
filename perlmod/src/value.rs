@@ -232,7 +232,7 @@ impl Value {
     ///
     /// This is mainly a helper to be used for blessed values. This only checks that the value
     /// itself is any kind of reference, then assumes it contains something resembling a pointer
-    /// (see [`Value::pv_raw`]), and if so, simply casts it to `T`.
+    /// (see [`ScalarRef::pv_raw`](ScalarRef::pv_raw())), and if so, simply casts it to `T`.
     pub unsafe fn from_ref_box<T>(&self) -> Result<&T, Error> {
         let ptr = self
             .dereference()
@@ -246,9 +246,9 @@ impl Value {
     ///
     /// # Safety
     ///
-    /// See [`Value::from_ref_box`]. This additionally uses [`Value::reftype`] to check that the
-    /// passed value was indeed blessed into the provided `package` name. Other than that, it
-    /// cannot verify the the contained pointer is truly a `T`.
+    /// See [`Value::from_ref_box`]. This additionally uses [`reftype`](ScalarRef::reftype) to
+    /// check that the passed value was indeed blessed into the provided `package` name. Other than
+    /// that, it cannot verify the the contained pointer is truly a `T`.
     pub unsafe fn from_blessed_box<'a, T>(&'a self, package: &'_ str) -> Result<&'a T, Error> {
         let ptr = self
             .dereference()
