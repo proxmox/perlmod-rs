@@ -231,8 +231,8 @@ pub fn handle_function(
     };
 
     Ok(XSub {
-        rust_name: name.to_owned(),
-        perl_name: attr.perl_name.clone(),
+        rust_name: name,
+        perl_name: attr.perl_name,
         xs_name,
         tokens,
     })

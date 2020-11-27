@@ -21,7 +21,7 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
             match core::mem::replace(item, syn::Item::Verbatim(TokenStream::new())) {
                 syn::Item::Fn(mut func) => {
                     let mut attribs = None;
-                    for attr in std::mem::replace(&mut func.attrs, Default::default()) {
+                    for attr in std::mem::take(&mut func.attrs) {
                         if attr.path.is_ident("export") {
                             if attribs.is_some() {
                                 bail!(attr => "multiple 'export' attributes not allowed");
