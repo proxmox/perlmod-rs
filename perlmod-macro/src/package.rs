@@ -39,7 +39,15 @@ BEGIN {
         my ($mod_name) = {{LIB_NAME}};
 
         my @dirs = (map "-L$_/auto/$auto_path", @INC);
-        my (@mod_files) = DynaLoader::dl_findfile(@dirs, '-L./target/debug', $mod_name);
+        my (@mod_files) = DynaLoader::dl_findfile(@dirs"#;
+
+#[cfg(debug_assertions)]
+const MODULE_HEAD_DEBUG: &str = r#", '-L./target/debug'"#;
+
+#[cfg(not(debug_assertions))]
+const MODULE_HEAD_DEBUG: &str = "";
+
+const MODULE_HEAD_2: &str = r#", $mod_name);
         die "failed to locate shared library for '$pkg' (lib${mod_name}.so)\n" if !@mod_files;
 
         $LIB = DynaLoader::dl_load_file($mod_files[0])
@@ -87,7 +95,10 @@ impl Package {
     }
 
     pub fn write(&self) -> Result<(), Error> {
-        let mut source = format!("package {};\n{}", self.attrs.package_name, MODULE_HEAD);
+        let mut source = format!(
+            "package {};\n{}{}{}",
+            self.attrs.package_name, MODULE_HEAD, MODULE_HEAD_DEBUG, MODULE_HEAD_2
+        );
 
         for export in &self.exported {
             source = format!(
