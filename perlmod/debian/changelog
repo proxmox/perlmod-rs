@@ -1,3 +1,13 @@
+rust-perlmod (0.2.1-1) stable; urgency=medium
+
+  * depend on perlmod-macro 0.2.1: non-debug builds don't include
+    `-L./target/debug` in their perl modules anymore
+
+  * support deserializing borrowed strings (mostly useful for exporter
+    function parameters)
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 27 Nov 2020 14:34:44 +0100
+
 rust-perlmod (0.2.0-1) stable; urgency=medium
 
   * add convenience methods for raw pointer types
