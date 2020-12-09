@@ -1,3 +1,11 @@
+rust-perlmod (0.2.2-1) stable; urgency=medium
+
+  * `#[export]` fns now accept a `#[try_from_ref]` attribute on parameters
+
+  * improve documentation
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 09 Dec 2020 09:23:46 +0100
+
 rust-perlmod (0.2.1-1) stable; urgency=medium
 
   * depend on perlmod-macro 0.2.1: non-debug builds don't include
