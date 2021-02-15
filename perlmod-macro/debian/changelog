@@ -1,3 +1,9 @@
+rust-perlmod-macro (0.2.2-1) stable; urgency=medium
+
+  * introduce 'try_from_ref' parameter attribute
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Feb 2021 10:36:28 +0100
+
 rust-perlmod-macro (0.2.1-1) stable; urgency=medium
 
   * remove `-L./target/debug` from library paths in non-debug-builds
