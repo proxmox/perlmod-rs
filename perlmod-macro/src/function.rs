@@ -200,6 +200,7 @@ pub fn handle_function(
 
         wrapper_func = quote! {
             #[no_mangle]
+            #[doc(hidden)]
             pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
                 unsafe {
                     match #impl_xs_name(cv) {
@@ -224,6 +225,7 @@ pub fn handle_function(
 
         wrapper_func = quote! {
             #[no_mangle]
+            #[doc(hidden)]
             pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
                 unsafe {
                     match #impl_xs_name(cv) {
