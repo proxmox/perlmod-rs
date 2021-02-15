@@ -194,15 +194,25 @@ impl ScalarRef {
             } else {
                 let flags = ffi::RSPL_type_flags(self.sv());
                 if flags > 0xff {
-                    panic!("bad C type returned");
+                    // we may possibly get here via a `#[raw]` scalar reference (though not
+                    // really?)
+                    Type::Other(0)
+                    //panic!("bad C type returned");
                 } else if flags != 0 {
+                    // non-scalars will not have any flags:
                     Type::Scalar(Flags::from_bits(flags as u8).unwrap())
                 } else if ffi::RSPL_is_array(self.sv()) {
                     Type::Array
                 } else if ffi::RSPL_is_hash(self.sv()) {
                     Type::Hash
                 } else {
-                    Type::Other(ffi::RSPL_svtype(self.sv()) as u8)
+                    // but `undef` also has no flags, so:
+                    let ty = ffi::RSPL_svtype(self.sv());
+                    if ty == 0 {
+                        Type::Scalar(Flags::empty())
+                    } else {
+                        Type::Other(ty as u8)
+                    }
                 }
             }
         }
@@ -370,13 +380,16 @@ impl serde::Serialize for Scalar {
                     serializer.serialize_f64(self.nv())
                 } else if flags.contains(Flags::INTEGER) {
                     serializer.serialize_i64(self.iv() as i64)
+                } else if flags.is_empty() {
+                    serializer.serialize_none()
                 } else {
                     serializer.serialize_unit()
                 }
             }
-            Type::Other(_) => Err(S::Error::custom(
-                "cannot deserialize weird magic perl values",
-            )),
+            Type::Other(other) => Err(S::Error::custom(format!(
+                "cannot serialize weird magic perl values ({})",
+                other
+            ))),
 
             // These are impossible as they are all handled by different Value enum types:
             Type::Reference => Value::from(

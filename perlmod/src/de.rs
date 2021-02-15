@@ -64,7 +64,10 @@ impl<'deserializer> Deserializer<'deserializer> {
         if let Value::Scalar(value) = &self.input {
             match value.ty() {
                 Type::Scalar(_) => Ok(()),
-                Type::Other(_) => Error::fail("cannot deserialize weird magic perl values"),
+                Type::Other(other) => Err(Error(format!(
+                    "cannot deserialize weird magic perl values ({})",
+                    other
+                ))),
                 // These are impossible as they are all handled by different Value enum types:
                 Type::Reference => Error::fail("Value::Scalar: containing a reference"),
                 Type::Array => Error::fail("Value::Scalar: containing an array"),
@@ -98,6 +101,8 @@ impl<'deserializer> Deserializer<'deserializer> {
                         visitor.visit_f64(value.nv())
                     } else if flags.contains(Flags::INTEGER) {
                         visitor.visit_i64(value.iv() as i64)
+                    } else if flags.is_empty() {
+                        visitor.visit_none()
                     } else {
                         visitor.visit_unit()
                     }
