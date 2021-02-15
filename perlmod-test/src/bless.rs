@@ -29,5 +29,8 @@ mod export {
         Ok(())
     }
 
-    perlmod::destructor! { Bless : CLASSNAME }
+    #[export(name = "DESTROY")]
+    fn destroy(#[raw] this: Value) {
+        perlmod::destructor!(this, Bless : CLASSNAME);
+    }
 }
