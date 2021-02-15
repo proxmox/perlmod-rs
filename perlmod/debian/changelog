@@ -1,3 +1,11 @@
+rust-perlmod (0.2.3-1) stable; urgency=medium
+
+  * fix an issue with deserializing 'undef' values
+
+  * bump macro dependency
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Feb 2021 14:55:45 +0100
+
 rust-perlmod (0.2.2-1) stable; urgency=medium
 
   * `#[export]` fns now accept a `#[try_from_ref]` attribute on parameters
