@@ -1,3 +1,9 @@
+rust-perlmod (0.4.1-1) stable; urgency=medium
+
+  * fix a refcount issue with Hash::insert_by_value
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 16 Feb 2021 12:37:43 +0100
+
 rust-perlmod (0.4.0-1) stable; urgency=medium
 
   * depend on perlmod-macro 0.3.0
