@@ -43,6 +43,17 @@ impl ArgumentAttrs {
     }
 }
 
+enum Return {
+    /// Return nothing. (This is different from returning an implicit undef!)
+    None(bool),
+
+    /// Return a single element.
+    Single(bool),
+
+    /// We support tuple return types. They act like "list" return types in perl.
+    Tuple(bool, usize),
+}
+
 pub fn handle_function(
     attr: FunctionAttrs,
     mut func: syn::ItemFn,
@@ -57,10 +68,13 @@ pub fn handle_function(
     }
 
     let name = func.sig.ident.clone();
-    let xs_name = attr.xs_name.unwrap_or_else(|| match mangled_package_name {
-        None => Ident::new(&format!("xs_{}", name), name.span()),
-        Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
-    });
+    let xs_name = attr
+        .xs_name
+        .clone()
+        .unwrap_or_else(|| match mangled_package_name {
+            None => Ident::new(&format!("xs_{}", name), name.span()),
+            Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
+        });
     let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
 
     let mut extract_arguments = TokenStream::new();
@@ -150,10 +164,11 @@ pub fn handle_function(
     }
 
     let has_return_value = match &func.sig.output {
-        syn::ReturnType::Default => false,
-        syn::ReturnType::Type(_arrow, ty) => match &**ty {
-            syn::Type::Tuple(tuple) => !tuple.elems.is_empty(),
-            _ => true,
+        syn::ReturnType::Default => Return::None(false),
+        syn::ReturnType::Type(_arrow, ty) => match get_result_type(&**ty) {
+            (syn::Type::Tuple(tuple), result) if tuple.elems.is_empty() => Return::None(result),
+            (syn::Type::Tuple(tuple), result) => Return::Tuple(result, tuple.elems.len()),
+            (_, result) => Return::Single(result),
         },
     };
 
@@ -166,76 +181,18 @@ pub fn handle_function(
         Span::call_site(),
     );
 
-    let mut handle_return;
-    let return_type;
-    let wrapper_func;
-    if has_return_value {
-        return_type = quote! { *mut ::perlmod::ffi::SV };
-
-        handle_return = quote! {
-            let result = match #name(#passed_arguments) {
-                Ok(output) => output,
-                Err(err) => {
-                    return Err(::perlmod::Value::new_string(&err.to_string())
-                        .into_mortal()
-                        .into_raw());
-                }
-            };
-        };
-
-        if attr.raw_return {
-            handle_return.extend(quote! {
-                Ok(result.into_mortal().into_raw())
-            });
-        } else {
-            handle_return.extend(quote! {
-                match ::perlmod::to_value(&result) {
-                    Ok(value) => Ok(value.into_mortal().into_raw()),
-                    Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
-                        .into_mortal()
-                        .into_raw()),
-                }
-            });
-        };
-
-        wrapper_func = quote! {
-            #[no_mangle]
-            #[doc(hidden)]
-            pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
-                unsafe {
-                    match #impl_xs_name(cv) {
-                        Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
-                        Err(sv) => ::perlmod::ffi::croak(sv),
-                    }
-                }
-            }
-        };
-    } else {
-        return_type = quote! { () };
-
-        if attr.raw_return {
-            bail!(&attr.raw_return => "raw_return attribute is illegal without a return value");
-        }
-
-        handle_return = quote! {
-            #name(#passed_arguments);
-
-            Ok(())
-        };
-
-        wrapper_func = quote! {
-            #[no_mangle]
-            #[doc(hidden)]
-            pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
-                unsafe {
-                    match #impl_xs_name(cv) {
-                        Ok(()) => (),
-                        Err(sv) => ::perlmod::ffi::croak(sv),
-                    }
-                }
-            }
-        };
-    }
+    let ReturnHandling {
+        return_type,
+        handle_return,
+        wrapper_func,
+    } = handle_return_kind(
+        &attr,
+        has_return_value,
+        &name,
+        &xs_name,
+        &impl_xs_name,
+        passed_arguments,
+    )?;
 
     let tokens = quote! {
         #func
@@ -276,4 +233,254 @@ pub fn handle_function(
         xs_name,
         tokens,
     })
+}
+
+struct ReturnHandling {
+    return_type: TokenStream,
+    handle_return: TokenStream,
+    wrapper_func: TokenStream,
+}
+
+fn handle_return_kind(
+    attr: &FunctionAttrs,
+    ret: Return,
+    name: &Ident,
+    xs_name: &Ident,
+    impl_xs_name: &Ident,
+    passed_arguments: TokenStream,
+) -> Result<ReturnHandling, Error> {
+    let return_type;
+    let mut handle_return;
+    let wrapper_func;
+
+    match ret {
+        Return::None(result) => {
+            return_type = quote! { () };
+
+            if attr.raw_return {
+                bail!(&attr.raw_return => "raw_return attribute is illegal without a return value");
+            }
+
+            if result {
+                handle_return = quote! {
+                    match #name(#passed_arguments) {
+                        Ok(()) => (),
+                        Err(err) => {
+                            return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw());
+                        }
+                    }
+
+                    Ok(())
+                };
+            } else {
+                handle_return = quote! {
+                    #name(#passed_arguments);
+
+                    Ok(())
+                };
+            }
+
+            wrapper_func = quote! {
+                #[no_mangle]
+                #[doc(hidden)]
+                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                    unsafe {
+                        match #impl_xs_name(cv) {
+                            Ok(()) => (),
+                            Err(sv) => ::perlmod::ffi::croak(sv),
+                        }
+                    }
+                }
+            };
+        }
+        Return::Single(result) => {
+            return_type = quote! { *mut ::perlmod::ffi::SV };
+
+            if result {
+                handle_return = quote! {
+                    let result = match #name(#passed_arguments) {
+                        Ok(output) => output,
+                        Err(err) => {
+                            return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw());
+                        }
+                    };
+                };
+            } else {
+                handle_return = quote! {
+                    let result = #name(#passed_arguments);
+                };
+            }
+
+            if attr.raw_return {
+                handle_return.extend(quote! {
+                    Ok(result.into_mortal().into_raw())
+                });
+            } else {
+                handle_return.extend(quote! {
+                    match ::perlmod::to_value(&result) {
+                        Ok(value) => Ok(value.into_mortal().into_raw()),
+                        Err(err) => Err(::perlmod::Value::new_string(&err.to_string())
+                            .into_mortal()
+                            .into_raw()),
+                    }
+                });
+            };
+
+            wrapper_func = quote! {
+                #[no_mangle]
+                #[doc(hidden)]
+                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                    unsafe {
+                        match #impl_xs_name(cv) {
+                            Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
+                            Err(sv) => ::perlmod::ffi::croak(sv),
+                        }
+                    }
+                }
+            };
+        }
+        Return::Tuple(result, count) => {
+            return_type = {
+                let mut rt = TokenStream::new();
+                for _ in 0..count {
+                    rt.extend(quote! { *mut ::perlmod::ffi::SV, });
+                }
+                quote! { (#rt) }
+            };
+
+            if result {
+                handle_return = quote! {
+                    let result = match #name(#passed_arguments) {
+                        Ok(output) => output,
+                        Err(err) => {
+                            return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw());
+                        }
+                    };
+                };
+            } else {
+                handle_return = quote! {
+                    let result = match #name(#passed_arguments);
+                };
+            }
+
+            if attr.raw_return {
+                let mut rt = TokenStream::new();
+                for i in 0..count {
+                    let i = simple_usize(i, Span::call_site());
+                    rt.extend(quote! { (result.#i).into_mortal().into_raw(), });
+                }
+                handle_return.extend(quote! {
+                    Ok((#rt))
+                });
+            } else {
+                let mut rt = TokenStream::new();
+                for i in 0..count {
+                    let i = simple_usize(i, Span::call_site());
+                    rt.extend(quote! {
+                        match ::perlmod::to_value(&result.#i) {
+                            Ok(value) => value.into_mortal().into_raw(),
+                            Err(err) => return Err(::perlmod::Value::new_string(&err.to_string())
+                                .into_mortal()
+                                .into_raw()),
+                        },
+                    });
+                }
+                handle_return.extend(quote! {
+                    Ok((#rt))
+                });
+            }
+
+            let icount = simple_usize(count, Span::call_site());
+            let sp_offset = simple_usize(count - 1, Span::call_site());
+            let mut push = quote! {
+                ::perlmod::ffi::RSPL_stack_resize_by(#icount);
+                let mut sp = ::perlmod::ffi::RSPL_stack_sp().sub(#sp_offset);
+                *sp = sv.0;
+            };
+
+            for i in 1..count {
+                let i = simple_usize(i, Span::call_site());
+                push.extend(quote! {
+                    sp = sp.add(1);
+                    *sp = sv.#i;
+                });
+            }
+            //let mut push = TokenStream::new();
+            //for i in 0..count {
+            //    let i = simple_usize(i, Span::call_site());
+            //    push.extend(quote! {
+            //        ::perlmod::ffi::stack_push_raw(sv.#i);
+            //    });
+            //}
+
+            wrapper_func = quote! {
+                #[no_mangle]
+                #[doc(hidden)]
+                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                    unsafe {
+                        match #impl_xs_name(cv) {
+                            Ok(sv) => { #push },
+                            Err(sv) => ::perlmod::ffi::croak(sv),
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    Ok(ReturnHandling {
+        return_type,
+        handle_return,
+        wrapper_func,
+    })
+}
+
+/// Note that we cannot handle renamed imports at all here...
+pub fn is_result_type(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(p) = ty {
+        if p.qself.is_some() {
+            return None;
+        }
+        let segs = &p.path.segments;
+        let is_result = match segs.len() {
+            1 => segs.last().unwrap().ident == "Result",
+            2 => segs.first().unwrap().ident == "std" && segs.last().unwrap().ident == "Result",
+            _ => false,
+        };
+        if !is_result {
+            return None;
+        }
+
+        if let syn::PathArguments::AngleBracketed(generic) = &segs.last().unwrap().arguments {
+            // We allow aliased Result types with an implicit Error:
+            if generic.args.len() != 1 && generic.args.len() != 2 {
+                return None;
+            }
+
+            if let syn::GenericArgument::Type(ty) = generic.args.first().unwrap() {
+                return Some(ty);
+            }
+        }
+    }
+    None
+}
+
+/// If the type is a Result type, return the contained Ok type, otherwise return the type itself.
+/// Also return whether or not it actually was a Result.
+pub fn get_result_type(ty: &syn::Type) -> (&syn::Type, bool) {
+    match is_result_type(ty) {
+        Some(ty) => (ty, true),
+        None => (ty, false),
+    }
+}
+
+/// Get a non-suffixed integer from an usize.
+fn simple_usize(i: usize, span: Span) -> syn::LitInt {
+    syn::LitInt::new(&format!("{}", i), span)
 }

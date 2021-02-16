@@ -45,6 +45,11 @@ mod export {
         perlmod::destructor!(this, Bless: CLASSNAME);
     }
 
+    #[export]
+    fn multi_return(#[raw] _this: Value) -> Result<(u32, u32), std::convert::Infallible> {
+        Ok((17, 32))
+    }
+
     impl<'a> TryFrom<&'a Value> for &'a Bless {
         type Error = Error;
 
