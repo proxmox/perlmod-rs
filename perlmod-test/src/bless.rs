@@ -1,5 +1,7 @@
 #[perlmod::package(name = "RSPM::Bless", lib = "perlmod_test")]
 mod export {
+    use std::convert::TryFrom;
+
     use anyhow::Error;
 
     use perlmod::Value;
@@ -29,8 +31,25 @@ mod export {
         Ok(())
     }
 
+    #[export]
+    fn another(#[try_from_ref] this: &Bless, param: u32) -> Result<(), Error> {
+        println!(
+            "Called 'another({})' on Bless {{ {:?} }}!",
+            param, this.content
+        );
+        Ok(())
+    }
+
     #[export(name = "DESTROY")]
     fn destroy(#[raw] this: Value) {
-        perlmod::destructor!(this, Bless : CLASSNAME);
+        perlmod::destructor!(this, Bless: CLASSNAME);
+    }
+
+    impl<'a> TryFrom<&'a Value> for &'a Bless {
+        type Error = Error;
+
+        fn try_from(value: &'a Value) -> Result<&'a Bless, Error> {
+            Ok(unsafe { value.from_blessed_box(CLASSNAME)? })
+        }
     }
 }
