@@ -121,7 +121,7 @@ impl Hash {
     /// Insert a value using an existin value as a key.
     pub fn insert_by_value(&self, key: &Value, value: Value) {
         unsafe {
-            ffi::RSPL_hv_store_ent(self.hv(), key.sv(), value.sv());
+            ffi::RSPL_hv_store_ent(self.hv(), key.sv(), value.into_raw());
         }
     }
 
