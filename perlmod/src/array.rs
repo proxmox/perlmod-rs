@@ -102,6 +102,9 @@ impl Array {
 
     /// Pre-extend the array to up to the specified length..
     pub fn reserve(&self, more: usize) {
+        if more == 0 {
+            return;
+        }
         let idx = self.len() + more - 1;
         unsafe {
             ffi::RSPL_av_extend(self.av(), idx as libc::ssize_t);
