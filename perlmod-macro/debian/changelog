@@ -1,3 +1,10 @@
+rust-perlmod-macro (0.3.1-1) stable; urgency=medium
+
+  * adjust search directory to not contain the module name since there are
+    multiple modules loading the same library
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Feb 2021 14:13:14 +0100
+
 rust-perlmod-macro (0.3.0-1) stable; urgency=medium
 
   * support tuple return types as fixed length 'list' return types in perl
