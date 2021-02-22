@@ -35,10 +35,9 @@ BEGIN {
 
         my ($pkg) = @_;
 
-        my $auto_path = ($pkg =~ s!::!/!gr);
         my ($mod_name) = {{LIB_NAME}};
 
-        my @dirs = (map "-L$_/auto/$auto_path", @INC);
+        my @dirs = (map "-L$_/auto", @INC);
         my (@mod_files) = DynaLoader::dl_findfile(@dirs"#;
 
 #[cfg(debug_assertions)]
