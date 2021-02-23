@@ -193,18 +193,13 @@ impl ScalarRef {
                 Type::Reference
             } else {
                 let flags = ffi::RSPL_type_flags(self.sv());
-                if flags > 0xff {
-                    // we may possibly get here via a `#[raw]` scalar reference (though not
-                    // really?)
-                    Type::Other(0)
-                    //panic!("bad C type returned");
-                } else if flags != 0 {
-                    // non-scalars will not have any flags:
-                    Type::Scalar(Flags::from_bits(flags as u8).unwrap())
-                } else if ffi::RSPL_is_array(self.sv()) {
+                if ffi::RSPL_is_array(self.sv()) {
                     Type::Array
                 } else if ffi::RSPL_is_hash(self.sv()) {
                     Type::Hash
+                } else if flags != 0 {
+                    // non-scalars will not have any flags:
+                    Type::Scalar(Flags::from_bits_truncate(flags as u8))
                 } else {
                     // but `undef` also has no flags, so:
                     let ty = ffi::RSPL_svtype(self.sv());
