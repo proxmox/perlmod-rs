@@ -205,11 +205,28 @@ impl ScalarRef {
                     let ty = ffi::RSPL_svtype(self.sv());
                     if ty == 0 {
                         Type::Scalar(Flags::empty())
+                    } else if ty == ffi::RSPL_PVLV() {
+                        self.get_target()
+                            .map(|s| s.ty())
+                            .unwrap_or(Type::Other(99))
                     } else {
                         Type::Other(ty as u8)
                     }
                 }
             }
+        }
+    }
+
+    /// Dereference this PVLV.
+    pub fn get_target(&self) -> Option<Scalar> {
+        let ptr = unsafe {
+            ffi::RSPL_vivify_defelem(self.sv());
+            ffi::RSPL_LvTARG(self.sv())
+        };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Scalar::from_raw_ref(ptr) })
         }
     }
 

@@ -107,6 +107,10 @@ extern "C" {
     pub fn RSPL_LEAVE();
 
     pub fn RSPL_sv_reftype(sv: *const SV, ob: libc::c_int) -> *const libc::c_char;
+
+    pub fn RSPL_PVLV() -> u32;
+    pub fn RSPL_LvTARG(sv: *mut SV) -> *mut SV;
+    pub fn RSPL_vivify_defelem(sv: *mut SV);
 }
 
 /// Argument marker for the stack.

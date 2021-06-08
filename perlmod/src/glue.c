@@ -301,6 +301,19 @@ extern const char* RSPL_sv_reftype(const SV *const sv, const int ob) {
     return sv_reftype(sv, ob);
 }
 
+// We we don't need to generate the numeric value:
+extern uint32_t RSPL_PVLV() {
+    return SVt_PVLV;
+}
+
+extern SV* RSPL_LvTARG(SV *sv) {
+    return LvTARG(sv);
+}
+
+extern void RSPL_vivify_defelem(SV *sv) {
+    Perl_vivify_defelem(aTHX_ sv);
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef

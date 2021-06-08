@@ -10,4 +10,16 @@ mod export {
 
         Ok(a + b)
     }
+
+    #[export]
+    fn test(t: Option<String>) -> Result<(), Error> {
+        println!("test called with {:?}", t);
+        Ok(())
+    }
+
+    #[export]
+    fn teststr(t: Option<&str>) -> Result<(), Error> {
+        println!("teststr called with {:?}", t);
+        Ok(())
+    }
 }
