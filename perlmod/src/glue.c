@@ -139,6 +139,10 @@ extern bool RSPL_is_scalar(SV *sv) {
     return SvTYPE(sv) < SVt_PVAV;
 }
 
+extern bool RSPL_SvOK(SV *sv) {
+    return SvOK(sv);
+}
+
 extern bool RSPL_SvTRUE(SV *sv) {
     return SvTRUE(sv);
 }
@@ -310,8 +314,25 @@ extern SV* RSPL_LvTARG(SV *sv) {
     return LvTARG(sv);
 }
 
-extern void RSPL_vivify_defelem(SV *sv) {
-    Perl_vivify_defelem(aTHX_ sv);
+// We prefer this unsigned.
+//extern unsigned char RSPL_LvTYPE(SV *sv) {
+//    return (unsigned char)LvTYPE(sv);
+//}
+
+//extern void RSPL_vivify_defelem(SV *sv) {
+//    Perl_vivify_defelem(aTHX_ sv);
+//}
+
+//extern uint32_t RSPL_SvFLAGS(SV *sv) {
+//    return SvFLAGS(sv);
+//}
+
+//extern bool RSPL_SvMAGICAL(SV *sv) {
+//    return SvMAGICAL(sv);
+//}
+
+extern void RSPL_SvGETMAGIC(SV *sv) {
+    return SvGETMAGIC(sv);
 }
 
 /*

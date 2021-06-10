@@ -186,48 +186,49 @@ impl ScalarRef {
         self as *const ScalarRef as *const SV as *mut SV
     }
 
-    /// Get some information about the value's type.
-    pub fn ty(&self) -> Type {
+    fn get_type(sv: *mut SV) -> Type {
         unsafe {
-            if ffi::RSPL_is_reference(self.sv()) {
-                Type::Reference
-            } else {
-                let flags = ffi::RSPL_type_flags(self.sv());
-                if ffi::RSPL_is_array(self.sv()) {
-                    Type::Array
-                } else if ffi::RSPL_is_hash(self.sv()) {
-                    Type::Hash
-                } else if flags != 0 {
-                    // non-scalars will not have any flags:
-                    Type::Scalar(Flags::from_bits_truncate(flags as u8))
-                } else {
-                    // but `undef` also has no flags, so:
-                    let ty = ffi::RSPL_svtype(self.sv());
-                    if ty == 0 {
-                        Type::Scalar(Flags::empty())
-                    } else if ty == ffi::RSPL_PVLV() {
-                        self.get_target()
-                            .map(|s| s.ty())
-                            .unwrap_or(Type::Other(99))
-                    } else {
-                        Type::Other(ty as u8)
-                    }
-                }
+            // These are simple:
+            if ffi::RSPL_is_reference(sv) {
+                return Type::Reference;
+            } else if ffi::RSPL_is_array(sv) {
+                return Type::Array;
+            } else if ffi::RSPL_is_hash(sv) {
+                return Type::Hash;
             }
-        }
+
+            // Scalars have flags:
+            let flags = ffi::RSPL_type_flags(sv);
+            if flags != 0 {
+                return Type::Scalar(Flags::from_bits_truncate(flags as u8));
+            }
+
+            // Except for undef, but undef is difficult to catch:
+            let ty = ffi::RSPL_svtype(sv);
+            if ty == 0 {
+                // Looks like undef
+                return Type::Scalar(Flags::empty());
+            } else if ty == ffi::RSPL_PVLV() {
+                // We don't support all kinds of magic, but some lvalues are simple:
+                // Try to GET the value and then check for definedness.
+                ffi::RSPL_SvGETMAGIC(sv);
+                if !ffi::RSPL_SvOK(sv) {
+                    // This happens when the value points to a non-existing hash element we could
+                    // auto-vivify, but we won't:
+                    return Type::Scalar(Flags::empty());
+                }
+
+                // Otherwise we just try to "recurse", which will work for substrings.
+                return Self::get_type(ffi::RSPL_LvTARG(sv));
+            } else {
+                return Type::Other(ty as u8);
+            }
+        };
     }
 
-    /// Dereference this PVLV.
-    pub fn get_target(&self) -> Option<Scalar> {
-        let ptr = unsafe {
-            ffi::RSPL_vivify_defelem(self.sv());
-            ffi::RSPL_LvTARG(self.sv())
-        };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(unsafe { Scalar::from_raw_ref(ptr) })
-        }
+    /// Get some information about the value's type.
+    pub fn ty(&self) -> Type {
+        Self::get_type(self.sv())
     }
 
     /// Dereference this reference.
@@ -400,7 +401,7 @@ impl serde::Serialize for Scalar {
             }
             Type::Other(other) => Err(S::Error::custom(format!(
                 "cannot serialize weird magic perl values ({})",
-                other
+                other,
             ))),
 
             // These are impossible as they are all handled by different Value enum types:

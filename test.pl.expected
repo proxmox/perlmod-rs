@@ -1,0 +1,11 @@
+Called something on Bless { "Hello" }!
+Called 'another(54)' on Bless { "Hello" }!
+test called with Some("lo ")
+teststr called with Some("lo ")
+test called with None
+teststr called with None
+Got (17, 32, )
+Got: 2 values: 17 32
+These should be called with a valid substr:
+Parameter exists: NO
+Was auto-vivified: NO

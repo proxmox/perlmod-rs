@@ -68,6 +68,7 @@ extern "C" {
     pub fn RSPL_is_hash(sv: *mut SV) -> bool;
     pub fn RSPL_type_flags(sv: *mut SV) -> u32;
     pub fn RSPL_svtype(sv: *mut SV) -> u32;
+    pub fn RSPL_SvOK(sv: *mut SV) -> bool;
     pub fn RSPL_SvTRUE(sv: *mut SV) -> bool;
 
     pub fn RSPL_newAV() -> *mut AV;
@@ -110,7 +111,11 @@ extern "C" {
 
     pub fn RSPL_PVLV() -> u32;
     pub fn RSPL_LvTARG(sv: *mut SV) -> *mut SV;
+    //pub fn RSPL_LvTYPE(sv: *mut SV) -> u8;
     pub fn RSPL_vivify_defelem(sv: *mut SV);
+
+    pub fn RSPL_SvFLAGS(sv: *mut SV) -> u32;
+    pub fn RSPL_SvGETMAGIC(sv: *mut SV) -> bool;
 }
 
 /// Argument marker for the stack.
