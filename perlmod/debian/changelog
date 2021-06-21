@@ -1,3 +1,9 @@
+rust-perlmod (0.5.0-1) stable; urgency=medium
+
+  * add support for deserializing PVLV magic (lvalues)
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Jun 2021 12:38:48 +0200
+
 rust-perlmod (0.4.3-1) stable; urgency=medium
 
   * fix an issue with serializing empty arrays
