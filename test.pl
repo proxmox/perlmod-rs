@@ -24,3 +24,5 @@ print "Parameter exists: " . (exists($param->{x}) ? "YES" : "NO") . "\n";
 RSPM::Foo142::test($param->{x});
 print "Was auto-vivified: " . (exists($param->{x}) ? "YES" : "NO") . "\n";
 RSPM::Foo142::teststr($param->{x});
+
+RSPM::Foo142::test_serde("Hello");

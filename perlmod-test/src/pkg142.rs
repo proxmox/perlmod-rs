@@ -1,3 +1,8 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Blubber(String);
+
 #[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test")]
 mod export {
     use anyhow::{bail, Error};
@@ -20,6 +25,12 @@ mod export {
     #[export]
     fn teststr(t: Option<&str>) -> Result<(), Error> {
         println!("teststr called with {:?}", t);
+        Ok(())
+    }
+
+    #[export]
+    fn test_serde(value: super::Blubber) -> Result<(), Error> {
+        println!("got {:?}", value);
         Ok(())
     }
 }

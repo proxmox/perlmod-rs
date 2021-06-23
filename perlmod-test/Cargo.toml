@@ -10,3 +10,4 @@ crate-type = [ "cdylib" ]
 [dependencies]
 anyhow = "1.0"
 perlmod = { path = "../perlmod", features = [ "exporter" ] }
+serde = { version = "1.0", features = [ "derive" ] }

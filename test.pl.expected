@@ -4,6 +4,7 @@ test called with Some("lo ")
 teststr called with Some("lo ")
 test called with None
 teststr called with None
+got Blubber("Hello")
 Got (17, 32, )
 Got: 2 values: 17 32
 These should be called with a valid substr:
