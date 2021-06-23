@@ -1,3 +1,9 @@
+rust-perlmod (0.5.1-1) stable; urgency=medium
+
+  * fix newtype struct deserialization
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 23 Jun 2021 10:58:40 +0200
+
 rust-perlmod (0.5.0-1) stable; urgency=medium
 
   * add support for deserializing PVLV magic (lvalues)
