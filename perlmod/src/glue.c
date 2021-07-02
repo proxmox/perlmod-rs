@@ -127,6 +127,10 @@ extern SV* RSPL_newSVpvn(const char *v, size_t len) {
     return newSVpvn(v, len);
 }
 
+extern SV* RSPL_newSVpvn_utf8(const char *v, size_t len) {
+    return newSVpvn_utf8(v, len, 1);
+}
+
 extern SV* RSPL_SvREFCNT_inc(SV *sv) {
     return SvREFCNT_inc(sv);
 }

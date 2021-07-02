@@ -60,6 +60,7 @@ extern "C" {
     pub fn RSPL_newSVuv(v: usize) -> *mut SV;
     pub fn RSPL_newSVnv(v: f64) -> *mut SV;
     pub fn RSPL_newSVpvn(v: *const libc::c_char, len: libc::size_t) -> *mut SV;
+    pub fn RSPL_newSVpvn_utf8(v: *const libc::c_char, len: libc::size_t) -> *mut SV;
     pub fn RSPL_SvREFCNT_inc(sv: *mut SV) -> *mut SV;
     pub fn RSPL_SvREFCNT_dec(sv: *mut SV);
     pub fn RSPL_is_reference(sv: *mut SV) -> bool;
