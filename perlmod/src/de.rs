@@ -506,7 +506,7 @@ impl<'a> HashAccess<'a> {
     pub fn new(value: &'a hash::Hash) -> Self {
         drop(value.shared_iter()); // reset iterator
         Self {
-            hash: &value,
+            hash: value,
             entry: std::ptr::null_mut(),
             finished: false,
             at_value: false,

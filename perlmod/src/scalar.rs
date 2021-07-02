@@ -216,7 +216,7 @@ impl ScalarRef {
             let ty = ffi::RSPL_svtype(sv);
             if ty == 0 {
                 // Looks like undef
-                return Type::Scalar(Flags::empty());
+                Type::Scalar(Flags::empty())
             } else if ty == ffi::RSPL_PVLV() {
                 // We don't support all kinds of magic, but some lvalues are simple:
                 // Try to GET the value and then check for definedness.
@@ -228,11 +228,11 @@ impl ScalarRef {
                 }
 
                 // Otherwise we just try to "recurse", which will work for substrings.
-                return Self::get_type(ffi::RSPL_LvTARG(sv));
+                Self::get_type(ffi::RSPL_LvTARG(sv))
             } else {
-                return Type::Other(ty as u8);
+                Type::Other(ty as u8)
             }
-        };
+        }
     }
 
     /// Get some information about the value's type.
@@ -359,7 +359,7 @@ impl ScalarRef {
 
 impl std::fmt::Debug for Scalar {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let this: &ScalarRef = &self;
+        let this: &ScalarRef = self;
         std::fmt::Debug::fmt(this, f)
     }
 }
