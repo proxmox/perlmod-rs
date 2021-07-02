@@ -157,7 +157,7 @@ static mut LIB_NAME: Option<String> = None;
 pub fn get_default_lib_name(why: Span) -> Result<&'static str, syn::Error> {
     unsafe {
         if let Some(name) = &LIB_NAME {
-            return Ok(&name);
+            return Ok(name);
         }
     }
 
@@ -186,6 +186,6 @@ pub fn get_default_lib_name(why: Span) -> Result<&'static str, syn::Error> {
 
     unsafe {
         LIB_NAME = Some(name.replace('-', "_"));
-        return Ok(&LIB_NAME.as_ref().unwrap());
+        return Ok(LIB_NAME.as_ref().unwrap());
     }
 }

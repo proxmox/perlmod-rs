@@ -370,6 +370,7 @@ fn handle_return_kind(
                 };
             }
 
+            #[allow(clippy::branches_sharing_code)] // ARE YOU SERIOUS?
             if attr.raw_return {
                 let mut rt = TokenStream::new();
                 for i in 0..count {
