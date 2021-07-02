@@ -370,18 +370,13 @@ fn handle_return_kind(
                 };
             }
 
-            #[allow(clippy::branches_sharing_code)] // ARE YOU SERIOUS?
+            let mut rt = TokenStream::new();
             if attr.raw_return {
-                let mut rt = TokenStream::new();
                 for i in 0..count {
                     let i = simple_usize(i, Span::call_site());
                     rt.extend(quote! { (result.#i).into_mortal().into_raw(), });
                 }
-                handle_return.extend(quote! {
-                    Ok((#rt))
-                });
             } else {
-                let mut rt = TokenStream::new();
                 for i in 0..count {
                     let i = simple_usize(i, Span::call_site());
                     rt.extend(quote! {
@@ -394,10 +389,11 @@ fn handle_return_kind(
                         },
                     });
                 }
-                handle_return.extend(quote! {
-                    Ok((#rt))
-                });
             }
+            handle_return.extend(quote! {
+                Ok((#rt))
+            });
+            drop(rt);
 
             let icount = simple_usize(count, Span::call_site());
             let sp_offset = simple_usize(count - 1, Span::call_site());
