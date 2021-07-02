@@ -1,3 +1,11 @@
+rust-perlmod (0.5.2-2) stable; urgency=medium
+
+  * bump perlmod-macro dependency
+
+  * mark strings with codepoints >=128 as utf8 when serializing to perl
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Jul 2021 11:40:24 +0200
+
 rust-perlmod (0.5.1-1) stable; urgency=medium
 
   * fix newtype struct deserialization
