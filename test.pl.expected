@@ -4,9 +4,18 @@ test called with Some("lo ")
 teststr called with Some("lo ")
 test called with None
 teststr called with None
-got Blubber("Hello")
+got Blubber("Can I have some coffee please?\n")
+got Blubber("Can I have some coffee please?\n")
+got Blubber("Can I have some ☕ please?\n")
+got Blubber("Can I have some ☕ please?\n")
 Got (17, 32, )
 Got: 2 values: 17 32
 These should be called with a valid substr:
 Parameter exists: NO
 Was auto-vivified: NO
+Can I have some coffee please?
+Can I have some coffee please?
+Can I have some coffee please?
+Can I have some ☕ please?
+Can I have some ☕ please?
+Can I have some ☕ please?

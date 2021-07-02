@@ -25,4 +25,18 @@ RSPM::Foo142::test($param->{x});
 print "Was auto-vivified: " . (exists($param->{x}) ? "YES" : "NO") . "\n";
 RSPM::Foo142::teststr($param->{x});
 
-RSPM::Foo142::test_serde("Hello");
+my $a = "Can I have some coffee please?\n";
+print $a;
+my $b = RSPM::Foo142::test_serde($a);
+print $b;
+my $c = RSPM::Foo142::test_serde($b);
+print $c;
+
+use utf8;
+binmode STDOUT, ':utf8';
+my $a = "Can I have some ☕ please?\n";
+print $a;
+my $b = RSPM::Foo142::test_serde($a);
+print $b;
+my $c = RSPM::Foo142::test_serde($b);
+print $c;

@@ -29,8 +29,8 @@ mod export {
     }
 
     #[export]
-    fn test_serde(value: super::Blubber) -> Result<(), Error> {
+    fn test_serde(value: super::Blubber) -> Result<String, Error> {
         println!("got {:?}", value);
-        Ok(())
+        Ok(value.0)
     }
 }
