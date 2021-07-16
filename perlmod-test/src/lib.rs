@@ -9,3 +9,6 @@ mod pkginline;
 
 /// A test for blessed values.
 mod bless;
+
+/// Tests for `Option`.
+mod option;

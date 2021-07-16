@@ -5,6 +5,7 @@ use v5.28.0;
 use lib '.';
 use RSPM::Bless;
 use RSPM::Foo142;
+use RSPM::Option;
 
 my $v = RSPM::Bless->new("Hello");
 $v->something();
@@ -40,3 +41,28 @@ my $b = RSPM::Foo142::test_serde($a);
 print $b;
 my $c = RSPM::Foo142::test_serde($b);
 print $c;
+
+sub to_string {
+    my ($param) = @_;
+
+    my $state = $param->{tristate};
+    $state = int($state) if defined($state);
+
+    my $a;
+    if (defined($state)) {
+	$a = $state ? "Some(true)" : "Some(false)";
+    } else {
+	$a = "None";
+    }
+
+    my $b = RSPM::Option::to_string($state);
+    my $c = RSPM::Option::struct_to_string({ 'tristate' => $state });
+
+    print "$a\n";
+    print "$b\n";
+    print "$c\n";
+}
+
+to_string({ 'tristate' => '0' });
+to_string({ 'tristate' => '1' });
+to_string({ 'tristate' => undef });
