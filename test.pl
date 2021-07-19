@@ -7,6 +7,8 @@ use RSPM::Bless;
 use RSPM::Foo142;
 use RSPM::Option;
 
+STDOUT->autoflush;
+
 my $v = RSPM::Bless->new("Hello");
 $v->something();
 my ($a, $b, $c) = $v->multi_return();

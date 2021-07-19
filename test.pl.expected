@@ -1,23 +1,23 @@
 Called something on Bless { "Hello" }!
-Called 'another(54)' on Bless { "Hello" }!
-test called with Some("lo ")
-teststr called with Some("lo ")
-test called with None
-teststr called with None
-got Blubber("Can I have some coffee please?\n")
-got Blubber("Can I have some coffee please?\n")
-got Blubber("Can I have some ☕ please?\n")
-got Blubber("Can I have some ☕ please?\n")
 Got (17, 32, )
 Got: 2 values: 17 32
+Called 'another(54)' on Bless { "Hello" }!
 These should be called with a valid substr:
+test called with Some("lo ")
+teststr called with Some("lo ")
 Parameter exists: NO
+test called with None
 Was auto-vivified: NO
+teststr called with None
 Can I have some coffee please?
+got Blubber("Can I have some coffee please?\n")
 Can I have some coffee please?
+got Blubber("Can I have some coffee please?\n")
 Can I have some coffee please?
 Can I have some ☕ please?
+got Blubber("Can I have some ☕ please?\n")
 Can I have some ☕ please?
+got Blubber("Can I have some ☕ please?\n")
 Can I have some ☕ please?
 Some(false)
 Some(false)
