@@ -70,7 +70,10 @@ extern "C" {
     pub fn RSPL_type_flags(sv: *mut SV) -> u32;
     pub fn RSPL_svtype(sv: *mut SV) -> u32;
     pub fn RSPL_SvOK(sv: *mut SV) -> bool;
+    pub fn RSPL_SvANY(sv: *mut SV) -> bool;
     pub fn RSPL_SvTRUE(sv: *mut SV) -> bool;
+
+    pub fn RSPL_is_defined(sv: *mut SV) -> bool;
 
     pub fn RSPL_newAV() -> *mut AV;
     pub fn RSPL_av_extend(av: *mut AV, len: libc::ssize_t);
@@ -115,7 +118,7 @@ extern "C" {
     //pub fn RSPL_LvTYPE(sv: *mut SV) -> u8;
     pub fn RSPL_vivify_defelem(sv: *mut SV);
 
-    pub fn RSPL_SvFLAGS(sv: *mut SV) -> u32;
+    //pub fn RSPL_SvFLAGS(sv: *mut SV) -> u32;
     pub fn RSPL_SvGETMAGIC(sv: *mut SV) -> bool;
 }
 

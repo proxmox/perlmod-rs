@@ -147,6 +147,10 @@ extern bool RSPL_SvOK(SV *sv) {
     return SvOK(sv);
 }
 
+extern bool RSPL_SvANY(SV *sv) {
+    return SvANY(sv);
+}
+
 extern bool RSPL_SvTRUE(SV *sv) {
     return SvTRUE(sv);
 }
@@ -165,6 +169,30 @@ static const uint32_t type_flags[16] = {
     [SVt_PVNV] = TYPE_FLAG_STRING | TYPE_FLAG_INT | TYPE_FLAG_DOUBLE,
     [SVt_PVMG] = ~0,
 };
+
+extern bool RSPL_is_defined(SV *sv) {
+    // see OP_DEFINED in pp_hot.c in perl code
+    if (!sv || !SvANY(sv))
+        return false;
+
+    switch (SvTYPE(sv)) {
+    case SVt_PVAV:
+        return (
+                AvMAX(sv) >= 0
+                || SvGMAGICAL(sv)
+                || (SvRMAGICAL(sv) && mg_find(sv, PERL_MAGIC_tied)));
+    case SVt_PVHV:
+        return (HvARRAY(sv)
+                || SvGMAGICAL(sv)
+                || (SvRMAGICAL(sv) && mg_find(sv, PERL_MAGIC_tied)));
+    case SVt_PVCV:
+        // we don't support subs at all
+        return false;
+    default:
+        SvGETMAGIC(sv);
+        return SvOK(sv);
+    }
+}
 
 extern uint32_t RSPL_svtype(SV *sv) {
     return SvTYPE(sv);

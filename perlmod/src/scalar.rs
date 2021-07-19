@@ -197,6 +197,10 @@ impl ScalarRef {
 
     fn get_type(sv: *mut SV) -> Type {
         unsafe {
+            if !ffi::RSPL_is_defined(sv) {
+                return Type::Scalar(Flags::empty());
+            }
+
             // These are simple:
             if ffi::RSPL_is_reference(sv) {
                 return Type::Reference;
@@ -212,7 +216,6 @@ impl ScalarRef {
                 return Type::Scalar(Flags::from_bits_truncate(flags as u8));
             }
 
-            // Except for undef, but undef is difficult to catch:
             let ty = ffi::RSPL_svtype(sv);
             if ty == 0 {
                 // Looks like undef
