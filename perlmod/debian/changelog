@@ -1,3 +1,9 @@
+rust-perlmod (0.5.3-3) stable; urgency=medium
+
+  * improve deserialization of 'undef'
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 19 Jul 2021 10:32:31 +0200
+
 rust-perlmod (0.5.2-2) stable; urgency=medium
 
   * bump perlmod-macro dependency
