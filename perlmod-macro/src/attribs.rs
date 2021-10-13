@@ -26,11 +26,11 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                     ..
                 })) => {
                     if path.is_ident("name") {
-                        package_name = Some(litstr.value());
+                        package_name = Some(expand_env_vars(&litstr)?);
                     } else if path.is_ident("file") {
-                        file_name = Some(litstr.value());
+                        file_name = Some(expand_env_vars(&litstr)?);
                     } else if path.is_ident("lib") {
-                        lib_name = Some(litstr.value());
+                        lib_name = Some(expand_env_vars(&litstr)?);
                     } else {
                         bail!(path => "unknown argument");
                     }
@@ -48,6 +48,39 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
             lib_name,
         })
     }
+}
+
+fn expand_env_vars(lit_str: &syn::LitStr) -> Result<String, syn::Error> {
+    let input = lit_str.value();
+    let mut expanded = String::with_capacity(input.len());
+
+    let mut input = input.as_str();
+    loop {
+        let dollar = match input.find("${") {
+            Some(d) => d,
+            None => {
+                expanded.push_str(input);
+                break;
+            }
+        };
+
+        expanded.push_str(&input[..dollar]);
+        input = &input[(dollar + 2)..];
+
+        let end = input.find('}').ok_or_else(
+            || format_err!(lit_str => "missing end of environment variable expansion"),
+        )?;
+
+        let var_name = &input[..end];
+        input = &input[(end + 1)..];
+
+        let var = std::env::var(var_name).map_err(|err| {
+            format_err!(lit_str => "failed to expand environment variable {:?}: {}", var_name, err)
+        })?;
+        expanded.push_str(&var);
+    }
+
+    Ok(expanded)
 }
 
 impl ModuleAttrs {

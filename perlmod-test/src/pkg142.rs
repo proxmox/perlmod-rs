@@ -34,3 +34,14 @@ mod export {
         Ok(value.0)
     }
 }
+
+#[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]
+mod expanded_export {
+    use anyhow::Error;
+
+    #[export]
+    fn test_lib_env_vars(value: &str) -> Result<(), Error> {
+        println!("foo: {:?}", value);
+        Ok(())
+    }
+}

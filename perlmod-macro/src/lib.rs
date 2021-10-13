@@ -51,6 +51,8 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
 /// ```
 /// // 'lib' and 'file' are optional. We use 'file' here to prevent doc tests from writing out the
 /// // file.
+/// //
+/// // 'name', 'lib' and 'file' expand environment variables such as `${CARGO_PKG_NAME}`
 /// #[perlmod::package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
 /// mod an_unused_name {
 ///     use anyhow::{bail, Error};
