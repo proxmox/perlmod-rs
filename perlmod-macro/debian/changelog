@@ -1,3 +1,15 @@
+rust-perlmod-macro (0.4.0-1) stable; urgency=medium
+
+  * drop toml dependency
+
+  * use CARGO_PKG_NAME environment variable instead of parsing Cargo.toml for
+    it
+
+  * expand environment variables in lib, name and file attribute of package
+    attributes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Oct 2021 11:29:59 +0200
+
 rust-perlmod-macro (0.3.2-1) stable; urgency=medium
 
   * add newlines to errors passed to croak_sv

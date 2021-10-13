@@ -1,6 +1,6 @@
 [package]
 name = "perlmod-macro"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
 license = "Apache-2.0 OR MIT"

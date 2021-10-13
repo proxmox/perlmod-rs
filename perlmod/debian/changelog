@@ -1,3 +1,19 @@
+rust-perlmod (0.6.0-1) stable; urgency=medium
+
+  * update to perlmod-macro 0.4.0
+
+  * impl Clone for Value, Scalar, Hash, Array
+
+  * add RawValue as a raw value *de*serialization helper
+
+  * perlmod::to_value now will NOT copy perl values anymore, instead, they
+    will be serialized as references now
+
+  * perlmod::from_value will now cause perl values to NOT be copied anymore
+    either, instead, they will be references
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Oct 2021 11:30:30 +0200
+
 rust-perlmod (0.5.3-3) stable; urgency=medium
 
   * improve deserialization of 'undef'
