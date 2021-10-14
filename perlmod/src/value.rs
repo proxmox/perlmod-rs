@@ -12,6 +12,7 @@ use crate::{Array, Hash, Scalar};
 
 /// A higher level value. This is basically an [`SV`] already cast to [`AV`](crate::ffi::AV) or
 /// [`HV`](crate::ffi::HV) for arrays and hashes.
+#[derive(Clone)]
 pub enum Value {
     Scalar(Scalar),
     Reference(Scalar),

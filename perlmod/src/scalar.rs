@@ -117,6 +117,13 @@ impl Scalar {
     }
 }
 
+impl Clone for Scalar {
+    #[inline]
+    fn clone(&self) -> Self {
+        unsafe { Self::from_raw_ref(self.sv()) }
+    }
+}
+
 impl Drop for Scalar {
     fn drop(&mut self) {
         unsafe {

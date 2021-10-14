@@ -10,6 +10,7 @@ use crate::Value;
 /// An owned reference to a perl hash value (HV).
 ///
 /// This keeps a reference to a value which lives in the perl interpreter.
+#[derive(Clone)]
 #[repr(transparent)]
 pub struct Hash(Scalar);
 
