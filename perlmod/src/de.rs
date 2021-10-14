@@ -2,9 +2,13 @@
 
 use std::marker::PhantomData;
 
-use serde::de::{self, Deserialize, DeserializeSeed, MapAccess, SeqAccess, Visitor};
+use serde::de::value::BorrowedStrDeserializer;
+use serde::de::{
+    self, Deserialize, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor,
+};
 
 use crate::error::Error;
+use crate::raw_value;
 use crate::scalar::Type;
 use crate::Value;
 use crate::{array, ffi, hash};
@@ -18,11 +22,13 @@ struct Deserializer<'de> {
 
 /// Deserialize a perl [`Value`](crate::Value).
 ///
-/// Note that this causes all the underlying data to be copied recursively.
+/// Note that this causes all the underlying data to be copied recursively, except for other
+/// [`Value`](crate::Value) variables, which will be references.
 pub fn from_value<T>(input: Value) -> Result<T, Error>
 where
     T: serde::de::DeserializeOwned,
 {
+    let _guard = raw_value::guarded(true);
     let mut deserializer = Deserializer::<'static>::from_value(input);
     let out = T::deserialize(&mut deserializer)?;
     Ok(out)
@@ -30,13 +36,14 @@ where
 
 /// Deserialize a reference to a perl [`Value`](crate::Value).
 ///
-/// Note that this causes all the underlying data to be copied recursively, except for data
-/// deserialized to `&[u8]` or `&str`, which will reference the "original" value (whatever that
-/// means for perl).
+/// Note that this causes all the underlying data to be copied recursively, except for other
+/// [`Value`](crate::Value) variables or `&[u8]` or `&str` types, which will reference the
+/// "original" value (whatever that means for perl).
 pub fn from_ref_value<'de, T>(input: &'de Value) -> Result<T, Error>
 where
     T: Deserialize<'de>,
 {
+    let _guard = raw_value::guarded(true);
     let mut deserializer = Deserializer::<'de>::from_value(input.clone_ref());
     let out = T::deserialize(&mut deserializer)?;
     Ok(out)
@@ -457,14 +464,24 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_struct<V>(
         self,
-        _name: &'static str,
-        _fields: &'static [&'static str],
+        name: &'static str,
+        fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Error>
     where
         V: Visitor<'de>,
     {
-        self.deserialize_map(visitor)
+        if name == raw_value::NAME && fields == [raw_value::VALUE] {
+            if !raw_value::is_enabled() {
+                return Error::fail("attempted raw value deserialization while disabled");
+            }
+
+            visitor.visit_map(RawDeserializer {
+                value: Some(&self.input),
+            })
+        } else {
+            self.deserialize_map(visitor)
+        }
     }
 
     fn deserialize_enum<V>(
@@ -586,5 +603,36 @@ impl<'de, 'a> SeqAccess<'de> for ArrayAccess<'a> {
             .next()
             .map(move |value| seed.deserialize(&mut Deserializer::from_value(value)))
             .transpose()
+    }
+}
+
+struct RawDeserializer<'a> {
+    value: Option<&'a Value>,
+}
+
+impl<'de, 'a> MapAccess<'de> for RawDeserializer<'a> {
+    type Error = Error;
+
+    fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>
+    where
+        K: DeserializeSeed<'de>,
+    {
+        if self.value.is_some() {
+            seed.deserialize(BorrowedStrDeserializer::new(raw_value::VALUE))
+                .map(Some)
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Error>
+    where
+        V: DeserializeSeed<'de>,
+    {
+        if let Some(value) = self.value.take() {
+            seed.deserialize((value.sv() as usize).into_deserializer())
+        } else {
+            Error::fail("map access value requested after end")
+        }
     }
 }

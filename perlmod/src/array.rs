@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 
 use crate::error::CastError;
 use crate::ffi::{self, AV, SV};
+use crate::raw_value;
 use crate::scalar::{Scalar, ScalarRef};
 use crate::Value;
 
@@ -225,6 +226,11 @@ impl serde::Serialize for Array {
         S: serde::Serializer,
     {
         use serde::ser::SerializeSeq;
+
+        if raw_value::is_enabled() {
+            return raw_value::serialize_raw(&self, serializer);
+        }
+
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
         for i in self {
             seq.serialize_element(&i)?;

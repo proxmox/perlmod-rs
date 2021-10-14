@@ -4,7 +4,7 @@ use serde::{ser, Serialize};
 
 use crate::error::Error;
 use crate::Value;
-use crate::{array, hash};
+use crate::{array, hash, raw_value};
 
 /// Perl [`Value`](crate::Value) serializer.
 struct Serializer;
@@ -17,12 +17,18 @@ pub fn to_value<T>(value: &T) -> Result<Value, Error>
 where
     T: Serialize,
 {
+    let _guard = raw_value::guarded(true);
     value.serialize(&mut Serializer)
+}
+
+enum SerHashMode {
+    Hash(hash::Hash),
+    Raw(Option<Value>),
 }
 
 /// Serde map & struct serialization helper.
 struct SerHash {
-    hash: hash::Hash,
+    mode: SerHashMode,
     key: Option<Value>,
 }
 
@@ -188,10 +194,14 @@ impl<'a> ser::Serializer for &'a mut Serializer {
 
     fn serialize_struct(
         self,
-        _name: &'static str,
+        name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeStruct, Error> {
-        self.serialize_map(Some(len))
+        if raw_value::is_enabled() && name == raw_value::NAME && len == 1 {
+            Ok(SerHash::raw())
+        } else {
+            Ok(SerHash::new())
+        }
     }
 
     fn serialize_struct_variant(
@@ -269,8 +279,22 @@ impl ser::SerializeTupleStruct for SerArray {
 impl SerHash {
     fn new() -> Self {
         Self {
-            hash: hash::Hash::new(),
+            mode: SerHashMode::Hash(hash::Hash::new()),
             key: None,
+        }
+    }
+
+    fn raw() -> Self {
+        Self {
+            mode: SerHashMode::Raw(None),
+            key: None,
+        }
+    }
+
+    fn as_mut_hash(&mut self) -> Option<&mut hash::Hash> {
+        match &mut self.mode {
+            SerHashMode::Hash(hash) => Some(hash),
+            _ => None,
         }
     }
 }
@@ -299,7 +323,9 @@ impl ser::SerializeMap for SerHash {
             None => Error::fail("serialize_value called without key"),
             Some(key) => {
                 let value = value.serialize(&mut Serializer)?;
-                self.hash.insert_by_value(&key, value);
+                self.as_mut_hash()
+                    .ok_or_else(|| Error::new("serialize_value called in raw perl value context"))?
+                    .insert_by_value(&key, value);
                 Ok(())
             }
         }
@@ -309,8 +335,163 @@ impl ser::SerializeMap for SerHash {
         if self.key.is_some() {
             Error::fail("missing value for key")
         } else {
-            Ok(Value::new_ref(&self.hash))
+            match self.mode {
+                SerHashMode::Hash(hash) => Ok(Value::new_ref(&hash)),
+                _ => Error::fail("raw value serialized as a map instead of a struct"),
+            }
         }
+    }
+}
+
+struct RawValueSerializer;
+
+macro_rules! fail_impossible {
+    () => {
+        Err(Error::new("bad type serializing raw value"))
+    };
+}
+macro_rules! impossible {
+    ($( ($name:ident $ty:ident) )+) => {
+        $(
+            fn $name(self, _: $ty) -> Result<Value, Error> {
+                fail_impossible!()
+            }
+        )+
+    };
+}
+
+impl ser::Serializer for RawValueSerializer {
+    type Ok = Value;
+    type Error = Error;
+
+    type SerializeSeq = ser::Impossible<Value, Error>;
+    type SerializeTuple = ser::Impossible<Value, Error>;
+    type SerializeTupleStruct = ser::Impossible<Value, Error>;
+    type SerializeTupleVariant = ser::Impossible<Value, Error>;
+    type SerializeMap = ser::Impossible<Value, Error>;
+    type SerializeStruct = ser::Impossible<Value, Error>;
+    type SerializeStructVariant = ser::Impossible<Value, Error>;
+
+    impossible! {
+        (serialize_bool bool)
+        (serialize_i8  i8)
+        (serialize_i16 i16)
+        (serialize_i32 i32)
+        (serialize_i64 i64)
+        (serialize_u8  u8)
+        (serialize_u16 u16)
+        (serialize_u32 u32)
+        (serialize_f32 f32)
+        (serialize_f64 f64)
+        (serialize_char char)
+    }
+
+    fn serialize_u64(self, v: u64) -> Result<Value, Error> {
+        Ok(unsafe { Value::from_raw_ref(v as *mut crate::ffi::SV) })
+    }
+
+    fn serialize_str(self, _: &str) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_bytes(self, _: &[u8]) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_none(self) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_some<T>(self, _value: &T) -> Result<Value, Error>
+    where
+        T: ?Sized + Serialize,
+    {
+        fail_impossible!()
+    }
+
+    fn serialize_unit(self) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_unit_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+    ) -> Result<Value, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_newtype_struct<T>(self, _name: &'static str, _value: &T) -> Result<Value, Error>
+    where
+        T: ?Sized + Serialize,
+    {
+        fail_impossible!()
+    }
+
+    fn serialize_newtype_variant<T>(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _value: &T,
+    ) -> Result<Value, Error>
+    where
+        T: ?Sized + Serialize,
+    {
+        fail_impossible!()
+    }
+
+    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_tuple_struct(
+        self,
+        _name: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeTupleStruct, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_tuple_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeTupleVariant, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_struct(
+        self,
+        _name: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeStruct, Error> {
+        fail_impossible!()
+    }
+
+    fn serialize_struct_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeStructVariant, Error> {
+        fail_impossible!()
     }
 }
 
@@ -322,12 +503,24 @@ impl ser::SerializeStruct for SerHash {
     where
         T: ?Sized + Serialize,
     {
-        self.hash.insert(field, value.serialize(&mut Serializer)?);
+        match &mut self.mode {
+            SerHashMode::Hash(hash) => hash.insert(field, value.serialize(&mut Serializer)?),
+            SerHashMode::Raw(raw) => {
+                if raw.is_some() {
+                    return Error::fail("serialize_field called twice in raw context");
+                }
+                *raw = Some(value.serialize(RawValueSerializer)?);
+            }
+        }
         Ok(())
     }
 
     fn end(self) -> Result<Value, Error> {
-        Ok(Value::new_ref(&self.hash))
+        match self.mode {
+            SerHashMode::Hash(hash) => Ok(Value::new_ref(&hash)),
+            SerHashMode::Raw(Some(value)) => Ok(value),
+            SerHashMode::Raw(None) => Error::fail("raw value not properly serialized"),
+        }
     }
 }
 
@@ -361,7 +554,13 @@ impl SerVariant<SerHash> {
     fn new(variant: &str) -> Self {
         let inner = SerHash::new();
         let hash = hash::Hash::new();
-        hash.insert(variant, Value::new_ref(&inner.hash));
+        hash.insert(
+            variant,
+            Value::new_ref(match &inner.mode {
+                SerHashMode::Hash(h) => h,
+                _ => unreachable!(),
+            }),
+        );
         Self { hash, inner }
     }
 }
@@ -374,10 +573,13 @@ impl ser::SerializeStructVariant for SerVariant<SerHash> {
     where
         T: ?Sized + Serialize,
     {
-        self.inner
-            .hash
-            .insert(field, value.serialize(&mut Serializer)?);
-        Ok(())
+        match &self.inner.mode {
+            SerHashMode::Hash(hash) => {
+                hash.insert(field, value.serialize(&mut Serializer)?);
+                Ok(())
+            }
+            _ => unreachable!(),
+        }
     }
 
     fn end(self) -> Result<Value, Error> {

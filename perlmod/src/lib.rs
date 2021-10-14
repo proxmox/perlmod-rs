@@ -26,7 +26,7 @@ pub use ser::to_value;
 
 pub mod scalar;
 #[doc(inline)]
-pub use scalar::{Mortal, Scalar};
+pub use scalar::{Mortal, Scalar, ScalarRef};
 
 pub mod array;
 #[doc(inline)]
@@ -39,6 +39,9 @@ pub use hash::Hash;
 pub mod value;
 #[doc(inline)]
 pub use value::Value;
+
+pub(crate) mod raw_value;
+pub use raw_value::RawValue;
 
 #[cfg(feature = "exporter")]
 #[doc(inline)]

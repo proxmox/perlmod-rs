@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 
 use crate::error::CastError;
 use crate::ffi::{self, HV, SV};
+use crate::raw_value;
 use crate::scalar::{Scalar, ScalarRef};
 use crate::Value;
 
@@ -206,6 +207,11 @@ impl serde::Serialize for Hash {
         S: serde::Serializer,
     {
         use serde::ser::SerializeMap;
+
+        if raw_value::is_enabled() {
+            return raw_value::serialize_raw(&self, serializer);
+        }
+
         let mut map = serializer.serialize_map(Some(self.len()))?;
         for (k, v) in self.shared_iter() {
             map.serialize_key(&k)?;

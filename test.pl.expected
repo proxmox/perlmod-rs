@@ -1,4 +1,5 @@
 Called something on Bless { "Hello" }!
+Called something_nonraw on Bless { "Hello" }!
 Got (17, 32, )
 Got: 2 values: 17 32
 Called 'another(54)' on Bless { "Hello" }!

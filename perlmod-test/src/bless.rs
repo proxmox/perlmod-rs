@@ -24,10 +24,18 @@ mod export {
         Ok(this)
     }
 
+    // The `#[raw]` attribute is an optimization, but not strictly required.
     #[export]
     fn something(#[raw] this: Value) -> Result<(), Error> {
         let this = unsafe { this.from_blessed_box::<Bless>(CLASSNAME)? };
         println!("Called something on Bless {{ {:?} }}!", this.content);
+        Ok(())
+    }
+
+    #[export]
+    fn something_nonraw(this: Value) -> Result<(), Error> {
+        let this = unsafe { this.from_blessed_box::<Bless>(CLASSNAME)? };
+        println!("Called something_nonraw on Bless {{ {:?} }}!", this.content);
         Ok(())
     }
 

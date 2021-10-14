@@ -6,8 +6,8 @@ use std::mem;
 use bitflags::bitflags;
 
 use crate::ffi::{self, SV};
-use crate::Error;
-use crate::Value;
+use crate::raw_value;
+use crate::{Error, Value};
 
 /// An owned reference to a perl value.
 ///
@@ -200,6 +200,13 @@ pub enum Type {
 impl ScalarRef {
     pub(crate) fn sv(&self) -> *mut SV {
         self as *const ScalarRef as *const SV as *mut SV
+    }
+
+    /// Get the raw `*mut SV` value for this.
+    ///
+    /// This does not affect the reference count of this value. This is up to the user.
+    pub fn as_raw(&self) -> *mut SV {
+        self.sv()
     }
 
     fn get_type(sv: *mut SV) -> Type {
@@ -403,6 +410,10 @@ impl serde::Serialize for Scalar {
         S: serde::Serializer,
     {
         use serde::ser::Error;
+
+        if raw_value::is_enabled() {
+            return raw_value::serialize_raw(&self, serializer);
+        }
 
         match self.ty() {
             Type::Scalar(flags) => {

@@ -6,6 +6,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::ffi::{self, SV};
+use crate::raw_value;
 use crate::scalar::ScalarRef;
 use crate::Error;
 use crate::{Array, Hash, Scalar};
@@ -295,6 +296,12 @@ impl From<Array> for Value {
     }
 }
 
+impl From<raw_value::RawValue> for Value {
+    fn from(value: raw_value::RawValue) -> Self {
+        value.into_inner()
+    }
+}
+
 impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use fmt::Debug;
@@ -338,15 +345,19 @@ impl Serialize for Value {
     {
         use serde::ser::Error;
 
-        match self {
-            Value::Scalar(this) => this.serialize(serializer),
-            Value::Reference(this) => Value::from(
-                this.dereference()
-                    .ok_or_else(|| S::Error::custom("failed to dereference perl value"))?,
-            )
-            .serialize(serializer),
-            Value::Array(value) => value.serialize(serializer),
-            Value::Hash(value) => value.serialize(serializer),
+        if raw_value::is_enabled() {
+            raw_value::serialize_raw(&self, serializer)
+        } else {
+            match self {
+                Value::Scalar(this) => this.serialize(serializer),
+                Value::Reference(this) => Value::from(
+                    this.dereference()
+                        .ok_or_else(|| S::Error::custom("failed to dereference perl value"))?,
+                )
+                .serialize(serializer),
+                Value::Array(value) => value.serialize(serializer),
+                Value::Hash(value) => value.serialize(serializer),
+            }
         }
     }
 }
@@ -488,6 +499,10 @@ impl<'de> Deserialize<'de> for Value {
             }
         }
 
-        deserializer.deserialize_any(ValueVisitor)
+        if raw_value::is_enabled() {
+            raw_value::RawValue::deserialize(deserializer).map(Value::from)
+        } else {
+            deserializer.deserialize_any(ValueVisitor)
+        }
     }
 }
