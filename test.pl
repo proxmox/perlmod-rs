@@ -69,3 +69,9 @@ sub to_string {
 to_string({ 'tristate' => '0' });
 to_string({ 'tristate' => '1' });
 to_string({ 'tristate' => undef });
+
+my $ref1 = { x => "x was stored" };
+my $ref2 = RSPM::Foo142::test_refs({ copied => "copied string", reference => $ref1 });
+print($ref1->{x}, "\n");
+$ref2->{x} = "x was changed";
+print($ref1->{x}, "\n");

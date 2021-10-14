@@ -1,11 +1,22 @@
 use serde::{Deserialize, Serialize};
 
+use perlmod::Value;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Blubber(String);
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RawRefs {
+    copied: String,
+
+    reference: Value,
+}
 
 #[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test")]
 mod export {
     use anyhow::{bail, Error};
+
+    use perlmod::Value;
 
     #[export]
     fn foo142(a: u32, b: u32) -> Result<u32, Error> {
@@ -32,6 +43,12 @@ mod export {
     fn test_serde(value: super::Blubber) -> Result<String, Error> {
         println!("got {:?}", value);
         Ok(value.0)
+    }
+
+    #[export]
+    fn test_refs(data: super::RawRefs) -> Result<Value, Error> {
+        println!("test_refs: copied text: {:?}", data.copied);
+        Ok(data.reference)
     }
 }
 

@@ -29,3 +29,6 @@ Some(true)
 None
 None
 None
+test_refs: copied text: "copied string"
+x was stored
+x was changed
