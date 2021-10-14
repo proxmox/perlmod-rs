@@ -1,6 +1,7 @@
 //! Module containing the [`Scalar`] and [`Mortal`] types.
 
 use std::convert::TryInto;
+use std::marker::PhantomData;
 use std::mem;
 
 use bitflags::bitflags;
@@ -171,7 +172,10 @@ impl core::ops::DerefMut for Mortal {
     }
 }
 
-pub struct ScalarRef;
+/// A reference to a perl value. This is a pre reference type and cannot be constructed manually.
+/// It is meant to provide methods common to `Value`, `Scalar`, `Array`, `Hash`, as these are all
+/// scalar values under the hood.
+pub struct ScalarRef(PhantomData<()>);
 
 bitflags! {
     /// Represents the types a `Value` can contain. Values can usually contain multiple scalar types

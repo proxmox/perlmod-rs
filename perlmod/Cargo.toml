@@ -1,6 +1,6 @@
 [package]
 name = "perlmod"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
 build = "build.rs"
