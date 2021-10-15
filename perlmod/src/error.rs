@@ -1,14 +1,28 @@
-use thiserror::Error as ThisError;
+use std::fmt;
 
 /// Error returned by `TryFrom` implementations between `Scalar`, `Array` and `Hash`.
-#[derive(ThisError, Debug)]
-#[error("wrong type")]
+#[derive(Debug)]
 pub struct CastError;
 
+impl std::error::Error for CastError {}
+
+impl fmt::Display for CastError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("wrong type")
+    }
+}
+
 /// Generic errors from the perlmod crate.
-#[derive(ThisError, Clone, Debug)]
-#[error("error: {0}")]
+#[derive(Clone, Debug)]
 pub struct Error(pub(crate) String);
+
+impl std::error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error: {}", self.0)
+    }
+}
 
 impl Error {
     #[inline]
