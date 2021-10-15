@@ -23,7 +23,8 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                     for attr in std::mem::take(&mut func.attrs) {
                         if attr.path.is_ident("export") {
                             if attribs.is_some() {
-                                bail!(attr => "multiple 'export' attributes not allowed");
+                                error!(attr => "multiple 'export' attributes not allowed");
+                                continue;
                             }
 
                             let args: AttributeArgs = if attr.tokens.is_empty() {

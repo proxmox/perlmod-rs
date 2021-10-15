@@ -33,10 +33,10 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                     } else if path.is_ident("lib") {
                         lib_name = Some(expand_env_vars(&litstr)?);
                     } else {
-                        bail!(path => "unknown argument");
+                        error!(path => "unknown argument");
                     }
                 }
-                _ => bail!(Span::call_site(), "unexpected attribute argument"),
+                _ => error!(Span::call_site(), "unexpected attribute argument"),
             }
         }
 
@@ -123,17 +123,18 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                     } else if path.is_ident("name") {
                         attrs.perl_name = Some(Ident::new(&litstr.value(), litstr.span()));
                     } else {
-                        bail!(path => "unknown argument");
+                        error!(path => "unknown argument");
+                        continue;
                     }
                 }
                 syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
                     if path.is_ident("raw_return") {
                         attrs.raw_return = true;
                     } else {
-                        bail!(path => "unknown attribute");
+                        error!(path => "unknown attribute");
                     }
                 }
-                _ => bail!(Span::call_site(), "unexpected attribute argument"),
+                _ => error!(Span::call_site(), "unexpected attribute argument"),
             }
         }
 

@@ -5,14 +5,15 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
+use std::cell::RefCell;
 use std::convert::TryFrom;
 
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 
-use syn::Error;
 use syn::parse_macro_input;
 use syn::AttributeArgs;
+use syn::Error;
 
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { Error::new_spanned($span, format!($($msg)*)) };
@@ -24,20 +25,15 @@ macro_rules! bail {
     ($span:expr, $($msg:tt)*) => { return Err(format_err!($span, $($msg)*).into()) };
 }
 
+/// Produce a compile error which does not immediately abort.
+macro_rules! error {
+    ($($msg:tt)*) => {{ crate::add_error(format_err!($($msg)*)); }}
+}
+
 mod attribs;
 mod function;
 mod module;
 mod package;
-
-fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
-    match data {
-        Ok(output) => output,
-        Err(err) => {
-            item.extend(err.to_compile_error());
-            item
-        },
-    }
-}
 
 /// Attribute for making a perl "package" out of a rust module.
 ///
@@ -68,6 +64,7 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
 /// ```
 #[proc_macro_attribute]
 pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
     let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
     handle_error(item.clone(), perlmod_impl(attr, item)).into()
@@ -77,6 +74,7 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 /// [`package!`](macro@package) macro for a usage example.
 #[proc_macro_attribute]
 pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
     let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
     handle_error(item.clone(), export_impl(attr, item)).into()
@@ -98,4 +96,57 @@ fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Er
     let attr = attribs::FunctionAttrs::try_from(attr)?;
     let func = function::handle_function(attr, func, None)?;
     Ok(func.tokens)
+}
+
+fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
+    let mut data = match data {
+        Ok(output) => output,
+        Err(err) => {
+            item.extend(err.to_compile_error());
+            item
+        }
+    };
+    data.extend(take_non_fatal_errors());
+    data
+}
+
+thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));
+
+/// The local error TLS must be freed at the end of a macro as any leftover `TokenStream` (even an
+/// empty one) will just panic between different runs as the multiple source files are handled by
+/// the same compiler thread.
+struct LocalErrorGuard;
+
+impl Drop for LocalErrorGuard {
+    fn drop(&mut self) {
+        NON_FATAL_ERRORS.with(|errors| {
+            *errors.borrow_mut() = None;
+        });
+    }
+}
+
+fn init_local_error() -> LocalErrorGuard {
+    NON_FATAL_ERRORS.with(|errors| {
+        *errors.borrow_mut() = Some(TokenStream::new());
+    });
+    LocalErrorGuard
+}
+
+pub(crate) fn add_error(err: syn::Error) {
+    NON_FATAL_ERRORS.with(|errors| {
+        errors
+            .borrow_mut()
+            .as_mut()
+            .expect("missing call to init_local_error")
+            .extend(err.to_compile_error())
+    });
+}
+
+pub(crate) fn take_non_fatal_errors() -> TokenStream {
+    NON_FATAL_ERRORS.with(|errors| {
+        errors
+            .borrow_mut()
+            .take()
+            .expect("missing call to init_local_mut")
+    })
 }
