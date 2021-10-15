@@ -1,10 +1,9 @@
 use std::convert::TryFrom;
 use std::env;
 
-use anyhow::Error;
-
 use proc_macro2::{Ident, Span};
 
+use syn::Error;
 use syn::AttributeArgs;
 
 use crate::attribs::ModuleAttrs;
@@ -121,9 +120,9 @@ impl Package {
 
         let path = std::path::Path::new(&file_name);
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
+            std::fs::create_dir_all(parent).map_err(io_err)?;
         }
-        std::fs::write(path, source.as_bytes())?;
+        std::fs::write(path, source.as_bytes()).map_err(io_err)?;
 
         Ok(())
     }
@@ -133,7 +132,11 @@ impl Package {
     }
 }
 
-pub fn get_default_lib_name(why: Span) -> Result<String, syn::Error> {
+fn io_err<E: ToString>(err: E) -> Error {
+    Error::new(Span::call_site(), err.to_string())
+}
+
+pub fn get_default_lib_name(why: Span) -> Result<String, Error> {
     env::var("CARGO_PKG_NAME")
         .map(|s| s.replace('-', "_"))
         .map_err(|err| {

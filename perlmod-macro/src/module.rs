@@ -1,12 +1,11 @@
 use std::convert::TryFrom;
 use std::iter::IntoIterator;
 
-use anyhow::Error;
-
 use proc_macro2::TokenStream;
 
 use quote::quote;
 use syn::punctuated::Punctuated;
+use syn::Error;
 use syn::{AttributeArgs, Token};
 
 use crate::attribs::FunctionAttrs;

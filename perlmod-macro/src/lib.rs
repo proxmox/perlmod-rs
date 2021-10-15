@@ -7,17 +7,16 @@ extern crate proc_macro2;
 
 use std::convert::TryFrom;
 
-use anyhow::Error;
-
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 
+use syn::Error;
 use syn::parse_macro_input;
 use syn::AttributeArgs;
 
 macro_rules! format_err {
-    ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
-    ($span:expr, $($msg:tt)*) => { syn::Error::new($span, format!($($msg)*)) };
+    ($span:expr => $($msg:tt)*) => { Error::new_spanned($span, format!($($msg)*)) };
+    ($span:expr, $($msg:tt)*) => { Error::new($span, format!($($msg)*)) };
 }
 
 macro_rules! bail {
@@ -33,12 +32,9 @@ mod package;
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
         Ok(output) => output,
-        Err(err) => match err.downcast::<syn::Error>() {
-            Ok(err) => {
-                item.extend(err.to_compile_error());
-                item
-            }
-            Err(err) => panic!("error in api/router macro: {}", err),
+        Err(err) => {
+            item.extend(err.to_compile_error());
+            item
         },
     }
 }
@@ -55,6 +51,8 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
 /// // 'name', 'lib' and 'file' expand environment variables such as `${CARGO_PKG_NAME}`
 /// #[perlmod::package(name = "RSPM::Foo", lib = "perlmod_test", file = "/dev/null")]
 /// mod an_unused_name {
+///     # pub mod anyhow { pub type Error = String; pub fn bail() {} }
+///     # macro_rules! bail { ($($msg:tt)+) => { format!($($msg)+) }; }
 ///     use anyhow::{bail, Error};
 ///
 ///     // This function can be used like `RSPM::Foo::foo(1, 2);` in perl.

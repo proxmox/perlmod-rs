@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 
 use proc_macro2::{Ident, Span};
 
+use syn::Error;
 use syn::AttributeArgs;
 
 pub struct ModuleAttrs {
@@ -11,7 +12,7 @@ pub struct ModuleAttrs {
 }
 
 impl TryFrom<AttributeArgs> for ModuleAttrs {
-    type Error = syn::Error;
+    type Error = Error;
 
     fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
         let mut package_name = None;
@@ -50,7 +51,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
     }
 }
 
-fn expand_env_vars(lit_str: &syn::LitStr) -> Result<String, syn::Error> {
+fn expand_env_vars(lit_str: &syn::LitStr) -> Result<String, Error> {
     let input = lit_str.value();
     let mut expanded = String::with_capacity(input.len());
 
@@ -105,7 +106,7 @@ pub struct FunctionAttrs {
 }
 
 impl TryFrom<AttributeArgs> for FunctionAttrs {
-    type Error = syn::Error;
+    type Error = Error;
 
     fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
         let mut attrs = FunctionAttrs::default();
