@@ -213,8 +213,12 @@ pub fn stack_push(value: crate::Mortal) {
 /// ```no_run
 /// # use serde::Serialize;
 ///
-/// # #[derive(Serialize)]
 /// # struct Output;
+/// # impl Serialize for Output {
+/// #     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+/// #         serializer.serialize_unit()
+/// #     }
+/// # }
 ///
 /// # fn code_to_extract_parameters() {}
 /// # fn actual_rust_function(_arg: ()) -> Result<Output, String> { Ok(Output) }
