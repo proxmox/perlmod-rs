@@ -266,6 +266,66 @@ impl Value {
 
         Ok(&*(ptr.pv_raw()? as *const T))
     }
+
+    /// Take ownership of a boxed value and create a perl value blessed into a package name.
+    ///
+    /// Note that this leaks the box. To let perl properly drop the value, the class name (which
+    /// must be a valid perl class name), must include a `DESTROY` sub implementing a compatible
+    /// destructor. Like so:
+    ///
+    /// ```
+    /// #[perlmod::package(name = "My::Thing")]
+    /// mod export {
+    ///     use std::convert::TryFrom;
+    ///     use std::sync::Mutex;
+    ///
+    ///     use perlmod::{Error, Value};
+    ///
+    ///     const CLASSNAME: &str = "My::Thing";
+    ///
+    ///     /// Some thing.
+    ///     pub struct Thing {
+    ///         stuff: String,
+    ///     }
+    ///
+    ///     /// Constructor for a Thing.
+    ///     /// Prior to perlmod 0.6, the `raw_return` and `#[raw]` attributes were necessary, now
+    ///     /// they're optional but produce slightly less code.
+    ///     #[export(raw_return)]
+    ///     pub fn new(#[raw] class: Value, stuff: String) -> Result<Value, Error> {
+    ///         Value::bless_box(class, Box::new(Thing { stuff }))
+    ///     }
+    ///
+    ///     /// Destructor for a Thing.
+    ///     #[export(name = "DESTROY")]
+    ///     fn destroy(#[raw] this: Value) {
+    ///         perlmod::destructor!(this, Thing: CLASSNAME);
+    ///     }
+    ///
+    ///     /// Convenience helper for generating methods more quickly.
+    ///     impl<'a> TryFrom<&'a Value> for &'a Thing {
+    ///         type Error = Error;
+    ///
+    ///         fn try_from(value: &'a Value) -> Result<&'a Thing, Error> {
+    ///             Ok(unsafe { value.from_blessed_box(CLASSNAME)? })
+    ///         }
+    ///     }
+    ///
+    ///     /// The `try_from_ref` attribute tells perlmod to use `TryFrom::try_from(&value)` to
+    ///     /// pass to `say_hello`. The conversion will `die` in perl on failure.
+    ///     #[export]
+    ///     pub fn say_hello(#[try_from_ref] this: &Thing) {
+    ///         println!("Hello, {}", this.stuff);
+    ///     }
+    /// }
+    /// ```
+    pub fn bless_box<T>(class: Value, mut box_: Box<T>) -> Result<Value, Error> {
+        let value = Value::new_pointer::<T>(&mut *box_);
+        let value = Value::new_ref(&value);
+        let this = value.bless_sv(&class)?;
+        let _perl = Box::leak(box_);
+        Ok(this)
+    }
 }
 
 impl From<Scalar> for Value {
