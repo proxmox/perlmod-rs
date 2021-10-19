@@ -13,15 +13,8 @@ mod export {
     }
 
     #[export(raw_return)]
-    fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
-        let mut ptr = Box::new(Bless { content });
-
-        let value = Value::new_pointer::<Bless>(&mut *ptr);
-        let value = Value::new_ref(&value);
-        let this = value.bless_sv(&class)?;
-        let _perl = Box::leak(ptr);
-
-        Ok(this)
+    fn new(#[raw] class: Value, content: String) -> Result<Value, perlmod::Error> {
+        Value::bless_box(class, Box::new(Bless { content }))
     }
 
     // The `#[raw]` attribute is an optimization, but not strictly required.

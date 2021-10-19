@@ -53,15 +53,20 @@ pub use perlmod_macro::package;
 /// [`package!`](macro@package) macro for a usage example.
 ///
 /// This macro can optionally take a `raw_return` argument specifying that the return type, which
-/// must be a [`Value`], will be returned as is, and not go through serialization.
+/// must be a [`Value`], will be returned as is, and not go through serialization. As of perlmod
+/// 0.6, serialization of a [`perlmod::Value`] will not produce a clone, so this is mostly an
+/// optimization.
 ///
 /// Additionally, function parameters can also use the following attributes:
 ///
 /// * `#[raw]` with a parameter of type [`Value`]: The parameter will be passed as
-///   is and not go through deserialization.
+///   is and not go through deserialization. As of perlmod 0.6, deserialization will not produce
+///   clones anymore, so this is mostly an optimization.
 /// * `#[try_from_ref]`: Instead of regular deserialization, `TryFrom::try_from(&Value)` will be
 ///   used.
 ///
 ///   Implementing the `TryFrom` trait accordingly can make using blessed references more
 ///   convenient, but at the cost of hiding underlying `unsafe` code.
+///
+/// For an example on making blessed objects, see [`Value::bless_box`](Value::bless_box()).
 pub use perlmod_macro::export;
