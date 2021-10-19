@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 12),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-anyhow-1+default-dev <!nocheck>,
  librust-proc-macro2-1+default-dev <!nocheck>,
  librust-quote-1+default-dev <!nocheck>,
  librust-syn-1+default-dev <!nocheck>,
@@ -22,7 +21,6 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-anyhow-1+default-dev,
  librust-proc-macro2-1+default-dev,
  librust-quote-1+default-dev,
  librust-syn-1+default-dev,
