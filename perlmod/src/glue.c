@@ -33,6 +33,16 @@ extern void RSPL_croak_sv(SV *sv) {
     croak_sv(sv);
 }
 
+extern void RSPL_newXS_flags(
+    const char *name,
+    void *subaddr,
+    const char *const filename,
+    const char *const proto,
+    uint32_t flags
+) {
+    newXS_flags(name, subaddr, filename, proto, flags);
+}
+
 extern double RSPL_SvNV(SV *sv) {
     return SvNV(sv);
 }

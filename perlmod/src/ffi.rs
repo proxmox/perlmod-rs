@@ -41,6 +41,15 @@ extern "C" {
     pub fn RSPL_stack_get(offset: usize) -> *mut SV;
 
     pub fn RSPL_croak_sv(sv: *mut SV) -> !;
+
+    pub fn RSPL_newXS_flags(
+        name: *const i8,
+        subaddr: *const i8,
+        filename: *const i8,
+        proto: *const i8,
+        flags: u32,
+    );
+
     pub fn RSPL_SvNV(sv: *mut SV) -> f64;
     pub fn RSPL_SvIV(sv: *mut SV) -> isize;
     pub fn RSPL_SvPVutf8(sv: *mut SV, len: *mut libc::size_t) -> *const libc::c_char;

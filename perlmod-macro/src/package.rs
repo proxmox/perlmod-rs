@@ -1,62 +1,52 @@
 use std::convert::TryFrom;
 use std::env;
 
-use proc_macro2::{Ident, Span};
+use proc_macro2::{Ident, Span, TokenStream};
 
-use syn::Error;
+use quote::quote;
 use syn::AttributeArgs;
+use syn::Error;
 
 use crate::attribs::ModuleAttrs;
 
 const MODULE_HEAD: &str = r#"
-use strict;
-use warnings;
-use DynaLoader ();
+require DynaLoader;
 
-my $LIB;
+sub bootstrap {
+    my ($pkg) = @_;
+    my ($mod_name) = {{LIB_NAME}};
+    my $bootstrap_name = 'xs_bootstrap_' . ($pkg =~ s/::/__/gr);
 
-BEGIN {
-    my sub newXS {
-        my ($perl_func_name, $full_symbol_name, $filename) = @_;
-
-        my $sym  = DynaLoader::dl_find_symbol($LIB, $full_symbol_name);
-        die "failed to locate '$full_symbol_name'\n" if !defined $sym;
-        DynaLoader::dl_install_xsub($perl_func_name, $sym, $filename);
-    }
-
-    my sub __load_shared_lib {
-        return if $LIB;
-
-        my ($pkg) = @_;
-
-        my ($mod_name) = {{LIB_NAME}};
-
-        my @dirs = (map "-L$_/auto", @INC);
-        my (@mod_files) = DynaLoader::dl_findfile(@dirs"#;
+    my @dirs = (map "-L$_/auto", @INC);
+    my $mod_file = DynaLoader::dl_findfile("#;
 
 #[cfg(debug_assertions)]
-const MODULE_HEAD_DEBUG: &str = r#", '-L./target/debug'"#;
+const MODULE_HEAD_DEBUG: &str = r#"'-L./target/debug', "#;
 
 #[cfg(not(debug_assertions))]
 const MODULE_HEAD_DEBUG: &str = "";
 
-const MODULE_HEAD_2: &str = r#", $mod_name);
-        die "failed to locate shared library for '$pkg' (lib${mod_name}.so)\n" if !@mod_files;
+const MODULE_HEAD_2: &str = r#"@dirs, $mod_name);
+    die "failed to locate shared library for '$pkg' (lib${mod_name}.so)\n" if !$mod_file;
 
-        $LIB = DynaLoader::dl_load_file($mod_files[0])
-            or die "failed to load library '$mod_files[0]'\n";
-    }
+    my $lib = DynaLoader::dl_load_file($mod_file)
+        or die "failed to load library '$mod_file'\n";
 
-    __load_shared_lib(__PACKAGE__);
+    my $sym  = DynaLoader::dl_find_symbol($lib, $bootstrap_name);
+    die "failed to locate '$bootstrap_name'\n" if !defined $sym;
+    my $boot = DynaLoader::dl_install_xsub($bootstrap_name, $sym, "src/FIXME.rs");
+    $boot->();
+}
+
+__PACKAGE__->bootstrap;
+
+1;
 "#;
-
-const MODULE_TAIL: &str = "}\n";
 
 struct Export {
     rust_name: Ident,
     perl_name: Option<Ident>,
     xs_name: Ident,
-    file_name: String,
 }
 
 pub struct Package {
@@ -72,19 +62,53 @@ impl Package {
         })
     }
 
-    pub fn export_named(
-        &mut self,
-        rust_name: Ident,
-        perl_name: Option<Ident>,
-        xs_name: Ident,
-        file_name: String,
-    ) {
+    pub fn export_named(&mut self, rust_name: Ident, perl_name: Option<Ident>, xs_name: Ident) {
         self.exported.push(Export {
             rust_name,
             perl_name,
             xs_name,
-            file_name,
         });
+    }
+
+    pub fn bootstrap_function(&self) -> TokenStream {
+        let mut newxs = TokenStream::new();
+        for export in &self.exported {
+            let perl_name = export.perl_name.as_ref().unwrap_or(&export.rust_name);
+            let sub_name = format!("{}::{}\0", self.attrs.package_name, perl_name);
+            let sub_lit = syn::LitByteStr::new(sub_name.as_bytes(), perl_name.span());
+
+            let xs_name = &export.xs_name;
+
+            newxs.extend(quote! {
+                RSPL_newXS_flags(
+                    #sub_lit.as_ptr() as *const i8,
+                    #xs_name as _,
+                    concat!(::std::file!(), "\0").as_bytes().as_ptr() as *const i8,
+                    ::std::ptr::null(), // TODO: perl-style prototype string goes here
+                    0,
+                );
+            });
+        }
+
+        let bootstrap_name =
+            format!("xs_bootstrap_{}", self.attrs.package_name).replace("::", "__");
+        let bootstrap_ident = Ident::new(&bootstrap_name, Span::call_site());
+
+        quote! {
+            #[no_mangle]
+            pub extern "C" fn #bootstrap_ident(
+                _cv: &::perlmod::ffi::CV,
+            ) {
+                unsafe {
+                    use ::perlmod::ffi::RSPL_newXS_flags;
+
+                    let argmark = ::perlmod::ffi::pop_arg_mark();
+                    argmark.set_stack();
+
+                    #newxs
+                }
+            }
+        }
     }
 
     pub fn write(&self) -> Result<(), Error> {
@@ -92,18 +116,6 @@ impl Package {
             "package {};\n{}{}{}",
             self.attrs.package_name, MODULE_HEAD, MODULE_HEAD_DEBUG, MODULE_HEAD_2
         );
-
-        for export in &self.exported {
-            source = format!(
-                "{}    newXS('{}', '{}', \"{}\");\n",
-                source,
-                export.perl_name.as_ref().unwrap_or(&export.rust_name),
-                export.xs_name,
-                export.file_name.replace('"', "\\\""),
-            );
-        }
-
-        source.push_str(MODULE_TAIL);
 
         if let Some(lib) = &self.attrs.lib_name {
             source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib));

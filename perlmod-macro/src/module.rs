@@ -53,12 +53,7 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                         )?;
                         *item = syn::Item::Verbatim(func.tokens);
 
-                        package.export_named(
-                            func.rust_name,
-                            func.perl_name,
-                            func.xs_name,
-                            "src/FIXME.rs".to_string(),
-                        );
+                        package.export_named(func.rust_name, func.perl_name, func.xs_name);
                     } else {
                         *item = syn::Item::Fn(func);
                     }
@@ -66,6 +61,8 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                 other => *item = other,
             }
         }
+
+        items.push(syn::Item::Verbatim(package.bootstrap_function()));
     }
 
     package.write()?;
