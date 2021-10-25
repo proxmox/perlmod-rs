@@ -1,3 +1,9 @@
+rust-perlmod (0.7.2-1) stable; urgency=medium
+
+  * ffi: add RSPL_newXS_flags helper to allow making bootstrap functions
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Oct 2021 10:05:09 +0200
+
 rust-perlmod (0.7.1-1) stable; urgency=medium
 
   * add Value::bless_box helper

@@ -1,3 +1,15 @@
+rust-perlmod-macro (0.4.1-1) stable; urgency=medium
+
+  * put `-L./target/debug` first in library path on debug builds
+
+  * generage bootstrap functions for packages
+
+  * change generated .pm files to utilize the bootstrap functions
+
+  * requires perlmod 0.7.2 or higher
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Oct 2021 10:03:47 +0200
+
 rust-perlmod-macro (0.4.0-1) stable; urgency=medium
 
   * drop toml dependency
