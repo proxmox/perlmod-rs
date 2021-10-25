@@ -33,6 +33,46 @@ pub struct HE {
     _ffi: usize,
 }
 
+/// Raw perl MAGIC struct, we don't actually make its contents available.
+#[repr(C)]
+pub struct MAGIC {
+    _ffi: usize,
+}
+
+impl MAGIC {
+    pub fn vtbl(&self) -> Option<&MGVTBL> {
+        unsafe { RSPL_MAGIC_virtual(self as *const MAGIC).as_ref() }
+    }
+
+    pub fn ptr(&self) -> *const libc::c_char {
+        unsafe { RSPL_MAGIC_ptr(self as *const MAGIC) }
+    }
+
+    pub fn len(&self) -> isize {
+        unsafe { RSPL_MAGIC_len(self as *const MAGIC) }
+    }
+}
+
+/// Struct big enough to fit perl's MGVTBL struct. We don't make the contents available for now.
+#[repr(C)]
+pub struct MGVTBL {
+    _funptrs: [usize; 8],
+}
+
+impl MGVTBL {
+    /// Create a new all-zeroes vtbl as perl docs suggest this is the safest way to
+    /// make sure what a `PERL_MAGIC_ext` magic actually means, as the ptr value
+    /// may be arbitrary.
+    ///
+    /// # Safety
+    ///
+    /// This must not be deallocated as long as it is attached to a perl value, so best use this as
+    /// `const` variables, rather than dynamically allocating it.
+    pub const fn zero() -> Self {
+        Self { _funptrs: [0; 8] }
+    }
+}
+
 // in our glue:
 #[link(name = "glue", kind = "static")]
 extern "C" {
@@ -129,6 +169,21 @@ extern "C" {
 
     //pub fn RSPL_SvFLAGS(sv: *mut SV) -> u32;
     pub fn RSPL_SvGETMAGIC(sv: *mut SV) -> bool;
+
+    pub fn RSPL_sv_magicext(
+        sv: *mut SV,
+        obj: *mut SV,
+        how: libc::c_int,
+        vtbl: Option<&MGVTBL>,
+        name: *const libc::c_char,
+        namelen: i32,
+    ) -> *mut MAGIC;
+    pub fn RSPL_sv_unmagicext(sv: *mut SV, ty: libc::c_int, vtbl: Option<&MGVTBL>);
+    pub fn RSPL_mg_findext(sv: *const SV, ty: libc::c_int, vtbl: Option<&MGVTBL>) -> *const MAGIC;
+    pub fn RSPL_MAGIC_virtual(mg: *const MAGIC) -> *const MGVTBL;
+    pub fn RSPL_MAGIC_ptr(mg: *const MAGIC) -> *const libc::c_char;
+    pub fn RSPL_MAGIC_len(mg: *const MAGIC) -> isize;
+    pub fn RSPL_PERL_MAGIC_ext() -> libc::c_int;
 }
 
 /// Argument marker for the stack.

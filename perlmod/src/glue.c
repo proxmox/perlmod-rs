@@ -377,6 +377,55 @@ extern void RSPL_SvGETMAGIC(SV *sv) {
     return SvGETMAGIC(sv);
 }
 
+/// Create a new all-zeroes vtbl as perl docs suggest this is the safest way to
+/// make sure what a `PERL_MAGIC_ext` magic actually means, as the ptr value
+/// may be arbitrary. So this function is actually used to allocate "tags".
+extern MGVTBL* RSPL_mgvtbl_new() {
+    return calloc(1, sizeof(MGVTBL));
+}
+
+extern MAGIC* RSPL_sv_magicext(
+    SV *sv,
+    SV *obj,
+    int how,
+    const MGVTBL *vtbl,
+    const char *name,
+    int32_t namelen)
+{
+    return sv_magicext(sv, obj, how, vtbl, name, namelen);
+}
+
+extern MAGIC* RSPL_mg_findext(const SV *sv, int ty, const MGVTBL *vtbl) {
+    return mg_findext(sv, ty, vtbl);
+}
+
+/* it's not completely clear to me whether we want to use mg_freeext or sv_unmagicext
+extern void RSPL_mg_freeext(SV *sv, int ty, const MGVTBL *vtbl) {
+    return mg_freeext(sv, ty, vtbl);
+}
+*/
+extern void RSPL_sv_unmagicext(SV *sv, int ty, MGVTBL *vtbl) {
+    // always returns 0 currently
+    sv_unmagicext(sv, ty, vtbl);
+}
+
+// Seems safer than depending on a `struct magic` declaration within rust code:
+extern const MGVTBL* RSPL_MAGIC_virtual(const MAGIC* mg) {
+    return mg->mg_virtual;
+}
+
+extern const char* RSPL_MAGIC_ptr(const MAGIC* mg) {
+    return mg->mg_ptr;
+}
+
+extern isize RSPL_MAGIC_len(const MAGIC* mg) {
+    return mg->mg_len;
+}
+
+extern int RSPL_PERL_MAGIC_ext() {
+    return PERL_MAGIC_ext;
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef
