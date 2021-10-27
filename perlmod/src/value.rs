@@ -403,6 +403,20 @@ impl core::ops::DerefMut for Value {
     }
 }
 
+impl AsRef<ScalarRef> for Value {
+    #[inline]
+    fn as_ref(&self) -> &ScalarRef {
+        &*self
+    }
+}
+
+impl AsMut<ScalarRef> for Value {
+    #[inline]
+    fn as_mut(&mut self) -> &mut ScalarRef {
+        &mut *self
+    }
+}
+
 impl Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
