@@ -67,6 +67,11 @@ impl Value {
         Value::Reference(unsafe { Scalar::from_raw_move(ffi::RSPL_newRV_inc(value.sv())) })
     }
 
+    /// Create a new empty hash.
+    pub fn new_hash() -> Self {
+        Value::Hash(Hash::new())
+    }
+
     /// Bless a reference into a package. The `Value` must be a reference.
     ///
     /// Note that a blessed value in perl can have a destructor (a `DESTROY` sub), and keeps track
