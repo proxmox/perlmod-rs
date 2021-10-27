@@ -9,7 +9,7 @@
 //! [`package`]: attr.package.html
 //! [`export`]: attr.export.html
 
-pub(crate) mod error;
+pub mod error;
 pub use error::Error;
 
 #[macro_use]
@@ -42,6 +42,10 @@ pub use value::Value;
 
 pub(crate) mod raw_value;
 pub use raw_value::RawValue;
+
+pub mod magic;
+#[doc(inline)]
+pub use magic::{MagicSpec, MagicTag};
 
 #[cfg(feature = "exporter")]
 #[doc(inline)]

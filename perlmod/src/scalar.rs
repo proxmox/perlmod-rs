@@ -7,6 +7,7 @@ use std::mem;
 use bitflags::bitflags;
 
 use crate::ffi::{self, SV};
+use crate::magic::{Leakable, MagicSpec};
 use crate::raw_value;
 use crate::{Error, Value};
 
@@ -376,6 +377,116 @@ impl ScalarRef {
                     .unwrap_or("<NON-UTF8-CLASSNAME>")
             }
         }
+    }
+
+    /// Attach magic to this value.
+    ///
+    /// # Safety
+    ///
+    /// The passed `vtbl` must stay valid for as long as the perl value exists.
+    /// It is up to the user to make sure `how` has a valid value. Passing `None` will create a
+    /// magic value of type `PERL_MAGIC_ext` for convenience (recommended).
+    pub unsafe fn add_raw_magic(
+        &self,
+        obj: Option<&ScalarRef>,
+        how: Option<libc::c_int>,
+        vtbl: Option<&ffi::MGVTBL>,
+        name: *const libc::c_char,
+        namelen: i32,
+    ) {
+        let _magic_ptr = ffi::RSPL_sv_magicext(
+            self.sv(),
+            obj.map(Self::sv).unwrap_or(std::ptr::null_mut()),
+            how.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
+            vtbl,
+            name,
+            namelen,
+        );
+    }
+
+    /// Remove attached magic.
+    ///
+    /// If `ty` is `None`, a `PERL_MAGIC_ext` magic will be removed.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the user that doing this will not crash the perl interpreter.
+    pub unsafe fn remove_raw_magic(&self, ty: Option<libc::c_int>, vtbl: Option<&ffi::MGVTBL>) {
+        ffi::RSPL_sv_unmagicext(
+            self.sv(),
+            ty.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
+            vtbl,
+        )
+    }
+
+    /// Find a magic value, if present.
+    ///
+    /// If `ty` is `None`, a `PERL_MAGIC_ext` magic will be removed.
+    pub fn find_raw_magic(
+        &self,
+        ty: Option<libc::c_int>,
+        vtbl: Option<&ffi::MGVTBL>,
+    ) -> Option<&ffi::MAGIC> {
+        unsafe {
+            ffi::RSPL_mg_findext(
+                self.sv(),
+                ty.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
+                vtbl,
+            )
+            .as_ref()
+        }
+    }
+
+    /// Attach a magic tag to this value. This is a more convenient alternative to using
+    /// [`add_raw_magic`](ScalarRef::add_raw_magic()) manually.
+    pub fn add_magic<'o, T: Leakable>(&self, spec: MagicSpec<'o, 'static, T>) {
+        unsafe {
+            self.add_raw_magic(
+                spec.obj,
+                spec.how,
+                Some(spec.vtbl),
+                spec.ptr.map(Leakable::leak).unwrap_or(std::ptr::null()),
+                0,
+            )
+        }
+    }
+
+    /// Find a magic value attached to this perl value.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the user to ensure the correct types are used in the provided `MagicSpec`.
+    pub fn find_magic<'a, 's, 'm, T: Leakable>(
+        &'s self,
+        spec: &'m MagicSpec<'static, 'static, T>,
+    ) -> Option<&'a T::Pointee> {
+        match self.find_raw_magic(spec.how, Some(spec.vtbl)) {
+            None => None,
+            Some(mg) => {
+                assert_eq!(
+                    mg.vtbl().map(|v| v as *const _),
+                    Some(spec.vtbl as *const _),
+                    "Perl_mg_findext misbehaved horribly",
+                );
+
+                T::get_ref(mg.ptr())
+            }
+        }
+    }
+
+    /// Remove a magic tag from this value previously added via
+    /// [`add_magic`](ScalarRef::add_magic()) and reclaim the contained value of type `T`.
+    ///
+    /// This does not need to include the object and type information.
+    ///
+    /// Use the [`spec`](MagicSpec::spec())` method in case you have additional information in your
+    /// magic tag.
+    pub fn remove_magic<T: Leakable>(&self, spec: &MagicSpec<'static, 'static, T>) -> Option<T> {
+        let this = self.find_magic(spec).map(|m| unsafe { T::reclaim(m) });
+        unsafe {
+            self.remove_raw_magic(spec.how, Some(spec.vtbl));
+        }
+        this
     }
 }
 

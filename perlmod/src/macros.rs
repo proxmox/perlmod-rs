@@ -104,3 +104,107 @@ macro_rules! destructor {
         }
     };
 }
+
+/// Create a standard destructor for a value where a rust value has been attached via a
+/// [`MagicSpec`](crate::scalar::MagicSpec).
+///
+/// This assumes the type is a reference and calls [`dereference`](Value::dereference) on it.
+///
+/// Due to compiler restrictions, the function itself needs to be written manually, only the
+/// contents can be generated using this macro. This also means that the `this` parameter needs to
+/// be passed to the macro.
+///
+/// Usage:
+/// ```ignore
+/// #[export(name = "DESTROY")]
+/// fn destroy(#[raw] this: Value) {
+///     // complete:
+///     magic_destructor!(this: MyMagic => {
+///         Err(err) => { eprintln!("DESTROY called with an invalid pointer: {}", err); }
+///     });
+/// }
+///
+/// #[export(name = "DESTROY")]
+/// fn destroy(#[raw] this: Value) {
+///     // simplest case with the default error message as shown above
+///     destructor!(this: MyMagic);
+/// }
+/// ```
+///
+/// The generated code looks like this:
+///
+/// ```ignore
+/// #[export(name = "DESTROY")]
+/// fn destroy(#[raw] this: Value) {
+///     match this.remove_magic_spec(&MyMagic) {
+///         Ok(_drpo) => (),
+///         Err(err) => {
+///             eprintln!("DESTROY called with an invalid pointer: {}", err);
+///         }
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! magic_destructor {
+    ($this:ident: $spec:expr) => {
+        $crate::magic_destructor!($this: $spec => {
+            ref => eprintln!("DESTROY called with a non-reference"),
+            type => eprintln!("DESTROY called on a value with no magic"),
+        });
+    };
+
+    ($this:ident: $spec:expr => { ref => $on_ref_err:expr, type => $on_type_err:expr, }) => {
+        match Value::dereference(&$this) {
+            None => $on_ref_err,
+            Some(value) => match $crate::ScalarRef::remove_magic(&value, $spec) {
+                Some(_drop) => (),
+                None => $on_type_err,
+            }
+        }
+    };
+}
+
+/// Helper to create the data required for blessed references to values containing a magic pointer.
+///
+/// This is a simple shortcut to avoid repetitive tasks and adds the following:
+/// * `const CLASSNAME: &'static str`: The perl package name.
+/// * `const MAGIC: perlmod::MagicSpec<Container>`: The magic specification used for
+///   [`add_magic`](crate::ScalarRef::add_magic()).
+/// * `impl TryFrom<&Value> for &Inner`: assuming the value is a reference (calling
+///   [`dereference`](Value::dereference()) on it) and then looking for the `MAGIC` pointer.
+///
+/// # Warning
+///
+/// This does *not* provide a destructor!
+///
+/// This is due to compiler limitations (the `#[export]` attribute cannot be applied from within
+/// this macro).
+///
+/// ```
+/// struct MyThing {} // anything
+///
+/// perlmod::declare_magic!(Box<MyThing> : &MyThing as "RSPM::MagicMacroClass");
+/// ```
+#[macro_export]
+macro_rules! declare_magic {
+    ($ty:ty : &$inner:ty as $class:literal) => {
+        const CLASSNAME: &str = $class;
+        const MAGIC: $crate::MagicSpec<$ty> = unsafe {
+            const TAG: $crate::MagicTag = $crate::MagicTag::new();
+            perlmod::MagicSpec::new_static(&TAG)
+        };
+
+        impl<'a> ::std::convert::TryFrom<&'a $crate::Value> for &'a $inner {
+            type Error = $crate::error::MagicError;
+
+            fn try_from(value: &'a $crate::Value) -> Result<Self, $crate::error::MagicError> {
+                use $crate::error::MagicError;
+                value
+                    .dereference()
+                    .ok_or_else(|| MagicError::NotAReference(CLASSNAME))?
+                    .find_magic(&MAGIC)
+                    .ok_or_else(|| MagicError::NotFound(CLASSNAME))
+            }
+        }
+    };
+}
