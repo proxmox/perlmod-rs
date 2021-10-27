@@ -35,6 +35,19 @@ mod function;
 mod module;
 mod package;
 
+/// Perl configuration related helper
+#[cfg(perlmod = "multiplicity")]
+#[inline]
+pub(crate) fn pthx_param() -> TokenStream {
+    quote::quote! { _perl: *const usize, }
+}
+
+#[cfg(not(perlmod = "multiplicity"))]
+#[inline]
+pub(crate) fn pthx_param() -> TokenStream {
+    TokenStream::new()
+}
+
 /// Attribute for making a perl "package" out of a rust module.
 ///
 /// This can be used on an inline module (rust version 1.42 or later), and hopefully in the future

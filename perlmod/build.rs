@@ -69,6 +69,20 @@ fn main() {
     // now build the static library:
     cc.file("src/glue.c").compile("libglue.a");
 
+    // get perl's MULTIPLICITY flag:
+    //     perl -MConfig -e 'print $Config{usemultiplicity}'
+    let perl_multiplicity = Command::new("perl")
+        .arg("-MConfig")
+        .arg("-e")
+        .arg("print $Config{usemultiplicity}")
+        .output()
+        .expect("failed to get perl usemultiplicity flag");
+
+    // pass the multiplicity cfg flag:
+    if perl_multiplicity.stdout == b"define" {
+        println!("cargo:rustc-cfg=perlmod=\"multiplicity\"");
+    }
+
     // the debian package should include src/glue.c
     println!(
         "dh-cargo:deb-built-using=glue=1={}",

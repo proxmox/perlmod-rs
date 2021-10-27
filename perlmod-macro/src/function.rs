@@ -251,6 +251,7 @@ fn handle_return_kind(
     let mut handle_return;
     let wrapper_func;
 
+    let pthx = crate::pthx_param();
     match ret {
         Return::None(result) => {
             return_type = quote! { () };
@@ -283,7 +284,7 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(()) => (),
@@ -331,7 +332,7 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
@@ -418,7 +419,7 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(sv) => { #push },
