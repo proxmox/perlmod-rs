@@ -201,9 +201,7 @@ pub fn handle_function(
 
         #[inline(never)]
         #[allow(non_snake_case)]
-        fn #impl_xs_name(
-            _cv: &::perlmod::ffi::CV,
-        ) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
+        fn #impl_xs_name() -> Result<#return_type, *mut ::perlmod::ffi::SV> {
             let argmark = unsafe { ::perlmod::ffi::pop_arg_mark() };
             let mut args = argmark.iter();
 
@@ -285,9 +283,9 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(cv) {
+                        match #impl_xs_name() {
                             Ok(()) => (),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -333,9 +331,9 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(cv) {
+                        match #impl_xs_name() {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -420,9 +418,9 @@ fn handle_return_kind(
             wrapper_func = quote! {
                 #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(cv: &::perlmod::ffi::CV) {
+                pub extern "C" fn #xs_name(/*pTHX, */ _cv: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(cv) {
+                        match #impl_xs_name() {
                             Ok(sv) => { #push },
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
