@@ -2,12 +2,19 @@
 
 use v5.28.0;
 
+# The nasty one:
+use Storable;
+use POSIX ();
+
 use lib '.';
 use RSPM::Bless;
 use RSPM::Foo142;
 use RSPM::Option;
+use RSPM::Magic;
 
 STDOUT->autoflush;
+# Let's combine stderr and stdout:
+POSIX::dup2(fileno(STDOUT), fileno(STDERR));
 
 my $v = RSPM::Bless->new("Hello");
 $v->something();
@@ -75,3 +82,17 @@ my $ref2 = RSPM::Foo142::test_refs({ copied => "copied string", reference => $re
 print($ref1->{x}, "\n");
 $ref2->{x} = "x was changed";
 print($ref1->{x}, "\n");
+
+my $magic = RSPM::Magic->new('magic test');
+$magic->call();
+
+print("Testing unsafe dclone\n");
+my $bad = Storable::dclone($magic);
+eval { $bad->call() };
+if (!$@) {
+    die "dclone'd object not properly detected!\n";
+} elsif ($@ ne "value blessed into RSPM::Magic did not contain its declared magic pointer\n") {
+    die "dclone'd object error message changed to: [$@]\n";
+}
+undef $bad;
+print("unsafe dclone dropped (error should have been printed)\n");

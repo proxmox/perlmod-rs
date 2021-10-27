@@ -32,3 +32,8 @@ None
 test_refs: copied text: "copied string"
 x was stored
 x was changed
+Calling magic with content "magic test"
+Testing unsafe dclone
+DESTROY called on a value with no magic
+unsafe dclone dropped (error should have been printed)
+Dropping blessed magic with content "magic test"

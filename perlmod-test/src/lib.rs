@@ -12,3 +12,6 @@ mod bless;
 
 /// Tests for `Option`.
 mod option;
+
+/// Tests for magic based blessed objects.
+mod magic;
