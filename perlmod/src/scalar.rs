@@ -354,6 +354,7 @@ impl ScalarRef {
         0 == unsafe { ffi::RSPL_type_flags(self.sv()) }
     }
 
+    // FIXME: self consuming on a phantom type... this can probably not be useful
     /// Turn this into a [`Value`].
     pub fn into_value(self) -> Value {
         Value::from_scalar(self.clone_ref())
