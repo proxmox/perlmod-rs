@@ -208,3 +208,16 @@ macro_rules! declare_magic {
         }
     };
 }
+
+/// Create an empty hash ref with magic data. This is a convenience helper for `sub new`
+/// implementations.
+#[macro_export]
+macro_rules! instantiate_magic {
+    ($class:expr, $magic:expr => $value:expr) => {{
+        let value = $crate::Value::new_hash();
+        let this = $crate::Value::new_ref(&value);
+        this.bless_sv($class)?;
+        value.add_magic(MAGIC.with_value($value));
+        this
+    }};
+}
