@@ -26,7 +26,7 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 /// A raw perl value. This is a type hint that this contains a raw reference and can *only* be
-/// deserialized from a [`perlmod::de::Deserializer`].
+/// deserialized from a perlmod deserializer.
 ///
 /// It should also not be serialized by anythin gother than `perlmod`'s serialization mechanisms.
 #[derive(Clone)]

@@ -6,6 +6,18 @@
 //! The underlying machinery for these macros is contained in this crate and provides ways to
 //! serialize and deserialize data between perl and rust.
 //!
+//! # Blessed Values
+//!
+//! This crate also provides all the tools required to bless perl values into packages, and
+//! associate rust data with perl values.
+//! There are multiple ways to do this, and they come with different issues.
+//!
+//! The currently recommended way is found in the documentation of the [`magic`] module, which is
+//! considered the least error prone.
+//!
+//! A less safe (and lower-level) example can be found in the documentation of the
+//! [`Value::bless`](Value::bless()) method.
+//!
 //! [`package`]: attr.package.html
 //! [`export`]: attr.export.html
 
@@ -58,8 +70,7 @@ pub use perlmod_macro::package;
 ///
 /// This macro can optionally take a `raw_return` argument specifying that the return type, which
 /// must be a [`Value`], will be returned as is, and not go through serialization. As of perlmod
-/// 0.6, serialization of a [`perlmod::Value`] will not produce a clone, so this is mostly an
-/// optimization.
+/// 0.6, serialization of a [`Value`] will not produce a clone, so this is mostly an optimization.
 ///
 /// Additionally, function parameters can also use the following attributes:
 ///

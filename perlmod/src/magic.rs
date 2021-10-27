@@ -1,4 +1,72 @@
 //! Helpers for making attaching magic values more convenient and slightly less unsafe.
+//!
+//! This is a safer alternative to directly blessing raw pointer values as it is more difficult to
+//! get the perl side of this wrong.
+//!
+//! For instance, one major downside of using `[Value::bless_box]` is that it is possible to simply
+//! bless invalid values into the same class, or create clones via perl's `Storable::dclone` or
+//! `Clone::clone`, which can easily cause a double-free corruption.
+//!
+//! To avoid this, we can attach a magic value to a perl value (or even multiple magic values if so
+//! desired).
+//!
+//! Here's an example for a less error prone perl class:
+//!
+//! ```
+//! #[perlmod::package(name = "RSPM::Convenient::Magic", lib = "perlmod_test")]
+//! mod export {
+//!     use perlmod::{Error, Value};
+//!
+//!     // This declares `CLASSNAME`, `MAGIC` and adds a `TryFrom<&Value>` implementation for
+//!     // `&Magic`.
+//!     perlmod::declare_magic!(Box<Magic> : &Magic as "RSPM::Convenient::Magic");
+//!
+//!     // This is our data type.
+//!     struct Magic {
+//!         content: String,
+//!     }
+//!
+//!     // We can add a drop handler in rust if we like.
+//!     impl Drop for Magic {
+//!         fn drop(&mut self) {
+//!             # fn code() {}
+//!             code();
+//!         }
+//!     }
+//!
+//!     // *Do not* forget the destructor on the perl-side! Otherwise our data will be leaked,
+//!     // even if the perl value gets destroyed.
+//!     #[export(name = "DESTROY")]
+//!     fn destroy(#[raw] this: Value) {
+//!         perlmod::magic_destructor!(this: &MAGIC);
+//!     }
+//!
+//!     #[export(raw_return)] // `raw` and `raw_return` attributes are an optional optimization
+//!     fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
+//!         // `instantiate_magic` is a shortcut for the most "common" type of blessed object: a
+//!         // hash. We don't actually make use of the hash itself currently (but we could).
+//!         Ok(perlmod::instantiate_magic!(&class, MAGIC => Box::new(Magic { content })))
+//!     }
+//!
+//!     // The `declare_magic` macro prepared all we need for the `#[try_from_ref]` attribute to
+//!     // work.
+//!     #[export]
+//!     fn call(#[try_from_ref] this: &Magic) -> Result<(), Error> {
+//!         println!("Calling magic with content {:?}", this.content);
+//!         Ok(())
+//!     }
+//! }
+//! ```
+//!
+//! The above allows for the following perl code:
+//!
+//! ```perl, ignore
+//! use RSPM::Convenient::Magic;
+//! my $value = RSPM::Convenient::Magic->new("Some Content");
+//! $value->call();
+//! undef $value; # Here, the DESTROY and `Drop` implementations will be called.
+//! ```
+//!
 
 use crate::ffi;
 use crate::ScalarRef;

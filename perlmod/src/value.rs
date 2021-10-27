@@ -91,6 +91,10 @@ impl Value {
     ///     #[export(raw_return)]
     ///     fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
     ///         let mut ptr = Box::new(MyThing { content });
+    ///         // Short version:
+    ///         // return Value::bless_box(class, ptr);
+    ///
+    ///         // Raw code:
     ///
     ///         // create a pointer value
     ///         let value = Value::new_pointer::<MyThing>(&mut *ptr);

@@ -106,9 +106,10 @@ macro_rules! destructor {
 }
 
 /// Create a standard destructor for a value where a rust value has been attached via a
-/// [`MagicSpec`](crate::scalar::MagicSpec).
+/// [`MagicSpec`](crate::magic::MagicSpec).
 ///
-/// This assumes the type is a reference and calls [`dereference`](Value::dereference) on it.
+/// This assumes the type is a reference and calls [`dereference`](crate::Value::dereference()) on
+/// it.
 ///
 /// Due to compiler restrictions, the function itself needs to be written manually, only the
 /// contents can be generated using this macro. This also means that the `this` parameter needs to
@@ -171,7 +172,7 @@ macro_rules! magic_destructor {
 /// * `const MAGIC: perlmod::MagicSpec<Container>`: The magic specification used for
 ///   [`add_magic`](crate::ScalarRef::add_magic()).
 /// * `impl TryFrom<&Value> for &Inner`: assuming the value is a reference (calling
-///   [`dereference`](Value::dereference()) on it) and then looking for the `MAGIC` pointer.
+///   [`dereference`](crate::Value::dereference()) on it) and then looking for the `MAGIC` pointer.
 ///
 /// # Warning
 ///
@@ -185,6 +186,8 @@ macro_rules! magic_destructor {
 ///
 /// perlmod::declare_magic!(Box<MyThing> : &MyThing as "RSPM::MagicMacroClass");
 /// ```
+///
+/// For a usage example see the [`magic`](crate::magic) module documentation.
 #[macro_export]
 macro_rules! declare_magic {
     ($ty:ty : &$inner:ty as $class:literal) => {
@@ -211,6 +214,8 @@ macro_rules! declare_magic {
 
 /// Create an empty hash ref with magic data. This is a convenience helper for `sub new`
 /// implementations.
+///
+/// For a usage example see the [`magic`](crate::magic) module documentation.
 #[macro_export]
 macro_rules! instantiate_magic {
     ($class:expr, $magic:expr => $value:expr) => {{
