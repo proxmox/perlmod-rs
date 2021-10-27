@@ -34,6 +34,7 @@ x was stored
 x was changed
 Calling magic with content "magic test"
 Testing unsafe dclone
-DESTROY called on a value with no magic
-unsafe dclone dropped (error should have been printed)
+unsafe dclone dropped
+Testing unsafe clone
+unsafe dclone dropped
 Dropping blessed magic with content "magic test"

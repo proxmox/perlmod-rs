@@ -6,6 +6,7 @@ use std::mem;
 
 use bitflags::bitflags;
 
+use crate::error::MagicError;
 use crate::ffi::{self, SV};
 use crate::magic::{Leakable, MagicSpec};
 use crate::raw_value;
@@ -475,14 +476,38 @@ impl ScalarRef {
     }
 
     /// Remove a magic tag from this value previously added via
-    /// [`add_magic`](ScalarRef::add_magic()) and reclaim the contained value of type `T`.
+    /// [`add_magic`](ScalarRef::add_magic()) and potentially reclaim the contained value of type
+    /// `T`.
+    ///
+    /// When using a "default" magic tag via [`MagicTag::DEFAULT`](crate::magic::MagicTag::DEFAULT)
+    /// such as when using the [`declare_magic!`](crate::declare_magic!) macro, removing the magic
+    /// implicitly causes perl call the `free` method, therefore in this case this method returns
+    /// `None`.
+    ///
+    /// In case the magic was not found, [`MagicError::NotFound("")`] is returned.
     ///
     /// This does not need to include the object and type information.
-    ///
-    /// Use the [`spec`](MagicSpec::spec())` method in case you have additional information in your
-    /// magic tag.
-    pub fn remove_magic<T: Leakable>(&self, spec: &MagicSpec<'static, 'static, T>) -> Option<T> {
-        let this = self.find_magic(spec).map(|m| unsafe { T::reclaim(m) });
+    pub fn remove_magic<T: Leakable>(
+        &self,
+        spec: &MagicSpec<'static, 'static, T>,
+    ) -> Result<Option<T>, MagicError> {
+        let this = match self.find_raw_magic(spec.how, Some(spec.vtbl)) {
+            None => Err(MagicError::NotFound("")),
+            Some(mg) => {
+                assert_eq!(
+                    mg.vtbl().map(|v| v as *const _),
+                    Some(spec.vtbl as *const _),
+                    "Perl_mg_findext misbehaved horribly",
+                );
+
+                Ok(match mg.vtbl() {
+                    // We assume that a 'free' callback takes care of reclaiming the value!
+                    Some(v) if v.free.is_some() => None,
+                    _ => T::get_ref(mg.ptr()).map(|m| unsafe { T::reclaim(m) }),
+                })
+            }
+        };
+
         unsafe {
             self.remove_raw_magic(spec.how, Some(spec.vtbl));
         }

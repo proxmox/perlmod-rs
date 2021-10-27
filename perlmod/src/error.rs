@@ -70,6 +70,9 @@ impl fmt::Display for MagicError {
             MagicError::NotAReference(class) => {
                 write!(f, "value blessed into {} was not a reference", class)
             }
+            MagicError::NotFound("") => {
+                write!(f, "value did not contain the requested magic pointer")
+            }
             MagicError::NotFound(class) => write!(
                 f,
                 "value blessed into {} did not contain its declared magic pointer",

@@ -2,9 +2,11 @@
 
 use v5.28.0;
 
-# The nasty one:
-use Storable;
 use POSIX ();
+
+# The nasty ones:
+use Storable;
+use Clone;
 
 use lib '.';
 use RSPM::Bless;
@@ -86,13 +88,20 @@ print($ref1->{x}, "\n");
 my $magic = RSPM::Magic->new('magic test');
 $magic->call();
 
-print("Testing unsafe dclone\n");
-my $bad = Storable::dclone($magic);
-eval { $bad->call() };
-if (!$@) {
-    die "dclone'd object not properly detected!\n";
-} elsif ($@ ne "value blessed into RSPM::Magic did not contain its declared magic pointer\n") {
-    die "dclone'd object error message changed to: [$@]\n";
+sub test_unsafe_clone($) {
+    my ($bad) = @_;
+    eval { $bad->call() };
+    if (!$@) {
+        die "cloned object not properly detected!\n";
+    } elsif ($@ ne "value blessed into RSPM::Magic did not contain its declared magic pointer\n") {
+        die "cloned object error message changed to: [$@]\n";
+    }
+    undef $bad;
+    print("unsafe dclone dropped\n");
 }
-undef $bad;
-print("unsafe dclone dropped (error should have been printed)\n");
+
+print("Testing unsafe dclone\n");
+test_unsafe_clone(Storable::dclone($magic));
+
+print("Testing unsafe clone\n");
+test_unsafe_clone(Clone::clone($magic));

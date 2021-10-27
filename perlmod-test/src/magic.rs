@@ -24,9 +24,4 @@ mod export {
         println!("Calling magic with content {:?}", this.content);
         Ok(())
     }
-
-    #[export(name = "DESTROY")]
-    fn destroy(#[raw] this: Value) {
-        perlmod::magic_destructor!(this: &MAGIC);
-    }
 }

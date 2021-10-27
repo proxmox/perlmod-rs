@@ -68,7 +68,10 @@
 //! ```
 //!
 
+use std::marker::PhantomData;
+
 use crate::ffi;
+use crate::perl_fn;
 use crate::ScalarRef;
 
 /// Pointer-like types which can be leaked and reclaimed.
@@ -123,19 +126,50 @@ unsafe impl<T> Leakable for std::rc::Rc<T> {
 }
 
 /// A tag for perl magic, see [`MagicSpec`] for its usage.
-pub struct MagicTag(ffi::MGVTBL);
+pub struct MagicTag<T = ()>(ffi::MGVTBL, PhantomData<T>);
 
-impl MagicTag {
+impl<T> MagicTag<T> {
     /// Create a new tag. See [`MagicSpec`] for its usage.
     pub const fn new() -> Self {
-        Self(ffi::MGVTBL::zero())
+        Self(ffi::MGVTBL::zero(), PhantomData)
     }
 }
 
-impl AsRef<ffi::MGVTBL> for MagicTag {
+impl<T> AsRef<ffi::MGVTBL> for MagicTag<T> {
     fn as_ref(&self) -> &ffi::MGVTBL {
         &self.0
     }
+}
+
+impl<T: Leakable> MagicTag<T> {
+    perl_fn! {
+        extern "C" fn drop_handler(_sv: *mut ffi::SV, mg: *mut ffi::MAGIC) -> libc::c_int {
+            let mg = unsafe { &*mg };
+            match T::get_ref(mg.ptr()) {
+                Some(ptr) => {
+                    let _drop = unsafe { T::reclaim(ptr) };
+                }
+                None => eprintln!("Default magic drop handler called but pointer was NULL"),
+            }
+            0
+        }
+    }
+
+    /// The default tag, note that using this tag when creating perl values for *different* types
+    /// than `T` this *will* cause memory corruption!
+    pub const DEFAULT: Self = Self(
+        ffi::MGVTBL {
+            free: Some(Self::drop_handler),
+            get: None,
+            set: None,
+            len: None,
+            clear: None,
+            copy: None,
+            dup: None,
+            local: None,
+        },
+        PhantomData,
+    );
 }
 
 /// A tag for perl magic. Use this for blessed objects.
@@ -194,7 +228,7 @@ impl<T> MagicSpec<'static, 'static, T> {
     /// # Safety
     ///
     /// This should be safe as long as the [`MagicTag`] is only used for a single [`MagicSpec`].
-    pub const unsafe fn new_static(vtbl: &'static MagicTag) -> Self {
+    pub const unsafe fn new_static<TT>(vtbl: &'static MagicTag<TT>) -> Self {
         Self {
             obj: None,
             how: None,

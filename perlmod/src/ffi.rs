@@ -53,13 +53,131 @@ impl MAGIC {
     }
 }
 
-/// Struct big enough to fit perl's MGVTBL struct. We don't make the contents available for now.
+#[repr(C)]
+pub struct Unsupported {
+    _ffi: usize,
+}
+
+#[cfg(perlmod = "multiplicity")]
+#[repr(C)]
+pub struct Interpreter {
+    _ffi: usize,
+}
+
+#[cfg(perlmod = "multiplicity")]
+mod vtbl_types_impl {
+    use super::{Interpreter, MAGIC, SV};
+    use libc::c_int;
+
+    pub type Get = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Set = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Len = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> u32;
+    pub type Clear = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Free = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Copy = extern "C" fn(
+        _perl: *const Interpreter,
+        sv: *mut SV,
+        mg: *mut MAGIC,
+        nsv: *mut SV,
+        name: *const libc::c_char,
+        namelen: i32,
+    ) -> c_int;
+    pub type Dup = extern "C" fn(
+        _perl: *const Interpreter,
+        sv: *mut SV,
+        mg: *mut MAGIC,
+        clone_parms: *mut super::Unsupported,
+    ) -> c_int;
+    pub type Local = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
+
+    #[macro_export]
+    macro_rules! perl_fn {
+        ($(
+            $(#[$attr:meta])*
+            extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
+                $($code:tt)*
+            }
+        )*) => {$(
+            $(#[$attr])*
+            extern "C" fn $name (_perl: *const $crate::ffi::Interpreter, $($args)*) $(-> $re)? {
+                $($code)*
+            }
+        )*};
+    }
+}
+
+#[cfg(not(perlmod = "multiplicity"))]
+mod vtbl_types_impl {
+    use super::{Interpreter, MAGIC, SV};
+    use libc::c_int;
+
+    pub type Get = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Set = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Len = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> u32;
+    pub type Clear = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Free = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
+    pub type Copy = extern "C" fn(
+        sv: *mut SV,
+        mg: *mut MAGIC,
+        nsv: *mut SV,
+        name: *const libc::c_char,
+        namelen: i32,
+    ) -> c_int;
+    pub type Dup =
+        extern "C" fn(sv: *mut SV, mg: *mut MAGIC, clone_parms: *mut super::Unsupported) -> c_int;
+    pub type Local = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
+
+    #[macro_export]
+    macro_rules! perl_fn {
+        ($(
+            $(#[$attr:meta])*
+            extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
+                $($code:tt)*
+            }
+        )*) => {$(
+            $(#[$attr])*
+            extern "C" fn $name ($($args)*) $(-> $re)? {
+                $($code)*
+            }
+        )*};
+    }
+}
+
+/// The types in this module depend on the configuration of your perl installation.
+///
+/// If the perl interpreter has been compiled with `USEMULTIPLICITY`, these methods have an
+/// additional parameter.
+pub mod vtbl_types {
+    pub use super::vtbl_types_impl::*;
+}
+
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MGVTBL {
-    _funptrs: [usize; 8],
+    pub get: Option<vtbl_types::Get>,
+    pub set: Option<vtbl_types::Set>,
+    pub len: Option<vtbl_types::Len>,
+    pub clear: Option<vtbl_types::Clear>,
+    pub free: Option<vtbl_types::Free>,
+    pub copy: Option<vtbl_types::Copy>,
+    pub dup: Option<vtbl_types::Dup>,
+    pub local: Option<vtbl_types::Local>,
 }
 
 impl MGVTBL {
+    /// Let's not expose this directly, we need there to be distinct instances of these, so they
+    /// should be created via `MGVTBL::zero()`.
+    const EMPTY: Self = Self {
+        get: None,
+        set: None,
+        len: None,
+        clear: None,
+        free: None,
+        copy: None,
+        dup: None,
+        local: None,
+    };
+
     /// Create a new all-zeroes vtbl as perl docs suggest this is the safest way to
     /// make sure what a `PERL_MAGIC_ext` magic actually means, as the ptr value
     /// may be arbitrary.
@@ -69,7 +187,7 @@ impl MGVTBL {
     /// This must not be deallocated as long as it is attached to a perl value, so best use this as
     /// `const` variables, rather than dynamically allocating it.
     pub const fn zero() -> Self {
-        Self { _funptrs: [0; 8] }
+        *&Self::EMPTY
     }
 }
 

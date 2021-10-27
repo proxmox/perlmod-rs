@@ -27,8 +27,10 @@ pub use error::Error;
 #[macro_use]
 mod macros;
 
-pub mod de;
+#[macro_use]
 pub mod ffi;
+
+pub mod de;
 pub mod ser;
 
 #[doc(inline)]

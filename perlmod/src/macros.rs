@@ -106,10 +106,14 @@ macro_rules! destructor {
 }
 
 /// Create a standard destructor for a value where a rust value has been attached via a
-/// [`MagicSpec`](crate::magic::MagicSpec).
+/// [`MagicSpec`]
 ///
 /// This assumes the type is a reference and calls [`dereference`](crate::Value::dereference()) on
 /// it.
+///
+/// Note that this only makes sense if the used [`MagicSpec`] does not include a `free` method.
+/// This method *is* includded when using its `DEFAULT` or the [`declare_magic!`] macro, so this
+/// macro is only required when using custom magic with a custom `DESTROY` sub.
 ///
 /// Due to compiler restrictions, the function itself needs to be written manually, only the
 /// contents can be generated using this macro. This also means that the `this` parameter needs to
@@ -137,7 +141,7 @@ macro_rules! destructor {
 /// ```ignore
 /// #[export(name = "DESTROY")]
 /// fn destroy(#[raw] this: Value) {
-///     match this.remove_magic_spec(&MyMagic) {
+///     match this.remove_magic(&MyMagic) {
 ///         Ok(_drpo) => (),
 ///         Err(err) => {
 ///             eprintln!("DESTROY called with an invalid pointer: {}", err);
@@ -145,6 +149,7 @@ macro_rules! destructor {
 ///     }
 /// }
 /// ```
+/// [`MagicSpec`]: crate::magic::MagicSpec
 #[macro_export]
 macro_rules! magic_destructor {
     ($this:ident: $spec:expr) => {
@@ -158,8 +163,9 @@ macro_rules! magic_destructor {
         match Value::dereference(&$this) {
             None => $on_ref_err,
             Some(value) => match $crate::ScalarRef::remove_magic(&value, $spec) {
-                Some(_drop) => (),
-                None => $on_type_err,
+                Ok(Some(_drop)) => (),
+                Ok(None) => (),
+                Err(_) => $on_type_err,
             }
         }
     };
@@ -173,13 +179,8 @@ macro_rules! magic_destructor {
 ///   [`add_magic`](crate::ScalarRef::add_magic()).
 /// * `impl TryFrom<&Value> for &Inner`: assuming the value is a reference (calling
 ///   [`dereference`](crate::Value::dereference()) on it) and then looking for the `MAGIC` pointer.
-///
-/// # Warning
-///
-/// This does *not* provide a destructor!
-///
-/// This is due to compiler limitations (the `#[export]` attribute cannot be applied from within
-/// this macro).
+/// * Binds the `Drop` handler for to the magic value, so that a custom destructor for perl is not
+///   necessary.
 ///
 /// ```
 /// struct MyThing {} // anything
@@ -192,10 +193,8 @@ macro_rules! magic_destructor {
 macro_rules! declare_magic {
     ($ty:ty : &$inner:ty as $class:literal) => {
         const CLASSNAME: &str = $class;
-        const MAGIC: $crate::MagicSpec<$ty> = unsafe {
-            const TAG: $crate::MagicTag = $crate::MagicTag::new();
-            perlmod::MagicSpec::new_static(&TAG)
-        };
+        const MAGIC: $crate::MagicSpec<$ty> =
+            unsafe { perlmod::MagicSpec::new_static(&$crate::MagicTag::<$ty>::DEFAULT) };
 
         impl<'a> ::std::convert::TryFrom<&'a $crate::Value> for &'a $inner {
             type Error = $crate::error::MagicError;
