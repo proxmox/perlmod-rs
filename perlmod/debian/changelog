@@ -1,3 +1,18 @@
+rust-perlmod (0.8.0-1) stable; urgency=medium
+
+  * add Value::new_hash for convenience
+
+  * impl AsRef<ScalarRef> for Value
+
+  * impl AsMut<ScalarRef> for Value
+
+  * add glue code for working with "magic"
+
+  * add helpers to add magic with less unsafe code and have drop handlers
+    called automatically
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 Oct 2021 09:18:51 +0200
+
 rust-perlmod (0.7.2-1) stable; urgency=medium
 
   * ffi: add RSPL_newXS_flags helper to allow making bootstrap functions

@@ -1,3 +1,11 @@
+rust-perlmod-macro (0.5.0-1) stable; urgency=medium
+
+  * detect perl's MULTIPLICITY configuration and adapt function signatures,
+    note that the corresponding parameters have not been used before, and
+    are still unused, so this is not really a breaking change
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 Oct 2021 09:15:14 +0200
+
 rust-perlmod-macro (0.4.1-1) stable; urgency=medium
 
   * put `-L./target/debug` first in library path on debug builds
