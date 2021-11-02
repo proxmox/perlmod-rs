@@ -52,6 +52,38 @@ impl Value {
         Value::Scalar(Scalar::new_bytes(s))
     }
 
+    /// If the value is an array, returns the associated [`Array`].
+    pub fn as_array(&self) -> Option<&Array> {
+        match self {
+            Value::Array(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    /// If the value is an array, returns the associated mutable [`Array`].
+    pub fn as_array_mut(&mut self) -> Option<&mut Array> {
+        match self {
+            Value::Array(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    /// If the value is a hash, returns the associated [`Hash`].
+    pub fn as_hash(&self) -> Option<&Hash> {
+        match self {
+            Value::Hash(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    /// If the value is a hash, returns the associated mutable [`Hash`].
+    pub fn as_hash_mut(&mut self) -> Option<&mut Hash> {
+        match self {
+            Value::Hash(v) => Some(v),
+            _ => None,
+        }
+    }
+
     /// Convenience method to create a new raw pointer value. Note that pointers are stored as
     /// arbitrary "byte strings" and any such byte string value can be interpreted as a raw pointer.
     pub fn new_pointer<T>(s: *mut T) -> Self {
