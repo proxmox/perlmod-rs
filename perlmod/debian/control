@@ -33,7 +33,7 @@ Recommends:
 Provides:
  librust-perlmod-0-dev (= ${binary:Version}),
  librust-perlmod-0.8-dev (= ${binary:Version}),
- librust-perlmod-0.8.0-dev (= ${binary:Version})
+ librust-perlmod-0.8.1-dev (= ${binary:Version})
 Description: Ffi & serde code for limited interaction with perl code - Rust source code
  This package contains the source for the Rust perlmod crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -54,9 +54,9 @@ Provides:
  librust-perlmod-0.8+exporter-dev (= ${binary:Version}),
  librust-perlmod-0.8+default-dev (= ${binary:Version}),
  librust-perlmod-0.8+perlmod-macro-dev (= ${binary:Version}),
- librust-perlmod-0.8.0+exporter-dev (= ${binary:Version}),
- librust-perlmod-0.8.0+default-dev (= ${binary:Version}),
- librust-perlmod-0.8.0+perlmod-macro-dev (= ${binary:Version})
+ librust-perlmod-0.8.1+exporter-dev (= ${binary:Version}),
+ librust-perlmod-0.8.1+default-dev (= ${binary:Version}),
+ librust-perlmod-0.8.1+perlmod-macro-dev (= ${binary:Version})
 Description: Ffi & serde code for limited interaction with perl code - feature "exporter" and 2 more
  This metapackage enables feature "exporter" for the Rust perlmod crate, by
  pulling in any additional dependencies needed by that feature.
