@@ -34,13 +34,6 @@
 //!         }
 //!     }
 //!
-//!     // *Do not* forget the destructor on the perl-side! Otherwise our data will be leaked,
-//!     // even if the perl value gets destroyed.
-//!     #[export(name = "DESTROY")]
-//!     fn destroy(#[raw] this: Value) {
-//!         perlmod::magic_destructor!(this: &MAGIC);
-//!     }
-//!
 //!     #[export(raw_return)] // `raw` and `raw_return` attributes are an optional optimization
 //!     fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
 //!         // `instantiate_magic` is a shortcut for the most "common" type of blessed object: a
