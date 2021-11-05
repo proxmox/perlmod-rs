@@ -37,4 +37,5 @@ Testing unsafe dclone
 unsafe dclone dropped
 Testing unsafe clone
 unsafe dclone dropped
+Testing enum deserialization
 Dropping blessed magic with content "magic test"

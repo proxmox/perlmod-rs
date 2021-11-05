@@ -12,11 +12,22 @@ pub struct RawRefs {
     reference: Value,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum AnEnum {
+    Something,
+    Another,
+    ResultA,
+    ResultB,
+}
+
 #[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test")]
 mod export {
     use anyhow::{bail, Error};
 
     use perlmod::Value;
+
+    use super::AnEnum;
 
     #[export]
     fn foo142(a: u32, b: u32) -> Result<u32, Error> {
@@ -49,6 +60,15 @@ mod export {
     fn test_refs(data: super::RawRefs) -> Result<Value, Error> {
         println!("test_refs: copied text: {:?}", data.copied);
         Ok(data.reference)
+    }
+
+    #[export]
+    fn test_enums(data: AnEnum) -> Result<AnEnum, Error> {
+        Ok(match data {
+            AnEnum::Something => AnEnum::ResultA,
+            AnEnum::Another => AnEnum::ResultB,
+            _ => bail!("invalid"),
+        })
     }
 }
 

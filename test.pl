@@ -105,3 +105,7 @@ test_unsafe_clone(Storable::dclone($magic));
 
 print("Testing unsafe clone\n");
 test_unsafe_clone(Clone::clone($magic));
+
+print("Testing enum deserialization\n");
+my $ra = RSPM::Foo142::test_enums("something");
+die "unexpected result from test_enums: $ra\n" if $ra ne 'result-a';
