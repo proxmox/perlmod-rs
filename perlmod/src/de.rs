@@ -493,7 +493,51 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        self.deserialize_any(visitor)
+        let mut iter;
+        // This is called for externally tagged enums only, so either a Hash with a single key, or
+        // a simple string variant:
+        match self.get()? {
+            Value::Scalar(value) => match value.ty() {
+                Type::Scalar(flags) => {
+                    use crate::scalar::Flags;
+
+                    if flags.contains(Flags::STRING) {
+                        let variant = unsafe { str_set_wrong_lifetime(value.pv_string_utf8()) };
+                        visitor.visit_enum(EnumDeserializer {
+                            variant,
+                            value: None,
+                        })
+                    } else {
+                        return Error::fail("expected an enum value");
+                    }
+                }
+                _ => unreachable!(),
+            },
+            Value::Hash(hash) => {
+                if hash.len() != 1 {
+                    return Error::fail("expected hash with a single key");
+                }
+
+                iter = hash.shared_iter();
+                let (key, value) = iter
+                    .next()
+                    .ok_or_else(|| Error::new("expected hash with a single key"))?;
+                match std::str::from_utf8(key) {
+                    Ok(variant) => {
+                        // FIXME: MAKE THESE BORROWED
+                        visitor.visit_enum(EnumDeserializer {
+                            variant,
+                            value: Some(value),
+                        })
+                    }
+                    Err(_) => visitor.visit_enum(EnumDeserializerByteVariant {
+                        variant: key,
+                        value: Some(value),
+                    }),
+                }
+            }
+            _ => return Error::fail("expected a string or hash for an enum"),
+        }
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -508,6 +552,103 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         self.deserialize_any(visitor)
+    }
+}
+
+struct EnumDeserializer<'a> {
+    variant: &'a str,
+    value: Option<Value>,
+}
+
+impl<'a, 'de> de::EnumAccess<'de> for EnumDeserializer<'a> {
+    type Error = Error;
+    type Variant = VariantDeserializer;
+
+    fn variant_seed<V>(self, seed: V) -> Result<(V::Value, VariantDeserializer), Error>
+    where
+        V: de::DeserializeSeed<'de>,
+    {
+        let variant = self.variant.into_deserializer();
+        let visitor = VariantDeserializer { value: self.value };
+        seed.deserialize(variant).map(|v| (v, visitor))
+    }
+}
+
+struct EnumDeserializerByteVariant<'a> {
+    variant: &'a [u8],
+    value: Option<Value>,
+}
+
+impl<'a, 'de> de::EnumAccess<'de> for EnumDeserializerByteVariant<'a> {
+    type Error = Error;
+    type Variant = VariantDeserializer;
+
+    fn variant_seed<V>(self, seed: V) -> Result<(V::Value, VariantDeserializer), Error>
+    where
+        V: de::DeserializeSeed<'de>,
+    {
+        // FIXME: With serde 1.0.122 the `.to_vec()` can be dropped!
+        let variant = self.variant.to_vec().into_deserializer();
+        let visitor = VariantDeserializer { value: self.value };
+        seed.deserialize(variant).map(|v| (v, visitor))
+    }
+}
+
+struct VariantDeserializer {
+    value: Option<Value>,
+}
+
+impl<'de> de::VariantAccess<'de> for VariantDeserializer {
+    type Error = Error;
+
+    fn unit_variant(self) -> Result<(), Error> {
+        match self.value {
+            Some(value) => {
+                de::Deserialize::deserialize(&mut Deserializer::<'de>::from_value(value))
+            }
+            None => Ok(()),
+        }
+    }
+
+    fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value, Error>
+    where
+        T: de::DeserializeSeed<'de>,
+    {
+        match self.value {
+            Some(value) => seed.deserialize(&mut Deserializer::<'de>::from_value(value)),
+            None => Error::fail("expected newtype variant, found unit variant"),
+        }
+    }
+
+    fn tuple_variant<V>(self, _len: usize, visitor: V) -> Result<V::Value, Error>
+    where
+        V: de::Visitor<'de>,
+    {
+        match self.value {
+            Some(Value::Array(v)) => {
+                if v.is_empty() {
+                    visitor.visit_unit()
+                } else {
+                    visitor.visit_seq(ArrayAccess::new(&v))
+                }
+            }
+            Some(_) => Error::fail("expected tuple variant"),
+            None => Error::fail("expected tuple variant, found unit"),
+        }
+    }
+
+    fn struct_variant<V>(
+        self,
+        _fields: &'static [&'static str],
+        visitor: V,
+    ) -> Result<V::Value, Error>
+    where
+        V: de::Visitor<'de>,
+    {
+        match self.value {
+            Some(Value::Hash(v)) => visitor.visit_map(HashAccess::new(&v)),
+            _ => Error::fail("expected struct variant"),
+        }
     }
 }
 
