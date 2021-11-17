@@ -45,3 +45,48 @@ to rust code.
 Features which would allow changing this (other than by obviously unintended behavior (such as
 bugs, raw memory access, etc.)) will not be accepted into this crate and will need to be maintained
 elsewhere.
+
+Pending Changes before 1.0
+==========================
+
+* Don't export non-bootstrap methods anymore, we don't need them.
+* Make some kind of perl-package-generation tool for generating the `.pm`
+  files, we only need to call bootstrap functions after all.
+  (So we may not even need to parse the rust code, rather, just provide a list
+  of perl packages to create...)
+
+Current recommended usage.
+==========================
+
+## "Blessed" objects.
+
+```rust
+#[perlmod::package(name = "My::Pkg", lib = "the_cdylib_name")]
+mod export {
+    use perlmod::{Error, Value};
+
+    // Create the common defaults used for blessed objects with attached magic pointer for rust:
+    perlmod::declare_magic!(Box<MyPkg> : &MyPkg as "My::Pkg");
+
+    struct MyPkg {
+        content: String,
+    }
+
+    impl Drop for MyPkg {
+        fn drop(&mut self) {
+            println!("Dropping blessed MyPkg with content {:?}", self.content);
+        }
+    }
+
+    #[export(raw_return)]
+    fn new(#[raw] class: Value, content: String) -> Result<Value, Error> {
+        Ok(perlmod::instantiate_magic!(&class, MAGIC => Box::new(MyPkg { content })))
+    }
+
+    #[export]
+    fn call(#[try_from_ref] this: &MyPkg, param: &str) -> Result<(), Error> {
+        println!("Calling magic with content {:?}, with parameter {}", this.content, param);
+        Ok(())
+    }
+}
+```
