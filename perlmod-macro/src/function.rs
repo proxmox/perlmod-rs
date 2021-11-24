@@ -112,8 +112,10 @@ pub fn handle_function(
         let deserialized_name =
             Ident::new(&format!("deserialized_arg_{}", arg_name), arg_name.span());
 
-        let missing_message =
-            syn::LitStr::new("missing required parameter: '{}'\n", arg_name.span());
+        let missing_message = syn::LitStr::new(
+            &format!("missing required parameter: '{}'\n", arg_name),
+            arg_name.span(),
+        );
 
         extract_arguments.extend(quote! {
             let #extracted_name: ::perlmod::Value = match args.next() {
