@@ -49,7 +49,6 @@ elsewhere.
 Pending Changes before 1.0
 ==========================
 
-* Don't export non-bootstrap methods anymore, we don't need them.
 * Make some kind of perl-package-generation tool for generating the `.pm`
   files, we only need to call bootstrap functions after all.
   (So we may not even need to parse the rust code, rather, just provide a list

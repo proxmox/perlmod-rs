@@ -118,14 +118,22 @@ pub fn handle_function(
             arg_name.span(),
         );
 
-        extract_arguments.extend(quote! {
-            let #extracted_name: ::perlmod::Value = match args.next() {
-                Some(arg) => ::perlmod::Value::from(arg),
-                None => {
+        let none_handling = if is_option_type(arg_type).is_some() {
+            quote! { ::perlmod::Value::new_undef(), }
+        } else {
+            quote! {
+                {
                     return Err(::perlmod::Value::new_string(#missing_message)
                         .into_mortal()
                         .into_raw());
                 }
+            }
+        };
+
+        extract_arguments.extend(quote! {
+            let #extracted_name: ::perlmod::Value = match args.next() {
+                Some(arg) => ::perlmod::Value::from(arg),
+                None => #none_handling
             };
         });
 
@@ -456,8 +464,8 @@ pub fn is_result_type(ty: &syn::Type) -> Option<&syn::Type> {
         }
         let segs = &p.path.segments;
         let is_result = match segs.len() {
-            1 => segs.last().unwrap().ident == "Result",
-            2 => segs.first().unwrap().ident == "std" && segs.last().unwrap().ident == "Result",
+            1 => segs[0].ident == "Result",
+            3 => segs[0].ident == "std" && segs[1].ident == "result" && segs[2].ident == "Result",
             _ => false,
         };
         if !is_result {
@@ -490,4 +498,33 @@ pub fn get_result_type(ty: &syn::Type) -> (&syn::Type, bool) {
 /// Get a non-suffixed integer from an usize.
 fn simple_usize(i: usize, span: Span) -> syn::LitInt {
     syn::LitInt::new(&format!("{}", i), span)
+}
+
+/// Note that we cannot handle renamed imports at all here...
+pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(p) = ty {
+        if p.qself.is_some() {
+            return None;
+        }
+        let segs = &p.path.segments;
+        let is_option = match segs.len() {
+            1 => segs[0].ident == "Option",
+            3 => segs[0].ident == "std" && segs[1].ident == "option" && segs[2].ident == "Option",
+            _ => false,
+        };
+        if !is_option {
+            return None;
+        }
+
+        if let syn::PathArguments::AngleBracketed(generic) = &segs.last().unwrap().arguments {
+            if generic.args.len() != 1 {
+                return None;
+            }
+
+            if let syn::GenericArgument::Type(ty) = generic.args.first().unwrap() {
+                return Some(ty);
+            }
+        }
+    }
+    None
 }
