@@ -59,6 +59,7 @@ fn main() {
 
     cc.pic(true)
         .shared_flag(false)
+        .opt_level(3)
         .include(include_dir)
         .include(archlib_include_path);
 
