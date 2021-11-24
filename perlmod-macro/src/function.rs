@@ -57,6 +57,7 @@ pub fn handle_function(
     attr: FunctionAttrs,
     mut func: syn::ItemFn,
     mangled_package_name: Option<&str>,
+    export_public: bool,
 ) -> Result<XSub, Error> {
     if !func.sig.generics.params.is_empty() {
         bail!(&func.sig.generics => "generic functions cannot be exported as xsubs");
@@ -194,6 +195,7 @@ pub fn handle_function(
         &xs_name,
         &impl_xs_name,
         passed_arguments,
+        export_public,
     )?;
 
     let tokens = quote! {
@@ -248,6 +250,7 @@ fn handle_return_kind(
     xs_name: &Ident,
     impl_xs_name: &Ident,
     passed_arguments: TokenStream,
+    export_public: bool,
 ) -> Result<ReturnHandling, Error> {
     let return_type;
     let mut handle_return;
@@ -283,10 +286,15 @@ fn handle_return_kind(
                 };
             }
 
+            let vis = if export_public {
+                quote! { #[no_mangle] pub }
+            } else {
+                quote! { #[allow(non_snake_case)] }
+            };
+
             wrapper_func = quote! {
-                #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(()) => (),

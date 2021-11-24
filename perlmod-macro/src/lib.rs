@@ -107,7 +107,7 @@ fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Er
     let func: syn::ItemFn = syn::parse2(item)?;
 
     let attr = attribs::FunctionAttrs::try_from(attr)?;
-    let func = function::handle_function(attr, func, None)?;
+    let func = function::handle_function(attr, func, None, true)?;
     Ok(func.tokens)
 }
 

@@ -50,6 +50,7 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                             attribs,
                             func,
                             Some(&mangled_package_name),
+                            false,
                         )?;
                         *item = syn::Item::Verbatim(func.tokens);
 
