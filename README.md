@@ -54,6 +54,10 @@ Pending Changes before 1.0
   files, we only need to call bootstrap functions after all.
   (So we may not even need to parse the rust code, rather, just provide a list
   of perl packages to create...)
+* Add prototypes to exported functions.
+* Allow "trailing" `Option` parameters to be skipped in perl.
+  eg. `fn foo(x: u32, y: Option<u32>);` should be callable as `foo(1)`, rather than requiring
+  `foo(1, undef)`.
 
 Current recommended usage.
 ==========================
