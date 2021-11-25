@@ -105,7 +105,13 @@ test_unsafe_clone(Storable::dclone($magic));
 
 print("Testing unsafe clone\n");
 test_unsafe_clone(Clone::clone($magic));
+undef $magic;
 
 print("Testing enum deserialization\n");
 my $ra = RSPM::Foo142::test_enums("something");
 die "unexpected result from test_enums: $ra\n" if $ra ne 'result-a';
+
+print("Testing optional parameters\n");
+RSPM::Foo142::test_trailing_optional(1, 99);
+RSPM::Foo142::test_trailing_optional(2, undef);
+RSPM::Foo142::test_trailing_optional(3);

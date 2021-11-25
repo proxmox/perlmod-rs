@@ -70,6 +70,11 @@ mod export {
             _ => bail!("invalid"),
         })
     }
+
+    #[export]
+    fn test_trailing_optional(first: u32, second: Option<u32>) {
+        println!("{:?}, {:?}", first, second);
+    }
 }
 
 #[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]

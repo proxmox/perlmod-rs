@@ -37,5 +37,9 @@ Testing unsafe dclone
 unsafe dclone dropped
 Testing unsafe clone
 unsafe dclone dropped
-Testing enum deserialization
 Dropping blessed magic with content "magic test"
+Testing enum deserialization
+Testing optional parameters
+1, Some(99)
+2, None
+3, None
