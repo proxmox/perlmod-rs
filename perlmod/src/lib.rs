@@ -70,9 +70,21 @@ pub use perlmod_macro::package;
 /// Attribute to export a function so that it can be installed as an `xsub` in perl. See the
 /// [`package!`](macro@package) macro for a usage example.
 ///
-/// This macro can optionally take a `raw_return` argument specifying that the return type, which
-/// must be a [`Value`], will be returned as is, and not go through serialization. As of perlmod
-/// 0.6, serialization of a [`Value`] will not produce a clone, so this is mostly an optimization.
+/// This macro has the following optional arguments:
+///
+/// * `raw_return`: specifies that the return type, which must be a [`Value`], will be returned as
+///   is, and not go through serialization. As of perlmod
+///   0.6, serialization of a [`Value`] will not produce a clone, so this is mostly an
+///   optimization.
+/// * `prototype`: The perl prototype for the function. By default, this will be guessed from the
+///   parameters as a chain of '$', with trailing `Option<>` parameters behind a `;`. So for
+///   example, an `fn(i32, Option<i32>, i32, Option<i32>)` has the prototype `$$$;$`.
+/// * `xs_name`: override the name of the exported xsub, this is not recommended and only makes
+///   sense when *not* using the `#[package]` macro, as with the `#[package]` macro, these aren't
+///   publicly visible.
+/// * `name`: the name the function should be using in perl. This only makes sense with the
+///   `#[package]` macro, as otherwise the user is responsible for loading the function via perl's
+///   `DynaLoader` on their own.
 ///
 /// Additionally, function parameters can also use the following attributes:
 ///
