@@ -47,6 +47,7 @@ struct Export {
     rust_name: Ident,
     perl_name: Option<Ident>,
     xs_name: Ident,
+    prototype: Option<String>,
 }
 
 pub struct Package {
@@ -62,11 +63,18 @@ impl Package {
         })
     }
 
-    pub fn export_named(&mut self, rust_name: Ident, perl_name: Option<Ident>, xs_name: Ident) {
+    pub fn export_named(
+        &mut self,
+        rust_name: Ident,
+        perl_name: Option<Ident>,
+        xs_name: Ident,
+        prototype: Option<String>,
+    ) {
         self.exported.push(Export {
             rust_name,
             perl_name,
             xs_name,
+            prototype,
         });
     }
 
@@ -79,12 +87,19 @@ impl Package {
 
             let xs_name = &export.xs_name;
 
+            let prototype = match export.prototype.as_deref() {
+                Some(proto) => quote! {
+                    concat!(#proto, "\0").as_bytes().as_ptr() as *const i8
+                },
+                None => quote!(::std::ptr::null()),
+            };
+
             newxs.extend(quote! {
                 RSPL_newXS_flags(
                     #sub_lit.as_ptr() as *const i8,
                     #xs_name as _,
                     concat!(::std::file!(), "\0").as_bytes().as_ptr() as *const i8,
-                    ::std::ptr::null(), // TODO: perl-style prototype string goes here
+                    #prototype,
                     0,
                 );
             });

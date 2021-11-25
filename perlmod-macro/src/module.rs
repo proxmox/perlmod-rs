@@ -54,7 +54,12 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                         )?;
                         *item = syn::Item::Verbatim(func.tokens);
 
-                        package.export_named(func.rust_name, func.perl_name, func.xs_name);
+                        package.export_named(
+                            func.rust_name,
+                            func.perl_name,
+                            func.xs_name,
+                            func.prototype,
+                        );
                     } else {
                         *item = syn::Item::Fn(func);
                     }

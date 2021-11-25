@@ -2,13 +2,24 @@ use std::convert::TryFrom;
 
 use proc_macro2::{Ident, Span};
 
-use syn::Error;
 use syn::AttributeArgs;
+use syn::Error;
 
 pub struct ModuleAttrs {
     pub package_name: String,
     pub file_name: Option<String>,
     pub lib_name: Option<String>,
+}
+
+fn is_ident_check_dup<T>(path: &syn::Path, var: &Option<T>, what: &'static str) -> bool {
+    if path.is_ident(what) {
+        if var.is_some() {
+            error!(path => "found multiple '{}' attributes", what);
+        }
+        true
+    } else {
+        false
+    }
 }
 
 impl TryFrom<AttributeArgs> for ModuleAttrs {
@@ -26,11 +37,11 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                     lit: syn::Lit::Str(litstr),
                     ..
                 })) => {
-                    if path.is_ident("name") {
+                    if is_ident_check_dup(&path, &package_name, "name") {
                         package_name = Some(expand_env_vars(&litstr)?);
-                    } else if path.is_ident("file") {
+                    } else if is_ident_check_dup(&path, &file_name, "file") {
                         file_name = Some(expand_env_vars(&litstr)?);
-                    } else if path.is_ident("lib") {
+                    } else if is_ident_check_dup(&path, &lib_name, "lib") {
                         lib_name = Some(expand_env_vars(&litstr)?);
                     } else {
                         error!(path => "unknown argument");
@@ -103,6 +114,7 @@ pub struct FunctionAttrs {
     pub perl_name: Option<Ident>,
     pub xs_name: Option<Ident>,
     pub raw_return: bool,
+    pub prototype: Option<String>,
 }
 
 impl TryFrom<AttributeArgs> for FunctionAttrs {
@@ -118,10 +130,12 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                     lit: syn::Lit::Str(litstr),
                     ..
                 })) => {
-                    if path.is_ident("xs_name") {
+                    if is_ident_check_dup(&path, &attrs.xs_name, "xs_name") {
                         attrs.xs_name = Some(Ident::new(&litstr.value(), litstr.span()));
-                    } else if path.is_ident("name") {
+                    } else if is_ident_check_dup(&path, &attrs.perl_name, "name") {
                         attrs.perl_name = Some(Ident::new(&litstr.value(), litstr.span()));
+                    } else if is_ident_check_dup(&path, &attrs.prototype, "prototype") {
+                        attrs.prototype = Some(litstr.value());
                     } else {
                         error!(path => "unknown argument");
                         continue;

@@ -10,6 +10,7 @@ pub struct XSub {
     pub perl_name: Option<Ident>,
     pub xs_name: Ident,
     pub tokens: TokenStream,
+    pub prototype: Option<String>,
 }
 
 #[derive(Default)]
@@ -77,6 +78,7 @@ pub fn handle_function(
         });
     let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
 
+    let mut trailing_options = 0;
     let mut extract_arguments = TokenStream::new();
     let mut deserialized_arguments = TokenStream::new();
     let mut passed_arguments = TokenStream::new();
@@ -119,8 +121,11 @@ pub fn handle_function(
         );
 
         let none_handling = if is_option_type(arg_type).is_some() {
+            trailing_options += 1;
             quote! { ::perlmod::Value::new_undef(), }
         } else {
+            // only cound the trailing options;
+            trailing_options = 0;
             quote! {
                 {
                     return Err(::perlmod::Value::new_string(#missing_message)
@@ -242,7 +247,27 @@ pub fn handle_function(
         perl_name: attr.perl_name,
         xs_name,
         tokens,
+        prototype: attr
+            .prototype
+            .or_else(|| Some(gen_prototype(func.sig.inputs.len(), trailing_options))),
     })
+}
+
+fn gen_prototype(arg_count: usize, trailing_options: usize) -> String {
+    let arg_count = arg_count - trailing_options;
+
+    let mut proto = String::with_capacity(arg_count + trailing_options + 1);
+
+    for _ in 0..arg_count {
+        proto.push('$');
+    }
+    if trailing_options > 0 {
+        proto.push(';');
+        for _ in 0..trailing_options {
+            proto.push('$');
+        }
+    }
+    proto
 }
 
 struct ReturnHandling {
