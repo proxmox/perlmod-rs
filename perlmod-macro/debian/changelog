@@ -1,3 +1,14 @@
+rust-perlmod-macro (0.6.0-1) stable; urgency=medium
+
+  * don't publicly export xs methods in packages made with #[package]
+
+  * make trailing Option<> parameters actually optional parameters with a
+    semicolon in their perl prototype
+
+  * fix missing parameter names in error messages
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Nov 2021 14:00:28 +0100
+
 rust-perlmod-macro (0.5.0-1) stable; urgency=medium
 
   * detect perl's MULTIPLICITY configuration and adapt function signatures,
