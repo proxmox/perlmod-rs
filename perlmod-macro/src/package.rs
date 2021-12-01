@@ -1,4 +1,3 @@
-use std::convert::TryFrom;
 use std::env;
 
 use proc_macro2::{Ident, Span, TokenStream};

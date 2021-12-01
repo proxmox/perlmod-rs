@@ -317,7 +317,6 @@ impl Value {
     /// ```
     /// #[perlmod::package(name = "My::Thing")]
     /// mod export {
-    ///     use std::convert::TryFrom;
     ///     use std::sync::Mutex;
     ///
     ///     use perlmod::{Error, Value};

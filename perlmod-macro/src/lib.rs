@@ -6,7 +6,6 @@ extern crate proc_macro;
 extern crate proc_macro2;
 
 use std::cell::RefCell;
-use std::convert::TryFrom;
 
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;

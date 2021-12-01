@@ -1,6 +1,3 @@
-use std::convert::TryFrom;
-use std::iter::IntoIterator;
-
 use proc_macro2::TokenStream;
 
 use quote::quote;

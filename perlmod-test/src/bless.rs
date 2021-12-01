@@ -1,7 +1,5 @@
 #[perlmod::package(name = "RSPM::Bless", lib = "perlmod_test")]
 mod export {
-    use std::convert::TryFrom;
-
     use anyhow::Error;
 
     use perlmod::Value;

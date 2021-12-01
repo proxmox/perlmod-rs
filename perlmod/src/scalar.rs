@@ -1,6 +1,5 @@
 //! Module containing the [`Scalar`] and [`Mortal`] types.
 
-use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::mem;
 

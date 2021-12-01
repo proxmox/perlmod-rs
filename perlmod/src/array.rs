@@ -1,6 +1,5 @@
 //! Module dealing with perl [`Array`](crate::Array)s. ([`AV`](crate::ffi::AV) pointers).
 
-use std::convert::TryFrom;
 use std::marker::PhantomData;
 
 use crate::error::CastError;

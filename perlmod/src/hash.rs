@@ -1,7 +1,5 @@
 //! Module dealing with perl [`Hash`](crate::Hash)es. ([`HV`](crate::ffi::HV) pointers).
 
-use std::convert::TryFrom;
-
 use crate::error::CastError;
 use crate::ffi::{self, HV, SV};
 use crate::raw_value;
