@@ -2,7 +2,7 @@
 name = "perlmod-macro"
 version = "0.6.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
-edition = "2018"
+edition = "2021"
 build = "build.rs"
 license = "Apache-2.0 OR MIT"
 categories = [ "API bindings" ]
