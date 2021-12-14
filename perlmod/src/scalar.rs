@@ -421,7 +421,7 @@ impl ScalarRef {
 
     /// Find a magic value, if present.
     ///
-    /// If `ty` is `None`, a `PERL_MAGIC_ext` magic will be removed.
+    /// If `ty` is `None`, a `PERL_MAGIC_ext` magic will be searched for.
     pub fn find_raw_magic(
         &self,
         ty: Option<libc::c_int>,
