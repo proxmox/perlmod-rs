@@ -7,7 +7,7 @@ use bitflags::bitflags;
 
 use crate::error::MagicError;
 use crate::ffi::{self, SV};
-use crate::magic::{Leakable, MagicSpec};
+use crate::magic::{Leakable, MagicSpec, MagicValue};
 use crate::raw_value;
 use crate::{Error, Value};
 
@@ -439,12 +439,12 @@ impl ScalarRef {
 
     /// Attach a magic tag to this value. This is a more convenient alternative to using
     /// [`add_raw_magic`](ScalarRef::add_raw_magic()) manually.
-    pub fn add_magic<'o, T: Leakable>(&self, spec: MagicSpec<'o, 'static, T>) {
+    pub fn add_magic<'spec, 'o, T: Leakable>(&self, spec: MagicValue<'spec, 'o, 'static, T>) {
         unsafe {
             self.add_raw_magic(
-                spec.obj,
-                spec.how,
-                Some(spec.vtbl),
+                spec.spec.obj,
+                spec.spec.how,
+                Some(spec.spec.vtbl),
                 spec.ptr.map(Leakable::leak).unwrap_or(std::ptr::null()),
                 0,
             )

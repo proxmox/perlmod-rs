@@ -121,6 +121,12 @@ unsafe impl<T> Leakable for std::rc::Rc<T> {
 /// A tag for perl magic, see [`MagicSpec`] for its usage.
 pub struct MagicTag<T = ()>(ffi::MGVTBL, PhantomData<T>);
 
+/// It doesn't actually contain a `T`
+unsafe impl<T> Sync for MagicTag<T> {}
+
+/// It doesn't actually contain a `T`
+unsafe impl<T> Send for MagicTag<T> {}
+
 impl<T> MagicTag<T> {
     /// Create a new tag. See [`MagicSpec`] for its usage.
     pub const fn new() -> Self {
@@ -208,12 +214,19 @@ impl<T: Leakable> MagicTag<T> {
 /// ```
 ///
 /// NOTE: Once `const fn` with trait bounds are stable, this will be `where T: Leakable`.
+#[derive(Clone)]
 pub struct MagicSpec<'o, 'v, T> {
     pub(crate) obj: Option<&'o ScalarRef>,
     pub(crate) how: Option<libc::c_int>,
     pub(crate) vtbl: &'v ffi::MGVTBL,
-    pub(crate) ptr: Option<T>,
+    _phantom: PhantomData<T>,
 }
+
+/// It doesn't actually contain a `T`
+unsafe impl<'o, 'v, T> Sync for MagicSpec<'o, 'v, T> {}
+
+/// It doesn't actually contain a `T`
+unsafe impl<'o, 'v, T> Send for MagicSpec<'o, 'v, T> {}
 
 impl<T> MagicSpec<'static, 'static, T> {
     /// Create a new static magic specification from a tag.
@@ -226,7 +239,7 @@ impl<T> MagicSpec<'static, 'static, T> {
             obj: None,
             how: None,
             vtbl: &vtbl.0,
-            ptr: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -236,7 +249,7 @@ impl<T> MagicSpec<'static, 'static, T> {
             obj: None,
             how: self.how,
             vtbl: self.vtbl,
-            ptr: None,
+            _phantom: PhantomData,
         }
     }
 }
@@ -245,12 +258,19 @@ impl<'o, 'v, T: Leakable> MagicSpec<'o, 'v, T> {
     /// Leak a `T` into a new `MagicSpec`.
     ///
     /// This LEAKS.
-    pub fn with_value(&self, ptr: T) -> Self {
-        MagicSpec {
-            obj: self.obj.clone(),
-            how: self.how.clone(),
-            vtbl: self.vtbl,
+    pub fn with_value<'a>(&'a self, ptr: T) -> MagicValue<'a, 'o, 'v, T> {
+        MagicValue {
+            spec: self,
             ptr: Some(ptr),
         }
     }
+}
+
+/// We want to instantiate `MagicSpec` as `static`, because as `const` the contained values may not
+/// actually end up to be guaranteed the same storage everywhere the `const` is accessed. But in
+/// order to be able to create a `static`, it must be `Sync`, so `MagicSpec` does not contain the
+/// pointer value anymore, instead, a `MagicValue` is instantiated for this.
+pub struct MagicValue<'spec, 'o, 'v, T> {
+    pub(crate) spec: &'spec MagicSpec<'o, 'v, T>,
+    pub(crate) ptr: Option<T>,
 }

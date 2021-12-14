@@ -59,7 +59,7 @@ pub use raw_value::RawValue;
 
 pub mod magic;
 #[doc(inline)]
-pub use magic::{MagicSpec, MagicTag};
+pub use magic::{MagicSpec, MagicTag, MagicValue};
 
 #[cfg(feature = "exporter")]
 #[doc(inline)]

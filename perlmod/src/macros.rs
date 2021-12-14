@@ -193,8 +193,10 @@ macro_rules! magic_destructor {
 macro_rules! declare_magic {
     ($ty:ty : &$inner:ty as $class:literal) => {
         const CLASSNAME: &str = $class;
-        const MAGIC: $crate::MagicSpec<$ty> =
-            unsafe { perlmod::MagicSpec::new_static(&$crate::MagicTag::<$ty>::DEFAULT) };
+        static MAGIC: $crate::MagicSpec<$ty> = unsafe {
+            static TAG: $crate::MagicTag<$ty> = $crate::MagicTag::<$ty>::DEFAULT;
+            perlmod::MagicSpec::new_static(&TAG)
+        };
 
         impl<'a> ::std::convert::TryFrom<&'a $crate::Value> for &'a $inner {
             type Error = $crate::error::MagicError;
