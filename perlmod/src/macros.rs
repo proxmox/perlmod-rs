@@ -221,7 +221,7 @@ macro_rules! instantiate_magic {
         let value = $crate::Value::new_hash();
         let this = $crate::Value::new_ref(&value);
         this.bless_sv($class)?;
-        value.add_magic(MAGIC.with_value($value));
+        value.add_magic($magic.with_value($value));
         this
     }};
 }
