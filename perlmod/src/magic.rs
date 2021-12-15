@@ -75,8 +75,23 @@ use crate::ScalarRef;
 /// balance out reference counts, and so forth.
 pub unsafe trait Leakable {
     type Pointee;
+
+    /// Leak this value as a pointer.
     fn leak(self) -> *const libc::c_char;
+
+    /// Reclaim a value from a pointer.
+    ///
+    /// # Safety
+    ///
+    /// This must only be called *once* on values previously created by calling [`get_ref`] on a
+    /// value obtained from [`leak`].
+    /// Implementors must ensure that it is always safe to call this exactly *once* on *each*
+    /// leaked value.
+    ///
+    /// [`get_ref`]: Leakable::get_ref
+    /// [`leak`]: Leakable::leak
     unsafe fn reclaim(ptr: &Self::Pointee) -> Self;
+
     fn get_ref<'a>(ptr: *const libc::c_char) -> Option<&'a Self::Pointee> {
         unsafe { (ptr as *const Self::Pointee).as_ref() }
     }

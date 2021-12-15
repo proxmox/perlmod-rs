@@ -227,7 +227,7 @@ impl serde::Serialize for Array {
         use serde::ser::SerializeSeq;
 
         if raw_value::is_enabled() {
-            return raw_value::serialize_raw(&self, serializer);
+            return raw_value::serialize_raw(self, serializer);
         }
 
         let mut seq = serializer.serialize_seq(Some(self.len()))?;

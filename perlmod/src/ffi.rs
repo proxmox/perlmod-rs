@@ -39,6 +39,7 @@ pub struct MAGIC {
     _ffi: usize,
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl MAGIC {
     pub fn vtbl(&self) -> Option<&MGVTBL> {
         unsafe { RSPL_MAGIC_virtual(self as *const MAGIC).as_ref() }
@@ -187,7 +188,7 @@ impl MGVTBL {
     /// This must not be deallocated as long as it is attached to a perl value, so best use this as
     /// `const` variables, rather than dynamically allocating it.
     pub const fn zero() -> Self {
-        *&Self::EMPTY
+        Self::EMPTY
     }
 }
 

@@ -460,7 +460,7 @@ impl Serialize for Value {
         use serde::ser::Error;
 
         if raw_value::is_enabled() {
-            raw_value::serialize_raw(&self, serializer)
+            raw_value::serialize_raw(self, serializer)
         } else {
             match self {
                 Value::Scalar(this) => this.serialize(serializer),

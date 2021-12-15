@@ -439,7 +439,7 @@ impl ScalarRef {
 
     /// Attach a magic tag to this value. This is a more convenient alternative to using
     /// [`add_raw_magic`](ScalarRef::add_raw_magic()) manually.
-    pub fn add_magic<'spec, 'o, T: Leakable>(&self, spec: MagicValue<'spec, 'o, 'static, T>) {
+    pub fn add_magic<T: Leakable>(&self, spec: MagicValue<'_, '_, 'static, T>) {
         unsafe {
             self.add_raw_magic(
                 spec.spec.obj,
@@ -552,7 +552,7 @@ impl serde::Serialize for Scalar {
         use serde::ser::Error;
 
         if raw_value::is_enabled() {
-            return raw_value::serialize_raw(&self, serializer);
+            return raw_value::serialize_raw(self, serializer);
         }
 
         match self.ty() {

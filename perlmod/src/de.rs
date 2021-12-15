@@ -508,7 +508,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                             value: None,
                         })
                     } else {
-                        return Error::fail("expected an enum value");
+                        Error::fail("expected an enum value")
                     }
                 }
                 _ => unreachable!(),
@@ -536,7 +536,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                     }),
                 }
             }
-            _ => return Error::fail("expected a string or hash for an enum"),
+            _ => Error::fail("expected a string or hash for an enum"),
         }
     }
 

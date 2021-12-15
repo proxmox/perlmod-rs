@@ -207,7 +207,7 @@ impl serde::Serialize for Hash {
         use serde::ser::SerializeMap;
 
         if raw_value::is_enabled() {
-            return raw_value::serialize_raw(&self, serializer);
+            return raw_value::serialize_raw(self, serializer);
         }
 
         let mut map = serializer.serialize_map(Some(self.len()))?;
