@@ -207,7 +207,7 @@ extern "C" {
         filename: *const i8,
         proto: *const i8,
         flags: u32,
-    );
+    ) -> *mut CV;
 
     pub fn RSPL_SvNV(sv: *mut SV) -> f64;
     pub fn RSPL_SvIV(sv: *mut SV) -> isize;
