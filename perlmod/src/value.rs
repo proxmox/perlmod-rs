@@ -175,6 +175,7 @@ impl Value {
         self.bless_sv(&pkgsv)
     }
 
+    /// Same as [`bless`] but the package string is already a perl [`ScalarRef`].
     pub fn bless_sv(&self, pkgsv: &ScalarRef) -> Result<Value, Error> {
         let stash = unsafe { ffi::RSPL_gv_stashsv(pkgsv.sv(), 0) };
         if stash.is_null() {
@@ -218,6 +219,7 @@ impl Value {
         Self::from_scalar(Scalar::from_raw_ref(ptr as *mut SV))
     }
 
+    /// Convert a [`Scalar`] to a [`Value`].
     pub fn from_scalar(scalar: Scalar) -> Self {
         Self::from(scalar)
     }
@@ -250,6 +252,7 @@ impl Value {
         }
     }
 
+    /// Turn this into a "mortal" value in perl.
     pub fn into_mortal(self) -> crate::scalar::Mortal {
         match self {
             Value::Scalar(v) => v.into_mortal(),

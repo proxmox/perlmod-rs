@@ -1,3 +1,5 @@
+//! Error types.
+
 use std::fmt;
 
 /// Error returned by `TryFrom` implementations between `Scalar`, `Array` and `Hash`.
