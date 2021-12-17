@@ -1,3 +1,16 @@
+rust-perlmod (0.10.1-1) stable; urgency=medium
+
+  * let ffi::RSPL_newXS_flags return the CV pointer
+
+  * let the perl_fn! macro also handle just types, not full functions with
+    bodies
+
+  * add Value::new_xsub as an taking a `perl_fn!(extern "C" fn(*mut CV))`
+
+  * use #[deny(unsafe_op_in_unsafe_fn)] and update code accordingly
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Dec 2021 09:21:24 +0100
+
 rust-perlmod (0.10.0-1) stable; urgency=medium
 
   * bugfix: declare_magic now declares MAGIC as a static instead of a const,
