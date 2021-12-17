@@ -95,6 +95,13 @@ mod vtbl_types_impl {
     macro_rules! perl_fn {
         ($(
             $(#[$attr:meta])*
+            extern "C" fn($($args:tt)*) $(-> $re:ty)?
+        )*) => {$(
+            $(#[$attr])*
+            extern "C" fn(*const $crate::ffi::Interpreter, $($args)*) $(-> $re)?
+        )*};
+        ($(
+            $(#[$attr:meta])*
             extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
                 $($code:tt)*
             }
@@ -130,6 +137,13 @@ mod vtbl_types_impl {
 
     #[macro_export]
     macro_rules! perl_fn {
+        ($(
+            $(#[$attr:meta])*
+            extern "C" fn($($args:tt)*) $(-> $re:ty)?
+        )*) => {$(
+            $(#[$attr])*
+            extern "C" fn($($args)*) $(-> $re)?
+        )*};
         ($(
             $(#[$attr:meta])*
             extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
