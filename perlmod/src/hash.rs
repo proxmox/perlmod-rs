@@ -50,7 +50,7 @@ impl Hash {
     /// The caller must ensure that it is safe to decrease the reference count later on, or use
     /// [`into_raw()`](Value::into_raw()) instead of letting the [`Hash`](struct@Hash) get dropped.
     pub unsafe fn from_raw_move(ptr: *mut HV) -> Self {
-        Self(Scalar::from_raw_move(ptr as *mut SV))
+        Self(unsafe { Scalar::from_raw_move(ptr as *mut SV) })
     }
 
     /// Create a new reference to an existing [`HV`] value. This will increase the value's
@@ -60,7 +60,7 @@ impl Hash {
     ///
     /// The caller may still need to decrease the reference count for the `ptr` source value.
     pub unsafe fn from_raw_ref(ptr: *mut HV) -> Self {
-        Self(Scalar::from_raw_ref(ptr as *mut SV))
+        Self(unsafe { Scalar::from_raw_ref(ptr as *mut SV) })
     }
 
     /// Create a new reference to this value.

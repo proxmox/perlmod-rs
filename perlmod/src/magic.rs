@@ -105,7 +105,7 @@ unsafe impl<T> Leakable for Box<T> {
     }
 
     unsafe fn reclaim(ptr: &T) -> Self {
-        Box::from_raw(ptr as *const T as *mut T)
+        unsafe { Box::from_raw(ptr as *const T as *mut T) }
     }
 }
 
@@ -117,7 +117,7 @@ unsafe impl<T> Leakable for std::sync::Arc<T> {
     }
 
     unsafe fn reclaim(ptr: &T) -> Self {
-        std::sync::Arc::from_raw(ptr as *const T)
+        unsafe { std::sync::Arc::from_raw(ptr as *const T) }
     }
 }
 
@@ -129,7 +129,7 @@ unsafe impl<T> Leakable for std::rc::Rc<T> {
     }
 
     unsafe fn reclaim(ptr: &T) -> Self {
-        std::rc::Rc::from_raw(ptr as *const T)
+        unsafe { std::rc::Rc::from_raw(ptr as *const T) }
     }
 }
 

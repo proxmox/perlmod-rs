@@ -341,7 +341,9 @@ impl StackMark {
     /// This is only valid if the mark is still valid (smaller than `PL_stack_sp`) and all values
     /// still remaining on the stack are mortal (which should normally be the case anyway).
     pub unsafe fn set_stack(self) {
-        RSPL_stack_shrink_to(self.0);
+        unsafe {
+            RSPL_stack_shrink_to(self.0);
+        }
     }
 }
 
@@ -377,7 +379,7 @@ impl Iterator for StackIter {
 ///
 /// Read up on `PL_markstack_ptr` in perlguts. This is equivalent to `*PL_markstack_ptr--` in C.
 pub unsafe fn pop_arg_mark() -> StackMark {
-    StackMark(RSPL_pop_markstack_ptr())
+    StackMark(unsafe { RSPL_pop_markstack_ptr() })
 }
 
 /// Push a value to the stack.
@@ -387,8 +389,10 @@ pub unsafe fn pop_arg_mark() -> StackMark {
 /// Read up on mortals and the stack and when it is legal to put a value onto it. Typically a
 /// mortal value with no more references to it to avoid leaking if they aren't used later on.
 pub unsafe fn stack_push_raw(value: *mut SV) {
-    RSPL_stack_resize_by(1);
-    *RSPL_stack_sp() = value;
+    unsafe {
+        RSPL_stack_resize_by(1);
+        *RSPL_stack_sp() = value;
+    }
 }
 
 pub fn stack_push(value: crate::Mortal) {
@@ -453,7 +457,9 @@ pub fn stack_push(value: crate::Mortal) {
 /// }
 /// ```
 pub unsafe fn croak(sv: *mut SV) -> ! {
-    RSPL_croak_sv(sv);
+    unsafe {
+        RSPL_croak_sv(sv);
+    }
 }
 
 /// Create a pseudo-block for mortals & temps to be freed after it.

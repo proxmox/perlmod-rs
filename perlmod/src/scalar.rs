@@ -55,7 +55,7 @@ impl Scalar {
     ///
     /// The caller may still need to decrease the reference count for the `ptr` source value.
     pub unsafe fn from_raw_ref(ptr: *mut SV) -> Self {
-        Self::from_raw_move(ffi::RSPL_SvREFCNT_inc(ptr))
+        unsafe { Self::from_raw_move(ffi::RSPL_SvREFCNT_inc(ptr)) }
     }
 
     /// Create a reference to `PL_sv_undef`.
@@ -332,7 +332,7 @@ impl ScalarRef {
     ///
     /// The user is responsible for making sure the underlying pointer is correct.
     pub unsafe fn pv_ref<T>(&self) -> Result<&T, Error> {
-        self.pv_raw().map(|p| &*p)
+        self.pv_raw().map(|p| unsafe { &*p })
     }
 
     /// Interpret the byte string as a pointer and return it as a mutable reference for
@@ -342,7 +342,7 @@ impl ScalarRef {
     ///
     /// The user is responsible for making sure the underlying pointer is correct.
     pub unsafe fn pv_mut_ref<T>(&self) -> Result<&mut T, Error> {
-        self.pv_raw().map(|p| &mut *p)
+        self.pv_raw().map(|p| unsafe { &mut *p })
     }
 
     /// Create another owned reference to this value.
@@ -394,14 +394,16 @@ impl ScalarRef {
         name: *const libc::c_char,
         namelen: i32,
     ) {
-        let _magic_ptr = ffi::RSPL_sv_magicext(
-            self.sv(),
-            obj.map(Self::sv).unwrap_or(std::ptr::null_mut()),
-            how.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
-            vtbl,
-            name,
-            namelen,
-        );
+        let _magic_ptr = unsafe {
+            ffi::RSPL_sv_magicext(
+                self.sv(),
+                obj.map(Self::sv).unwrap_or(std::ptr::null_mut()),
+                how.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
+                vtbl,
+                name,
+                namelen,
+            )
+        };
     }
 
     /// Remove attached magic.
@@ -412,11 +414,13 @@ impl ScalarRef {
     ///
     /// It is up to the user that doing this will not crash the perl interpreter.
     pub unsafe fn remove_raw_magic(&self, ty: Option<libc::c_int>, vtbl: Option<&ffi::MGVTBL>) {
-        ffi::RSPL_sv_unmagicext(
-            self.sv(),
-            ty.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
-            vtbl,
-        )
+        unsafe {
+            ffi::RSPL_sv_unmagicext(
+                self.sv(),
+                ty.unwrap_or_else(|| ffi::RSPL_PERL_MAGIC_ext()),
+                vtbl,
+            )
+        }
     }
 
     /// Find a magic value, if present.

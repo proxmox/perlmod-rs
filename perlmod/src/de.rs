@@ -186,7 +186,7 @@ impl<'deserializer> Deserializer<'deserializer> {
 /// from a borrowed Value (keeping references to all the contained data within perl), which lives
 /// longer than the deserializer.
 unsafe fn str_set_wrong_lifetime<'a, 'b>(s: &'a str) -> &'b str {
-    std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.as_ptr(), s.len()))
+    unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.as_ptr(), s.len())) }
 }
 
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {

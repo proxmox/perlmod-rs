@@ -21,6 +21,8 @@
 //! [`package`]: attr.package.html
 //! [`export`]: attr.export.html
 
+#![deny(unsafe_op_in_unsafe_fn)]
+
 pub mod error;
 pub use error::Error;
 

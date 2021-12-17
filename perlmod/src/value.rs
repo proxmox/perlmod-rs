@@ -60,13 +60,15 @@ impl Value {
     /// you're doing, as perl code WILL execute the function and expect it to behave in a
     /// particular way!
     pub unsafe fn new_xsub(xsub: perl_fn!(extern "C" fn(*mut crate::ffi::CV))) -> Self {
-        Self::from_raw_move(crate::ffi::RSPL_newXS_flags(
-            std::ptr::null(),
-            xsub as _,
-            std::ptr::null(),
-            std::ptr::null(),
-            0,
-        ) as _)
+        unsafe {
+            Self::from_raw_move(crate::ffi::RSPL_newXS_flags(
+                std::ptr::null(),
+                xsub as _,
+                std::ptr::null(),
+                std::ptr::null(),
+                0,
+            ) as _)
+        }
     }
 
     /// If the value is an array, returns the associated [`Array`].
@@ -223,7 +225,7 @@ impl Value {
     /// The caller must ensure that it is safe to decrease the reference count later on, or use
     /// `into_raw()` instead of letting the `Value` get dropped.
     pub unsafe fn from_raw_move(ptr: *mut SV) -> Self {
-        Self::from_scalar(Scalar::from_raw_move(ptr as *mut SV))
+        Self::from_scalar(unsafe { Scalar::from_raw_move(ptr as *mut SV) })
     }
 
     /// Create a new reference to an existing `SV` value. This will increase the value's reference
@@ -233,7 +235,7 @@ impl Value {
     ///
     /// The caller may still need to decrease the reference count for the `ptr` source value.
     pub unsafe fn from_raw_ref(ptr: *mut SV) -> Self {
-        Self::from_scalar(Scalar::from_raw_ref(ptr as *mut SV))
+        Self::from_scalar(unsafe { Scalar::from_raw_ref(ptr as *mut SV) })
     }
 
     /// Convert a [`Scalar`] to a [`Value`].
@@ -301,7 +303,7 @@ impl Value {
             .dereference()
             .ok_or_else(|| Error::new("not a reference"))?
             .pv_raw()?;
-        Ok(&*(ptr as *const T))
+        Ok(unsafe { &*(ptr as *const T) })
     }
 
     /// Check that the value is a reference and blessed into a particular package name. If so,
@@ -325,7 +327,7 @@ impl Value {
             )));
         }
 
-        Ok(&*(ptr.pv_raw()? as *const T))
+        Ok(unsafe { &*(ptr.pv_raw()? as *const T) })
     }
 
     /// Take ownership of a boxed value and create a perl value blessed into a package name.
