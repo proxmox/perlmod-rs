@@ -6,9 +6,9 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::ffi::{self, SV};
-use crate::raw_value;
 use crate::scalar::ScalarRef;
 use crate::Error;
+use crate::{perl_fn, raw_value};
 use crate::{Array, Hash, Scalar};
 
 /// A higher level value. This is basically an [`SV`] already cast to [`AV`](crate::ffi::AV) or
@@ -50,6 +50,23 @@ impl Value {
     /// Create a new byte string.
     pub fn new_bytes(s: &[u8]) -> Self {
         Value::Scalar(Scalar::new_bytes(s))
+    }
+
+    /// Create a new reference code reference.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the user to ensure that only a valid perl XSUB is used. You should know what
+    /// you're doing, as perl code WILL execute the function and expect it to behave in a
+    /// particular way!
+    pub unsafe fn new_xsub(xsub: perl_fn!(extern "C" fn(*mut crate::ffi::CV))) -> Self {
+        Self::from_raw_move(crate::ffi::RSPL_newXS_flags(
+            std::ptr::null(),
+            xsub as _,
+            std::ptr::null(),
+            std::ptr::null(),
+            0,
+        ) as _)
     }
 
     /// If the value is an array, returns the associated [`Array`].
