@@ -69,6 +69,7 @@ pub fn handle_function(
     }
 
     let name = func.sig.ident.clone();
+    let export_public = export_public.then(|| &func.vis);
     let xs_name = attr
         .xs_name
         .clone()
@@ -283,16 +284,15 @@ fn handle_return_kind(
     xs_name: &Ident,
     impl_xs_name: &Ident,
     passed_arguments: TokenStream,
-    export_public: bool,
+    export_public: Option<&syn::Visibility>,
 ) -> Result<ReturnHandling, Error> {
     let return_type;
     let mut handle_return;
     let wrapper_func;
 
-    let vis = if export_public {
-        quote! { #[no_mangle] pub }
-    } else {
-        quote! { #[allow(non_snake_case)] }
+    let vis = match export_public {
+        Some(vis) => quote! { #[no_mangle] #vis },
+        None => quote! { #[allow(non_snake_case)] },
     };
 
     let pthx = crate::pthx_param();
