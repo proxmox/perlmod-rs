@@ -289,6 +289,12 @@ fn handle_return_kind(
     let mut handle_return;
     let wrapper_func;
 
+    let vis = if export_public {
+        quote! { #[no_mangle] pub }
+    } else {
+        quote! { #[allow(non_snake_case)] }
+    };
+
     let pthx = crate::pthx_param();
     match ret {
         Return::None(result) => {
@@ -318,12 +324,6 @@ fn handle_return_kind(
                     Ok(())
                 };
             }
-
-            let vis = if export_public {
-                quote! { #[no_mangle] pub }
-            } else {
-                quote! { #[allow(non_snake_case)] }
-            };
 
             wrapper_func = quote! {
                 #[doc(hidden)]
@@ -373,9 +373,8 @@ fn handle_return_kind(
             };
 
             wrapper_func = quote! {
-                #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
@@ -460,9 +459,8 @@ fn handle_return_kind(
             //}
 
             wrapper_func = quote! {
-                #[no_mangle]
                 #[doc(hidden)]
-                pub extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name() {
                             Ok(sv) => { #push },
