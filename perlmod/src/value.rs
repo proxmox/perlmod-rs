@@ -87,7 +87,7 @@ impl Value {
         }
     }
 
-    /// If the value is a hash, returns the associated [`Hash`].
+    /// If the value is a hash, returns the associated [`struct@Hash`].
     pub fn as_hash(&self) -> Option<&Hash> {
         match self {
             Value::Hash(v) => Some(v),
@@ -95,7 +95,7 @@ impl Value {
         }
     }
 
-    /// If the value is a hash, returns the associated mutable [`Hash`].
+    /// If the value is a hash, returns the associated mutable [`struct@Hash`].
     pub fn as_hash_mut(&mut self) -> Option<&mut Hash> {
         match self {
             Value::Hash(v) => Some(v),
@@ -194,7 +194,7 @@ impl Value {
         self.bless_sv(&pkgsv)
     }
 
-    /// Same as [`bless`] but the package string is already a perl [`ScalarRef`].
+    /// Same as [`bless`](Self::bless()) but the package string is already a perl [`ScalarRef`].
     pub fn bless_sv(&self, pkgsv: &ScalarRef) -> Result<Value, Error> {
         let stash = unsafe { ffi::RSPL_gv_stashsv(pkgsv.sv(), 0) };
         if stash.is_null() {
