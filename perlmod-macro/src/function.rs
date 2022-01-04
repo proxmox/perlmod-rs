@@ -2,6 +2,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
 use syn::Error;
+use syn::spanned::Spanned;
 
 use crate::attribs::FunctionAttrs;
 
@@ -15,7 +16,13 @@ pub struct XSub {
 
 #[derive(Default)]
 struct ArgumentAttrs {
+    /// This is the `CV` pointer.
+    cv: Option<Span>,
+
+    /// Skip the deserializer for this argument.
     raw: bool,
+
+    /// Call `TryFrom<&Value>::try_from` for this argument instead of deserializing it.
     try_from_ref: bool,
 }
 
@@ -25,6 +32,8 @@ impl ArgumentAttrs {
             self.raw = true;
         } else if path.is_ident("try_from_ref") {
             self.try_from_ref = true;
+        } else if path.is_ident("cv") {
+            self.cv = Some(path.span());
         } else {
             return false;
         }
@@ -33,10 +42,10 @@ impl ArgumentAttrs {
     }
 
     fn validate(&self, span: Span) -> Result<(), Error> {
-        if self.raw && self.try_from_ref {
+        if self.raw as usize + self.try_from_ref as usize + self.cv.is_some() as usize > 1 {
             bail!(
                 span,
-                "`raw` and `try_from_ref` attributes are mutually exclusive"
+                "`raw` and `try_from_ref` and `cv` attributes are mutually exclusive"
             );
         }
         Ok(())
@@ -83,6 +92,7 @@ pub fn handle_function(
     let mut extract_arguments = TokenStream::new();
     let mut deserialized_arguments = TokenStream::new();
     let mut passed_arguments = TokenStream::new();
+    let mut cv_arg_param = TokenStream::new();
     for arg in &mut func.sig.inputs {
         let mut argument_attrs = ArgumentAttrs::default();
 
@@ -91,7 +101,6 @@ pub fn handle_function(
             syn::FnArg::Typed(ref mut pt) => {
                 pt.attrs
                     .retain(|attr| !argument_attrs.handle_path(&attr.path));
-                use syn::spanned::Spanned;
                 argument_attrs.validate(pt.span())?;
                 &*pt
             }
@@ -111,6 +120,19 @@ pub fn handle_function(
         };
 
         let arg_type = &*pat_ty.ty;
+
+        if let Some(cv_span) = argument_attrs.cv {
+            if !cv_arg_param.is_empty() {
+                bail!(cv_span, "only 1 'cv' parameter allowed");
+            }
+            cv_arg_param = quote! { #arg_name: #arg_type };
+            if passed_arguments.is_empty() {
+                passed_arguments.extend(quote! { #arg_name });
+            } else {
+                passed_arguments.extend(quote! {, #arg_name });
+            }
+            continue;
+        }
 
         let extracted_name = Ident::new(&format!("extracted_arg_{}", arg_name), arg_name.span());
         let deserialized_name =
@@ -193,7 +215,7 @@ pub fn handle_function(
         &format!(
             "too many parameters for function '{}', (expected {})\n",
             name,
-            func.sig.inputs.len()
+            func.sig.inputs.len() - (!cv_arg_param.is_empty()) as usize
         ),
         Span::call_site(),
     );
@@ -210,6 +232,7 @@ pub fn handle_function(
         &impl_xs_name,
         passed_arguments,
         export_public,
+        !cv_arg_param.is_empty(),
     )?;
 
     let tokens = quote! {
@@ -219,7 +242,7 @@ pub fn handle_function(
 
         #[inline(never)]
         #[allow(non_snake_case)]
-        fn #impl_xs_name() -> Result<#return_type, *mut ::perlmod::ffi::SV> {
+        fn #impl_xs_name(#cv_arg_param) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
             let argmark = unsafe { ::perlmod::ffi::pop_arg_mark() };
             let mut args = argmark.iter();
 
@@ -285,6 +308,7 @@ fn handle_return_kind(
     impl_xs_name: &Ident,
     passed_arguments: TokenStream,
     export_public: Option<&syn::Visibility>,
+    cv_arg: bool,
 ) -> Result<ReturnHandling, Error> {
     let return_type;
     let mut handle_return;
@@ -293,6 +317,12 @@ fn handle_return_kind(
     let vis = match export_public {
         Some(vis) => quote! { #[no_mangle] #vis },
         None => quote! { #[allow(non_snake_case)] },
+    };
+
+    let (cv_arg_name, cv_arg_passed) = if cv_arg {
+        (quote! { cv }, quote! { cv })
+    } else {
+        (quote! { _cv }, TokenStream::new())
     };
 
     let pthx = crate::pthx_param();
@@ -327,9 +357,9 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name() {
+                        match #impl_xs_name(#cv_arg_passed) {
                             Ok(()) => (),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -374,9 +404,9 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name() {
+                        match #impl_xs_name(#cv_arg_passed) {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -460,9 +490,9 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx _cv: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name() {
+                        match #impl_xs_name(#cv_arg_passed) {
                             Ok(sv) => { #push },
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }

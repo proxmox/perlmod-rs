@@ -75,6 +75,11 @@ mod export {
     fn test_trailing_optional(first: u32, second: Option<u32>) {
         println!("{:?}, {:?}", first, second);
     }
+
+    #[export(xs_name = "testit_xsub")]
+    fn testit(#[cv] cv: &perlmod::ffi::CV, arg: &str) {
+        let _ = (cv, arg);
+    }
 }
 
 #[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]

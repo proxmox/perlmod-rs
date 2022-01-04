@@ -112,6 +112,7 @@ pub struct FunctionAttrs {
     pub perl_name: Option<Ident>,
     pub xs_name: Option<Ident>,
     pub raw_return: bool,
+    pub cv_variable: Option<Ident>,
     pub prototype: Option<String>,
 }
 
