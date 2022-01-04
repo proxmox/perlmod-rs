@@ -65,6 +65,74 @@ pub struct Interpreter {
     _ffi: usize,
 }
 
+#[macro_export]
+macro_rules! perl_fn {
+    // inherited visibility
+    ($(
+        $(#[$attr:meta])*
+        extern "C" fn($($args:tt)*) $(-> $re:ty)?
+    )*) => {
+        $crate::perl_fn_impl! {
+            $(
+                $(#[$attr])*
+                () extern "C" fn($($args)*) $(-> $re)?
+            )*
+        }
+    };
+    ($(
+        $(#[$attr:meta])*
+        extern "C" fn $name:ident $(<($($gen:tt)*)>)? ($($args:tt)*) $(-> $re:ty)?
+        $(where ($($where_clause:tt)*))?
+        {
+            $($code:tt)*
+        }
+    )*) => {
+        $crate::perl_fn_impl! {
+            $(
+                $(#[$attr])*
+                () extern "C" fn $name $(<($($gen)*)>)? ($($args)*) $(-> $re)?
+                $(where ($($where_clause)*))?
+                {
+                    $($code)*
+                }
+            )*
+        }
+    };
+
+    // same with 'pub' visibility
+    ($(
+        $(#[$attr:meta])*
+        pub $(($($vis:tt)+))? extern "C" fn($($args:tt)*) $(-> $re:ty)?
+    )*) => {
+        $crate::perl_fn_impl! {
+            $(
+                $(#[$attr])*
+                (pub $(($($vis)+))?) extern "C" fn($($args)*) $(-> $re)?
+            )*
+        }
+    };
+    ($(
+        $(#[$attr:meta])*
+        pub $(($($vis:tt)+))?
+        extern "C" fn $name:ident $(<($($gen:tt)*)>)? ($($args:tt)*) $(-> $re:ty)?
+        $(where ($($where_clause:tt)*))?
+        {
+            $($code:tt)*
+        }
+    )*) => {
+        $crate::perl_fn_impl! {
+            $(
+                $(#[$attr])*
+                (pub $(($($vis)+))?) extern "C" fn $name $(<($($gen)*)>)? ($($args)*) $(-> $re)?
+                $(where ($($where_clause)*))?
+                {
+                    $($code)*
+                }
+            )*
+        }
+    };
+}
+
 #[cfg(perlmod = "multiplicity")]
 mod vtbl_types_impl {
     use super::{Interpreter, MAGIC, SV};
@@ -91,23 +159,32 @@ mod vtbl_types_impl {
     ) -> c_int;
     pub type Local = extern "C" fn(_perl: *const Interpreter, sv: *mut SV, mg: *mut MAGIC) -> c_int;
 
+    #[doc(hidden)]
     #[macro_export]
-    macro_rules! perl_fn {
+    macro_rules! perl_fn_impl {
         ($(
             $(#[$attr:meta])*
-            extern "C" fn($($args:tt)*) $(-> $re:ty)?
+            ($($vis:tt)*) extern "C" fn($($args:tt)*) $(-> $re:ty)?
         )*) => {$(
             $(#[$attr])*
-            extern "C" fn(*const $crate::ffi::Interpreter, $($args)*) $(-> $re)?
+            $($vis)* extern "C" fn(*const $crate::ffi::Interpreter, $($args)*) $(-> $re)?
         )*};
         ($(
             $(#[$attr:meta])*
-            extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
+            ($($vis:tt)*)
+            extern "C" fn $name:ident $(<($($gen:tt)*)>)? ($($args:tt)*) $(-> $re:ty)?
+            $(where ($($where_clause:tt)*))?
+            {
                 $($code:tt)*
             }
         )*) => {$(
             $(#[$attr])*
-            extern "C" fn $name (_perl: *const $crate::ffi::Interpreter, $($args)*) $(-> $re)? {
+            $($vis)* extern "C" fn $name $(<$($gen)*>)? (
+                _perl: *const $crate::ffi::Interpreter,
+                $($args)*
+            ) $(-> $re)?
+            $(where $($where_clause)*)?
+            {
                 $($code)*
             }
         )*};
@@ -135,23 +212,29 @@ mod vtbl_types_impl {
         extern "C" fn(sv: *mut SV, mg: *mut MAGIC, clone_parms: *mut super::Unsupported) -> c_int;
     pub type Local = extern "C" fn(sv: *mut SV, mg: *mut MAGIC) -> c_int;
 
+    #[doc(hidden)]
     #[macro_export]
-    macro_rules! perl_fn {
+    macro_rules! perl_fn_impl {
         ($(
             $(#[$attr:meta])*
-            extern "C" fn($($args:tt)*) $(-> $re:ty)?
+            ($($vis:tt)*) extern "C" fn($($args:tt)*) $(-> $re:ty)?
         )*) => {$(
             $(#[$attr])*
-            extern "C" fn($($args)*) $(-> $re)?
+            $($vis)* extern "C" fn($($args)*) $(-> $re)?
         )*};
         ($(
             $(#[$attr:meta])*
-            extern "C" fn $name:ident ($($args:tt)*) $(-> $re:ty)? {
+            ($($vis:tt)*)
+            extern "C" fn $name:ident $(<($($gen:tt)*)>)? ($($args:tt)*) $(-> $re:ty)?
+            $(where ($($where_clause:tt)*))?
+            {
                 $($code:tt)*
             }
         )*) => {$(
             $(#[$attr])*
-            extern "C" fn $name ($($args)*) $(-> $re)? {
+            $($vis)* extern "C" fn $name $(<$($gen)*>)? ($($args)*) $(-> $re)?
+            $(where $($where_clause)*)?
+            {
                 $($code)*
             }
         )*};
