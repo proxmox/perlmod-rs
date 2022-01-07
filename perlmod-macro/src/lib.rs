@@ -38,7 +38,7 @@ mod package;
 #[cfg(perlmod = "multiplicity")]
 #[inline]
 pub(crate) fn pthx_param() -> TokenStream {
-    quote::quote! { _perl: *const usize, }
+    quote::quote! { _perl: *const ::perlmod::ffi::Interpreter, }
 }
 
 #[cfg(not(perlmod = "multiplicity"))]
