@@ -357,7 +357,7 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name(#cv_arg_passed) {
                             Ok(()) => (),
@@ -404,7 +404,7 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name(#cv_arg_passed) {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
@@ -490,7 +490,7 @@ fn handle_return_kind(
 
             wrapper_func = quote! {
                 #[doc(hidden)]
-                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: &::perlmod::ffi::CV) {
+                #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
                         match #impl_xs_name(#cv_arg_passed) {
                             Ok(sv) => { #push },
