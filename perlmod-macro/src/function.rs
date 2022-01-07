@@ -320,7 +320,10 @@ fn handle_return_kind(
     };
 
     let (cv_arg_name, cv_arg_passed) = if cv_arg {
-        (quote! { cv }, quote! { cv })
+        (
+            quote! { cv },
+            quote! { ::perlmod::Value::from_raw_ref(cv as *mut ::perlmod::ffi::SV) },
+        )
     } else {
         (quote! { _cv }, TokenStream::new())
     };
