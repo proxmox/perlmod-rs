@@ -1,8 +1,8 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
-use syn::Error;
 use syn::spanned::Spanned;
+use syn::Error;
 
 use crate::attribs::FunctionAttrs;
 
