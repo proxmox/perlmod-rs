@@ -1,3 +1,11 @@
+rust-perlmod (0.11.0-1) stable; urgency=medium
+
+  * support visibility in `perl_fn!`
+
+  * bump macro to 0.7.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 25 Jan 2022 09:32:52 +0100
+
 rust-perlmod (0.10.1-1) stable; urgency=medium
 
   * let ffi::RSPL_newXS_flags return the CV pointer

@@ -1,6 +1,6 @@
 [package]
 name = "perlmod-macro"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2021"
 build = "build.rs"

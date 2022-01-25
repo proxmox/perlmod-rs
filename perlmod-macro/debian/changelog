@@ -1,3 +1,16 @@
+rust-perlmod-macro (0.7.0-1) stable; urgency=medium
+
+  * expose 'cv' parameter on exports via the #[cv] attribute on a `Value`
+
+  * change 'multiplicity' parameter type from `*const usize` to
+    `*const ffi::Interpreter`
+
+  * use raw pointer for CV parameter in xs subs
+
+  * copy visibility to xsub wrappers
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 25 Jan 2022 09:28:48 +0100
+
 rust-perlmod-macro (0.6.0-1) stable; urgency=medium
 
   * don't publicly export xs methods in packages made with #[package]
