@@ -65,6 +65,11 @@ pub struct Interpreter {
     _ffi: usize,
 }
 
+/// Build perl-compatible functions and fn types (`pTHX` macro equivalent).
+///
+/// Takes an `extern "C" fn` (with or without body) and potentially inserts the a
+/// `*const Interpreter` as first parameter depending on the perl configuration, so it can be used
+/// for xsub implementations.
 #[macro_export]
 macro_rules! perl_fn {
     // inherited visibility
