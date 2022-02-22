@@ -77,7 +77,7 @@ mod export {
     }
 
     #[export(xs_name = "testit_xsub")]
-    fn testit(#[cv] cv: &perlmod::ffi::CV, arg: &str) {
+    fn testit(#[cv] cv: Value, arg: &str) {
         let _ = (cv, arg);
     }
 }
