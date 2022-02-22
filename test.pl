@@ -115,3 +115,8 @@ print("Testing optional parameters\n");
 RSPM::Foo142::test_trailing_optional(1, 99);
 RSPM::Foo142::test_trailing_optional(2, undef);
 RSPM::Foo142::test_trailing_optional(3);
+
+print("Substring test\n");
+my $orig = "OneTwoThree";
+my $sub = RSPM::Foo142::test_substr_return($orig);
+print("[$orig] [$sub]\n");

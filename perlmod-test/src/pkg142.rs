@@ -80,6 +80,11 @@ mod export {
     fn testit(#[cv] cv: Value, arg: &str) {
         let _ = (cv, arg);
     }
+
+    #[export(raw_return)]
+    fn test_substr_return(#[raw] value: Value) -> Result<Value, Error> {
+        Ok(value.substr(3..6)?)
+    }
 }
 
 #[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]

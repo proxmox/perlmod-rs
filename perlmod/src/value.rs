@@ -388,6 +388,17 @@ impl Value {
         let _perl = Box::leak(box_);
         Ok(this)
     }
+
+    /// Attempt to create a substring, provided the contained value is actually a string.
+    pub fn substr<I>(&self, index: I) -> Result<Value, Error>
+    where
+        I: std::slice::SliceIndex<[u8], Output = [u8]>,
+    {
+        match self {
+            Value::Scalar(s) => s.substr(index).map(Value::Scalar),
+            _ => Err(Error::new("substr called on non-scalar")),
+        }
+    }
 }
 
 impl From<Scalar> for Value {

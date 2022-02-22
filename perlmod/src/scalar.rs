@@ -379,6 +379,65 @@ impl ScalarRef {
         }
     }
 
+    /// Check whether this value is a substring.
+    pub fn is_substr(&self) -> bool {
+        unsafe {
+            self.find_raw_magic(
+                Some(ffi::RSPL_PERL_MAGIC_substr()),
+                Some(&*ffi::RSPL_vtbl_substr()),
+            )
+            .is_some()
+        }
+    }
+
+    /// Create a substring from a string.
+    pub fn substr<I>(&self, index: I) -> Result<Scalar, Error>
+    where
+        I: std::slice::SliceIndex<[u8], Output = [u8]>,
+    {
+        let bytes = self.pv_bytes();
+        let slice: &[u8] = bytes
+            .get(index)
+            .ok_or_else(|| Error::new("substr with out of bounds range"))?;
+        let start = unsafe { slice.as_ptr().offset_from(bytes.as_ptr()) };
+        let start = usize::try_from(start).map_err(|_| Error::new("bad substr index"))?;
+
+        Ok(unsafe {
+            Scalar::from_raw_move(ffi::RSPL_substr(
+                ffi::RSPL_SvREFCNT_inc(self.sv()),
+                start,
+                slice.len(),
+            ))
+        })
+    }
+
+    /// Try to produce a substring from an existing "base" value and a `&str`.
+    ///
+    /// Returns `None` if `substr` is not part of `value`.
+    pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Result<Option<Scalar>, Error> {
+        let value_bytes = value.pv_bytes();
+        let value_beg = value_bytes.as_ptr() as usize;
+        let value_end = value_beg + value_bytes.len();
+        let value_range = value_beg..value_end;
+
+        let str_bytes = substr.as_bytes();
+        let str_beg = str_bytes.as_ptr() as usize;
+        let str_end = str_beg + str_bytes.len();
+        if !value_range.contains(&str_beg) || !value_range.contains(&str_end) {
+            return Ok(None);
+        }
+
+        // we just checked the ranges:
+        let start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
+        Ok(Some(unsafe {
+            Scalar::from_raw_move(ffi::RSPL_substr(
+                ffi::RSPL_SvREFCNT_inc(value.sv()),
+                start,
+                substr.len(),
+            ))
+        }))
+    }
+
     /// Attach magic to this value.
     ///
     /// # Safety

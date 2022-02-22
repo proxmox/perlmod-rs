@@ -43,3 +43,5 @@ Testing optional parameters
 1, Some(99)
 2, None
 3, None
+Substring test
+[OneTwoThree] [Two]

@@ -356,6 +356,18 @@ extern SV* RSPL_LvTARG(SV *sv) {
     return LvTARG(sv);
 }
 
+/// Takes ownership of `orig`, returns an owned scalar.
+/// This does NOT check `off` and `len`. That's up to the caller.
+extern SV* RSPL_substr(SV *orig, usize off, usize len) {
+    SV *ret = newSV_type(SVt_PVLV);
+    sv_magic(ret, NULL, PERL_MAGIC_substr, NULL, 0);
+    LvTYPE(ret) = 'x';
+    LvTARG(ret) = orig;
+    LvTARGOFF(ret) = off;
+    LvTARGLEN(ret) = len;
+    return ret;
+}
+
 // We prefer this unsigned.
 //extern unsigned char RSPL_LvTYPE(SV *sv) {
 //    return (unsigned char)LvTYPE(sv);
@@ -375,6 +387,14 @@ extern SV* RSPL_LvTARG(SV *sv) {
 
 extern void RSPL_SvGETMAGIC(SV *sv) {
     return SvGETMAGIC(sv);
+}
+
+extern const MGVTBL* RSPL_vtbl_substr() {
+    return &PL_vtbl_substr;
+}
+
+extern int RSPL_PERL_MAGIC_substr() {
+    return PERL_MAGIC_substr;
 }
 
 /// Create a new all-zeroes vtbl as perl docs suggest this is the safest way to

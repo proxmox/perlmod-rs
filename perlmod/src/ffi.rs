@@ -405,6 +405,10 @@ extern "C" {
     pub fn RSPL_MAGIC_ptr(mg: *const MAGIC) -> *const libc::c_char;
     pub fn RSPL_MAGIC_len(mg: *const MAGIC) -> isize;
     pub fn RSPL_PERL_MAGIC_ext() -> libc::c_int;
+
+    pub fn RSPL_PERL_MAGIC_substr() -> libc::c_int;
+    pub fn RSPL_vtbl_substr() -> *const MGVTBL;
+    pub fn RSPL_substr(orig: *mut SV, off: usize, len: usize) -> *mut SV;
 }
 
 /// Argument marker for the stack.
