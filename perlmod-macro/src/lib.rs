@@ -79,7 +79,7 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
     let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
-    handle_error(item.clone(), perlmod_impl(attr, item)).into()
+    handle_error(perlmod_impl(attr, item)).into()
 }
 
 /// Attribute to export a function so that it can be installed as an `xsub` in perl. See the
@@ -89,7 +89,7 @@ pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
     let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
-    handle_error(item.clone(), export_impl(attr, item)).into()
+    handle_error(export_impl(attr, item)).into()
 }
 
 fn perlmod_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
@@ -110,13 +110,10 @@ fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Er
     Ok(func.tokens)
 }
 
-fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
-    let mut data = match data {
+fn handle_error(result: Result<TokenStream, Error>) -> TokenStream {
+    let mut data = match result {
         Ok(output) => output,
-        Err(err) => {
-            item.extend(err.to_compile_error());
-            item
-        }
+        Err(err) => err.to_compile_error(),
     };
     data.extend(take_non_fatal_errors());
     data
