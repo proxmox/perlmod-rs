@@ -50,7 +50,7 @@ struct Export {
 }
 
 pub struct Package {
-    attrs: ModuleAttrs,
+    pub attrs: ModuleAttrs,
     exported: Vec<Export>,
 }
 

@@ -68,7 +68,12 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
         items.push(syn::Item::Verbatim(package.bootstrap_function()));
     }
 
-    package.write()?;
+    if package.attrs.file_name.is_some()
+        || package.attrs.lib_name.is_some()
+        || std::env::var("PERLMOD_WRITE_PACKAGES").ok().as_deref() == Some("1")
+    {
+        package.write()?;
+    }
 
     Ok(quote! { #module })
 }
