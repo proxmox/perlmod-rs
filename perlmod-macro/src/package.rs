@@ -14,7 +14,7 @@ require DynaLoader;
 sub bootstrap {
     my ($pkg) = @_;
     my ($mod_name) = {{LIB_NAME}};
-    my $bootstrap_name = 'xs_bootstrap_' . ($pkg =~ s/::/__/gr);
+    my $bootstrap_name = 'boot_' . ($pkg =~ s/::/__/gr);
 
     my @dirs = (map "-L$_/auto", @INC);
     my $mod_file = DynaLoader::dl_findfile("#;
@@ -105,7 +105,7 @@ impl Package {
         }
 
         let bootstrap_name =
-            format!("xs_bootstrap_{}", self.attrs.package_name).replace("::", "__");
+            format!("boot_{}", self.attrs.package_name).replace("::", "__");
         let bootstrap_ident = Ident::new(&bootstrap_name, Span::call_site());
 
         quote! {
