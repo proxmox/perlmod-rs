@@ -446,6 +446,10 @@ extern int RSPL_PERL_MAGIC_ext() {
     return PERL_MAGIC_ext;
 }
 
+extern HV* RSPL_defstash() {
+    return PL_defstash;
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef

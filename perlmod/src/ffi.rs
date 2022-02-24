@@ -409,6 +409,8 @@ extern "C" {
     pub fn RSPL_PERL_MAGIC_substr() -> libc::c_int;
     pub fn RSPL_vtbl_substr() -> *const MGVTBL;
     pub fn RSPL_substr(orig: *mut SV, off: usize, len: usize) -> *mut SV;
+
+    pub fn RSPL_defstash() -> *mut HV;
 }
 
 /// Argument marker for the stack.
