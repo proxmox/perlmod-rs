@@ -7,6 +7,7 @@ pub struct ModuleAttrs {
     pub package_name: String,
     pub file_name: Option<String>,
     pub lib_name: Option<String>,
+    pub write: Option<bool>,
 }
 
 fn is_ident_check_dup<T>(path: &syn::Path, var: &Option<T>, what: &'static str) -> bool {
@@ -27,6 +28,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
         let mut package_name = None;
         let mut file_name = None;
         let mut lib_name = None;
+        let mut write = None;
 
         for arg in args {
             match arg {
@@ -45,6 +47,17 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                         error!(path => "unknown argument");
                     }
                 }
+                syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
+                    path,
+                    lit: syn::Lit::Bool(litbool),
+                    ..
+                })) => {
+                    if is_ident_check_dup(&path, &write, "write") {
+                        write = Some(litbool.value());
+                    } else {
+                        error!(path => "unknown argument");
+                    }
+                }
                 _ => error!(Span::call_site(), "unexpected attribute argument"),
             }
         }
@@ -56,6 +69,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
             package_name,
             file_name,
             lib_name,
+            write,
         })
     }
 }
