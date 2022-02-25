@@ -1,6 +1,6 @@
 [package]
 name = "perlmod"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2021"
 build = "build.rs"
@@ -19,7 +19,7 @@ bitflags = "1.2.1"
 libc = "0.2"
 serde = "1.0"
 
-perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.7" }
+perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.8" }
 
 [features]
 default = ["exporter"]

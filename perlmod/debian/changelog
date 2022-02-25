@@ -1,3 +1,13 @@
+rust-perlmod (0.12.0-1) stable; urgency=medium
+
+  * add experimental support for explicit substring handling
+
+  * bump macro to 0.8.0
+    - boot xsubs have been renamed to boot_PACKAGE__NAME
+    - .pm files aren't written out by default anymore
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 25 Feb 2022 15:47:59 +0100
+
 rust-perlmod (0.11.0-1) stable; urgency=medium
 
   * support visibility in `perl_fn!`
