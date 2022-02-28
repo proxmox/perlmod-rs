@@ -60,7 +60,7 @@ Current recommended usage.
 ## "Blessed" objects.
 
 ```rust
-#[perlmod::package(name = "My::Pkg", lib = "the_cdylib_name")]
+#[perlmod::package(name = "My::Pkg")]
 mod export {
     use perlmod::{Error, Value};
 
