@@ -117,6 +117,34 @@ impl Scalar {
     pub fn new_pointer<T>(s: *mut T) -> Self {
         Self::new_bytes(&(s as usize).to_ne_bytes())
     }
+
+    /// Try to produce a substring from an existing "base" value and a `&str`.
+    ///
+    /// Returns `None` if `substr` is not part of `value`.
+    pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Result<Option<Scalar>, Error> {
+        let value_bytes = value.pv_bytes();
+        let value_beg = value_bytes.as_ptr() as usize;
+        let value_end = value_beg + value_bytes.len();
+        let value_range = value_beg..value_end;
+
+        let str_bytes = substr.as_bytes();
+        let str_beg = str_bytes.as_ptr() as usize;
+        let str_end = str_beg + str_bytes.len();
+        if !value_range.contains(&str_beg) || !value_range.contains(&str_end) {
+            return Ok(None);
+        }
+
+        // we just checked the ranges:
+        let start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
+        Ok(Some(unsafe {
+            Scalar::from_raw_move(ffi::RSPL_substr(
+                ffi::RSPL_SvREFCNT_inc(value.sv()),
+                start,
+                substr.len(),
+            ))
+        }))
+    }
+
 }
 
 impl Clone for Scalar {
@@ -409,33 +437,6 @@ impl ScalarRef {
                 slice.len(),
             ))
         })
-    }
-
-    /// Try to produce a substring from an existing "base" value and a `&str`.
-    ///
-    /// Returns `None` if `substr` is not part of `value`.
-    pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Result<Option<Scalar>, Error> {
-        let value_bytes = value.pv_bytes();
-        let value_beg = value_bytes.as_ptr() as usize;
-        let value_end = value_beg + value_bytes.len();
-        let value_range = value_beg..value_end;
-
-        let str_bytes = substr.as_bytes();
-        let str_beg = str_bytes.as_ptr() as usize;
-        let str_end = str_beg + str_bytes.len();
-        if !value_range.contains(&str_beg) || !value_range.contains(&str_end) {
-            return Ok(None);
-        }
-
-        // we just checked the ranges:
-        let start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
-        Ok(Some(unsafe {
-            Scalar::from_raw_move(ffi::RSPL_substr(
-                ffi::RSPL_SvREFCNT_inc(value.sv()),
-                start,
-                substr.len(),
-            ))
-        }))
     }
 
     /// Attach magic to this value.
