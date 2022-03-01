@@ -1,3 +1,9 @@
+rust-perlmod (0.12.1-1) stable; urgency=medium
+
+  * move 'substr_from_str_slice' from ScalarRef to Scalar
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 01 Mar 2022 14:41:44 +0100
+
 rust-perlmod (0.12.0-1) stable; urgency=medium
 
   * add experimental support for explicit substring handling
