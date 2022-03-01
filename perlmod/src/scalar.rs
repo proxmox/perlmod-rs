@@ -120,8 +120,12 @@ impl Scalar {
 
     /// Try to produce a substring from an existing "base" value and a `&str`.
     ///
-    /// Returns `None` if `substr` is not part of `value`.
+    /// Returns `None` if `substr` is not part of `value` or if `substr` is the empty string.
     pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Result<Option<Scalar>, Error> {
+        if substr.is_empty() {
+            return Ok(None);
+        }
+
         let value_bytes = value.pv_bytes();
         let value_beg = value_bytes.as_ptr() as usize;
         let value_end = value_beg + value_bytes.len();
@@ -129,7 +133,7 @@ impl Scalar {
 
         let str_bytes = substr.as_bytes();
         let str_beg = str_bytes.as_ptr() as usize;
-        let str_end = str_beg + str_bytes.len();
+        let str_end = str_beg + str_bytes.len() - 1;
         if !value_range.contains(&str_beg) || !value_range.contains(&str_end) {
             return Ok(None);
         }
