@@ -1,3 +1,10 @@
+rust-perlmod (0.12.2-1) stable; urgency=medium
+
+  * fix 'substr_from_str_slice' failing if the substring is at the end of the
+    string
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 01 Mar 2022 15:12:50 +0100
+
 rust-perlmod (0.12.1-1) stable; urgency=medium
 
   * move 'substr_from_str_slice' from ScalarRef to Scalar
