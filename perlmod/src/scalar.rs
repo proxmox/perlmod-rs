@@ -121,9 +121,9 @@ impl Scalar {
     /// Try to produce a substring from an existing "base" value and a `&str`.
     ///
     /// Returns `None` if `substr` is not part of `value` or if `substr` is the empty string.
-    pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Result<Option<Scalar>, Error> {
+    pub fn substr_from_str_slice(value: &ScalarRef, substr: &str) -> Option<Scalar> {
         if substr.is_empty() {
-            return Ok(None);
+            return None;
         }
 
         let value_bytes = value.pv_bytes();
@@ -135,18 +135,18 @@ impl Scalar {
         let str_beg = str_bytes.as_ptr() as usize;
         let str_end = str_beg + str_bytes.len() - 1;
         if !value_range.contains(&str_beg) || !value_range.contains(&str_end) {
-            return Ok(None);
+            return None;
         }
 
         // we just checked the ranges:
         let start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
-        Ok(Some(unsafe {
+        Some(unsafe {
             Scalar::from_raw_move(ffi::RSPL_substr(
                 ffi::RSPL_SvREFCNT_inc(value.sv()),
                 start,
                 substr.len(),
             ))
-        }))
+        })
     }
 
 }
@@ -579,6 +579,20 @@ impl ScalarRef {
             self.remove_raw_magic(spec.how, Some(spec.vtbl));
         }
         this
+    }
+
+    /// Merges a `Cow<str>` with this value.
+    ///
+    /// Note that the `Cow` part is not required here.
+    ///
+    /// If `self` is a UTF-8 scalar and its memory representation covers the borrowed substring,
+    /// this is equivalent to calling [`Scalar::substr`] with the `index` matching the string.
+    ///
+    /// Otherwise (if the provided string is unrelated to `self`), this is also equivalent to
+    /// calling `[Scalar::new_string]`.
+    pub fn merge_str_slice(&self, text: &str) -> Scalar {
+        Scalar::substr_from_str_slice(self, text)
+            .unwrap_or_else(|| Scalar::new_string(text))
     }
 }
 
