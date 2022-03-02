@@ -139,16 +139,31 @@ impl Scalar {
         }
 
         // we just checked the ranges:
-        let start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
+        let mut start = unsafe { str_bytes.as_ptr().offset_from(value_bytes.as_ptr()) as usize };
+        let mut len = substr.len();
+
+        if unsafe { ffi::RSPL_SvUTF8(value.sv()) } {
+            // go from byte offset to code point offset
+            len = str_bytes
+                .iter()
+                .copied()
+                .filter(|&b| (b as i8) >= -0x40)
+                .count();
+            start = value_bytes[..start]
+                .iter()
+                .copied()
+                .filter(|&b| (b as i8) >= -0x40)
+                .count();
+        }
+
         Some(unsafe {
             Scalar::from_raw_move(ffi::RSPL_substr(
                 ffi::RSPL_SvREFCNT_inc(value.sv()),
                 start,
-                substr.len(),
+                len,
             ))
         })
     }
-
 }
 
 impl Clone for Scalar {
@@ -591,8 +606,7 @@ impl ScalarRef {
     /// Otherwise (if the provided string is unrelated to `self`), this is also equivalent to
     /// calling `[Scalar::new_string]`.
     pub fn merge_str_slice(&self, text: &str) -> Scalar {
-        Scalar::substr_from_str_slice(self, text)
-            .unwrap_or_else(|| Scalar::new_string(text))
+        Scalar::substr_from_str_slice(self, text).unwrap_or_else(|| Scalar::new_string(text))
     }
 }
 

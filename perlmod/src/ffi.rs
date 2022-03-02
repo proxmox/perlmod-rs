@@ -315,6 +315,7 @@ extern "C" {
     pub fn RSPL_SvIV(sv: *mut SV) -> isize;
     pub fn RSPL_SvPVutf8(sv: *mut SV, len: *mut libc::size_t) -> *const libc::c_char;
     pub fn RSPL_SvPV(sv: *mut SV, len: *mut libc::size_t) -> *const libc::c_char;
+    pub fn RSPL_SvUTF8(sv: *mut SV) -> bool;
     /// This calls `sv_utf8_downgrade` first to avoid croaking, instead returns `NULL` on error.
     pub fn RSPL_SvPVbyte(sv: *mut SV, len: *mut libc::size_t) -> *const libc::c_char;
     pub fn RSPL_sv_2mortal(sv: *mut SV) -> *mut SV;

@@ -65,6 +65,10 @@ extern const char* RSPL_SvPV(SV *sv, size_t *out_len) {
     return out;
 }
 
+extern bool RSPL_SvUTF8(SV *sv) {
+    return SvUTF8(sv) != 0;
+}
+
 /// SvPVbyte with a downgrade check to avoid croaking!
 extern const char* RSPL_SvPVbyte(SV *sv, size_t *out_len) {
     size_t length;
