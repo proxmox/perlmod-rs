@@ -1,3 +1,13 @@
+rust-perlmod (0.13.0-1) stable; urgency=medium
+
+  * add `merge_str_slice` convenience helper
+
+  * drop `Result` from `substr_from_str_slice` return value
+
+  * handle SvUTF8 flag in `substr_from_str_slice`
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 04 Mar 2022 09:01:32 +0100
+
 rust-perlmod (0.12.2-1) stable; urgency=medium
 
   * fix 'substr_from_str_slice' failing if the substring is at the end of the
