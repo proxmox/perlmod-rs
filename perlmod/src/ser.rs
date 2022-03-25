@@ -9,6 +9,14 @@ use crate::{array, hash, raw_value};
 /// Perl [`Value`](crate::Value) serializer.
 struct Serializer;
 
+/// Check if the `perlmod::Serializer` is currently being used for serialization.
+///
+/// External structs can use this to determine whether serializing a `RawValue` containing an xsub
+/// will be serialized into perl in a meaningful way.
+pub fn is_active() -> bool {
+    raw_value::is_enabled()
+}
+
 /// Serialize data into a perl [`Value`](crate::Value).
 ///
 /// Note that in theory it should be safe to send such values to different threads as long as their
