@@ -1,4 +1,4 @@
-#[perlmod::package(name = "RSPM::Bless", lib = "perlmod_test")]
+#[perlmod::package(name = "RSPM::Bless", lib = "perlmod_test", write = true)]
 mod export {
     use anyhow::Error;
 

@@ -1,4 +1,4 @@
-#[perlmod::package(name = "RSPM::Magic", lib = "perlmod_test")]
+#[perlmod::package(name = "RSPM::Magic", lib = "perlmod_test", write = true)]
 mod export {
     use perlmod::{Error, Value};
 

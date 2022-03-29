@@ -21,7 +21,7 @@ enum AnEnum {
     ResultB,
 }
 
-#[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test")]
+#[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test", write = true)]
 mod export {
     use anyhow::{bail, Error};
 
