@@ -139,6 +139,8 @@ impl Hash {
 
     /// Get the global `PL_defstash`.
     ///
+    /// # Safety
+    ///
     /// Using this can mess things up. Know what you're doing!
     pub unsafe fn defstash() -> Self {
         Self(unsafe { Scalar::from_raw_ref(ffi::RSPL_defstash() as *mut SV) })

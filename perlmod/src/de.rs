@@ -662,7 +662,7 @@ pub struct HashAccess<'a> {
 
 impl<'a> HashAccess<'a> {
     pub fn new(value: &'a hash::Hash) -> Self {
-        drop(value.shared_iter()); // reset iterator
+        let _ = value.shared_iter(); // reset iterator
         Self {
             hash: value,
             entry: std::ptr::null_mut(),
