@@ -254,7 +254,7 @@ pub fn handle_function(
                     .into_raw());
             }
 
-            drop(args);
+            //drop(args);
 
             #deserialized_arguments
 
