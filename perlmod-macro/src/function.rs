@@ -204,7 +204,7 @@ pub fn handle_function(
 
     let has_return_value = match &func.sig.output {
         syn::ReturnType::Default => Return::None(false),
-        syn::ReturnType::Type(_arrow, ty) => match get_result_type(&**ty) {
+        syn::ReturnType::Type(_arrow, ty) => match get_result_type(ty) {
             (syn::Type::Tuple(tuple), result) if tuple.elems.is_empty() => Return::None(result),
             (syn::Type::Tuple(tuple), result) => Return::Tuple(result, tuple.elems.len()),
             (_, result) => Return::Single(result),

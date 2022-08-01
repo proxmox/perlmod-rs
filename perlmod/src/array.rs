@@ -133,13 +133,13 @@ impl core::ops::Deref for Array {
     type Target = ScalarRef;
 
     fn deref(&self) -> &Self::Target {
-        &*self.0
+        &self.0
     }
 }
 
 impl core::ops::DerefMut for Array {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.0
+        &mut self.0
     }
 }
 

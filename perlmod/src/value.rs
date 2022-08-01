@@ -452,10 +452,10 @@ impl core::ops::Deref for Value {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            Value::Scalar(v) => &**v,
-            Value::Reference(v) => &**v,
-            Value::Array(v) => &**v,
-            Value::Hash(v) => &**v,
+            Value::Scalar(v) => v,
+            Value::Reference(v) => v,
+            Value::Array(v) => v,
+            Value::Hash(v) => v,
         }
     }
 }
@@ -474,7 +474,7 @@ impl core::ops::DerefMut for Value {
 impl AsRef<ScalarRef> for Value {
     #[inline]
     fn as_ref(&self) -> &ScalarRef {
-        &**self
+        self
     }
 }
 
