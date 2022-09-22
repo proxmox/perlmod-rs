@@ -64,7 +64,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeStructVariant = SerVariant<SerHash>;
 
     fn serialize_bool(self, v: bool) -> Result<Value, Error> {
-        Ok(Value::new_uint(if v { 1 } else { 0 }))
+        Ok(Value::new_uint(usize::from(v)))
     }
 
     fn serialize_i8(self, v: i8) -> Result<Value, Error> {

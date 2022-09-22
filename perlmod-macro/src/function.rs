@@ -78,7 +78,7 @@ pub fn handle_function(
     }
 
     let name = func.sig.ident.clone();
-    let export_public = export_public.then(|| &func.vis);
+    let export_public = export_public.then_some(&func.vis);
     let xs_name = attr
         .xs_name
         .clone()

@@ -527,7 +527,7 @@ impl<'de> Deserialize<'de> for Value {
 
             #[inline]
             fn visit_bool<E>(self, value: bool) -> Result<Value, E> {
-                Ok(Value::new_int(if value { 1 } else { 0 }))
+                Ok(Value::new_int(isize::from(value)))
             }
 
             #[inline]

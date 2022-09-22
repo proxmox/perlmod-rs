@@ -413,7 +413,7 @@ impl ScalarRef {
     /// If `blessed` is true and the value is a blessed reference, the package name will be
     /// returned, otherwise the scalar type (`"SCALAR"`, `"ARRAY"`, ...) will be returned.
     pub fn reftype(&self, blessed: bool) -> &'static str {
-        let ptr = unsafe { ffi::RSPL_sv_reftype(self.sv(), if blessed { 1 } else { 0 }) };
+        let ptr = unsafe { ffi::RSPL_sv_reftype(self.sv(), i32::from(blessed)) };
 
         if ptr.is_null() {
             "<UNKNOWN>"
