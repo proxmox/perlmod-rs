@@ -132,10 +132,10 @@ impl Package {
         );
 
         if let Some(lib) = &self.attrs.lib_name {
-            source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib));
+            source = source.replace("{{LIB_NAME}}", &format!("('{lib}')"));
         } else {
             let lib_name = get_default_lib_name(Span::call_site())?;
-            source = source.replace("{{LIB_NAME}}", &format!("('{}')", lib_name));
+            source = source.replace("{{LIB_NAME}}", &format!("('{lib_name}')"));
         }
 
         let file_name = self

@@ -161,10 +161,10 @@ impl std::fmt::Debug for Array {
         let mut comma = false;
         for i in self {
             if comma {
-                write!(f, ", {:?}", i)?;
+                write!(f, ", {i:?}")?;
             } else {
                 comma = true;
-                write!(f, "{:?}", i)?;
+                write!(f, "{i:?}")?;
             }
         }
         write!(f, "]")?;

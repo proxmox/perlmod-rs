@@ -322,8 +322,7 @@ impl Value {
         let reftype = ptr.reftype(true);
         if reftype != package {
             return Err(Error::new_owned(format!(
-                "value not blessed into {:?} (`ref` returned {:?})",
-                package, reftype,
+                "value not blessed into {package:?} (`ref` returned {reftype:?})",
             )));
         }
 

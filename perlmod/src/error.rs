@@ -70,15 +70,14 @@ impl fmt::Display for MagicError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             MagicError::NotAReference(class) => {
-                write!(f, "value blessed into {} was not a reference", class)
+                write!(f, "value blessed into {class} was not a reference")
             }
             MagicError::NotFound("") => {
                 write!(f, "value did not contain the requested magic pointer")
             }
             MagicError::NotFound(class) => write!(
                 f,
-                "value blessed into {} did not contain its declared magic pointer",
-                class
+                "value blessed into {class} did not contain its declared magic pointer"
             ),
         }
     }

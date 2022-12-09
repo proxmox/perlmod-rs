@@ -40,19 +40,19 @@ mod export {
 
     #[export]
     fn test(t: Option<String>) -> Result<(), Error> {
-        println!("test called with {:?}", t);
+        println!("test called with {t:?}");
         Ok(())
     }
 
     #[export]
     fn teststr(t: Option<&str>) -> Result<(), Error> {
-        println!("teststr called with {:?}", t);
+        println!("teststr called with {t:?}");
         Ok(())
     }
 
     #[export]
     fn test_serde(value: super::Blubber) -> Result<String, Error> {
-        println!("got {:?}", value);
+        println!("got {value:?}");
         Ok(value.0)
     }
 
@@ -73,7 +73,7 @@ mod export {
 
     #[export]
     fn test_trailing_optional(first: u32, second: Option<u32>) {
-        println!("{:?}, {:?}", first, second);
+        println!("{first:?}, {second:?}");
     }
 
     #[export(xs_name = "testit_xsub")]
@@ -93,7 +93,7 @@ mod expanded_export {
 
     #[export]
     fn test_lib_env_vars(value: &str) -> Result<(), Error> {
-        println!("foo: {:?}", value);
+        println!("foo: {value:?}");
         Ok(())
     }
 }

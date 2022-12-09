@@ -7,8 +7,8 @@ use std::{env, fs, io};
 fn main() {
     let out_dir = env::var("OUT_DIR").expect("expected OUT_DIR to be set by cargo");
 
-    let include_dir = format!("{}/include", out_dir);
-    let ppport_h_file = format!("{}/ppport.h", include_dir);
+    let include_dir = format!("{out_dir}/include");
+    let ppport_h_file = format!("{include_dir}/ppport.h");
     // quoted, without exterial double qoutes
     let ppport_h_file_string_inner = ppport_h_file.replace('"', "\\\"");
 
@@ -23,8 +23,7 @@ fn main() {
         .arg("-MDevel::PPPort")
         .arg("-e")
         .arg(&format!(
-            r#"Devel::PPPort::WriteFile("{}");"#,
-            ppport_h_file_string_inner
+            r#"Devel::PPPort::WriteFile("{ppport_h_file_string_inner}");"#
         ))
         .output()
         .expect("failed to create ppport.h file using perl's Devel::PPPort");

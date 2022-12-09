@@ -83,10 +83,10 @@ pub fn handle_function(
         .xs_name
         .clone()
         .unwrap_or_else(|| match mangled_package_name {
-            None => Ident::new(&format!("xs_{}", name), name.span()),
-            Some(prefix) => Ident::new(&format!("xs_{}_{}", prefix, name), name.span()),
+            None => Ident::new(&format!("xs_{name}"), name.span()),
+            Some(prefix) => Ident::new(&format!("xs_{prefix}_{name}"), name.span()),
         });
-    let impl_xs_name = Ident::new(&format!("impl_xs_{}", name), name.span());
+    let impl_xs_name = Ident::new(&format!("impl_xs_{name}"), name.span());
 
     let mut trailing_options = 0;
     let mut extract_arguments = TokenStream::new();
@@ -134,12 +134,12 @@ pub fn handle_function(
             continue;
         }
 
-        let extracted_name = Ident::new(&format!("extracted_arg_{}", arg_name), arg_name.span());
+        let extracted_name = Ident::new(&format!("extracted_arg_{arg_name}"), arg_name.span());
         let deserialized_name =
-            Ident::new(&format!("deserialized_arg_{}", arg_name), arg_name.span());
+            Ident::new(&format!("deserialized_arg_{arg_name}"), arg_name.span());
 
         let missing_message = syn::LitStr::new(
-            &format!("missing required parameter: '{}'\n", arg_name),
+            &format!("missing required parameter: '{arg_name}'\n"),
             arg_name.span(),
         );
 
@@ -553,7 +553,7 @@ pub fn get_result_type(ty: &syn::Type) -> (&syn::Type, bool) {
 
 /// Get a non-suffixed integer from an usize.
 fn simple_usize(i: usize, span: Span) -> syn::LitInt {
-    syn::LitInt::new(&format!("{}", i), span)
+    syn::LitInt::new(&format!("{i}"), span)
 }
 
 /// Note that we cannot handle renamed imports at all here...

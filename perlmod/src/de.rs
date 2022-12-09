@@ -72,8 +72,7 @@ impl<'deserializer> Deserializer<'deserializer> {
             match value.ty() {
                 Type::Scalar(_) => Ok(()),
                 Type::Other(other) => Err(Error(format!(
-                    "cannot deserialize weird magic perl values ({})",
-                    other
+                    "cannot deserialize weird magic perl values ({other})"
                 ))),
                 // These are impossible as they are all handled by different Value enum types:
                 Type::Reference => Error::fail("Value::Scalar: containing a reference"),
@@ -185,7 +184,7 @@ impl<'deserializer> Deserializer<'deserializer> {
 /// lifetime needs to only live as long as the serializer, and we feed our serializer with the data
 /// from a borrowed Value (keeping references to all the contained data within perl), which lives
 /// longer than the deserializer.
-unsafe fn str_set_wrong_lifetime<'a, 'b>(s: &'a str) -> &'b str {
+unsafe fn str_set_wrong_lifetime<'a>(s: &'_ str) -> &'a str {
     unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.as_ptr(), s.len())) }
 }
 

@@ -368,7 +368,7 @@ impl ScalarRef {
 
         let bytes: [u8; mem::size_of::<usize>()] = bytes
             .try_into()
-            .map_err(|err| Error(format!("invalid value for pointer: {}", err)))?;
+            .map_err(|err| Error(format!("invalid value for pointer: {err}")))?;
 
         Ok(usize::from_ne_bytes(bytes) as *mut T)
     }
@@ -539,9 +539,9 @@ impl ScalarRef {
     /// # Safety
     ///
     /// It is up to the user to ensure the correct types are used in the provided `MagicSpec`.
-    pub fn find_magic<'a, 's, 'm, T: Leakable>(
-        &'s self,
-        spec: &'m MagicSpec<'static, 'static, T>,
+    pub fn find_magic<'a, T: Leakable>(
+        &'_ self,
+        spec: &'_ MagicSpec<'static, 'static, T>,
     ) -> Option<&'a T::Pointee> {
         match self.find_raw_magic(spec.how, Some(spec.vtbl)) {
             None => None,
@@ -666,8 +666,7 @@ impl serde::Serialize for Scalar {
                 }
             }
             Type::Other(other) => Err(S::Error::custom(format!(
-                "cannot serialize weird magic perl values ({})",
-                other,
+                "cannot serialize weird magic perl values ({other})",
             ))),
 
             // These are impossible as they are all handled by different Value enum types:

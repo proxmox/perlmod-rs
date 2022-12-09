@@ -9,7 +9,7 @@ mod export {
 
     #[export]
     pub fn to_string(tristate: Option<bool>) -> String {
-        format!("{:?}", tristate)
+        format!("{tristate:?}")
     }
 
     #[export]
