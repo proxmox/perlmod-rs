@@ -13,9 +13,10 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+default-dev <!nocheck>,
  perl (>= 5.28.1) <!nocheck>
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: 
 Vcs-Browser: 
+X-Cargo-Crate: perlmod
 Rules-Requires-Root: no
 
 Package: librust-perlmod-dev
