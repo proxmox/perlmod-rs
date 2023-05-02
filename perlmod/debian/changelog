@@ -1,3 +1,13 @@
+rust-perlmod (0.13.2-1) stable; urgency=medium
+
+  * clippy fixups & code health
+
+  * add perlmod::error::{set/get}_errno() as errno API
+
+  * bump macro to 0.8.1 to support the 'serialize_error' and 'errno' attributes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 May 2023 10:11:19 +0200
+
 rust-perlmod (0.13.1-1) stable; urgency=medium
 
   * provide perlmod::ser::is_active helper

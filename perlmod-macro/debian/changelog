@@ -1,3 +1,16 @@
+rust-perlmod-macro (0.8.1-1) stable; urgency=medium
+
+  * clippy fixups & code health
+
+  * fix syntax error in code generated for non-result tuple return types
+
+  * add a 'serialize_error' export attribute for structured error values
+
+  * add an 'errno' export attribute to copy the perlmod errno value to libc's errno value
+    at the end of an exported function
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 May 2023 10:11:34 +0200
+
 rust-perlmod-macro (0.8.0-1) stable; urgency=medium
 
   * bring error span handling up to date (remove some unnecessary clones)
