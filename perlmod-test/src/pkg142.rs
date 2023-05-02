@@ -92,7 +92,7 @@ mod export {
         b: String,
     }
 
-    #[export(serialize_error)]
+    #[export(serialize_error, errno)]
     fn test_deserialized_error(fail: bool) -> Result<&'static str, MyError> {
         if fail {
             Err(MyError {
@@ -100,6 +100,7 @@ mod export {
                 b: "second".to_string(),
             })
         } else {
+            ::perlmod::error::set_errno(77);
             Ok("worked")
         }
     }

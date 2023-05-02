@@ -368,6 +368,12 @@ fn handle_return_kind(
         TokenStream::new()
     };
 
+    let copy_errno = if attr.errno {
+        quote! { ::perlmod::error::copy_errno_to_libc(); }
+    } else {
+        TokenStream::new()
+    };
+
     let pthx = crate::pthx_param();
     match ret.value {
         ReturnValue::None => {
@@ -398,7 +404,9 @@ fn handle_return_kind(
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(#cv_arg_passed) {
+                        let res = #impl_xs_name(#cv_arg_passed);
+                        #copy_errno
+                        match res {
                             Ok(()) => (),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -441,7 +449,9 @@ fn handle_return_kind(
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(#cv_arg_passed) {
+                        let res = #impl_xs_name(#cv_arg_passed);
+                        #copy_errno
+                        match res {
                             Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
@@ -523,7 +533,9 @@ fn handle_return_kind(
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
-                        match #impl_xs_name(#cv_arg_passed) {
+                        let res = #impl_xs_name(#cv_arg_passed);
+                        #copy_errno
+                        match res {
                             Ok(sv) => { #push },
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }

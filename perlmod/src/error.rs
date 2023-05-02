@@ -1,6 +1,8 @@
 //! Error types.
 
+use std::cell::Cell;
 use std::fmt;
+use std::os::raw::c_int;
 
 /// Error returned by `TryFrom` implementations between `Scalar`, `Array` and `Hash`.
 #[derive(Debug)]
@@ -84,3 +86,30 @@ impl fmt::Display for MagicError {
 }
 
 impl std::error::Error for MagicError {}
+
+thread_local! {
+    static ERRNO: Cell<c_int> = Cell::new(0);
+}
+
+/// Set the perlmod-specific `errno` value. This is *not* libc's `errno`, but a separate storage
+/// location not touched by other C or perl functions. An `#[export(errno)]` function will copy
+/// this value to libc's errno location at right before returning into the perl stack (*after* all
+/// side effects such as destructors have already finished).
+pub fn set_errno(value: c_int) {
+    ERRNO.with(|v| v.set(value))
+}
+
+/// *Not* `libc`'s `errno`, this retrieves a value previously set with [`set_errno`], see its
+/// description for details.
+pub fn get_errno() -> c_int {
+    ERRNO.with(|v| v.get())
+}
+
+/// This is part of the proc-macro API and is of little use to users of this crate directly.
+/// When manually implementing "xsubs" this can be used before returning as a shortcut to copying
+/// the perlmod errno value to libc.
+pub unsafe fn copy_errno_to_libc() {
+    unsafe {
+        libc::__errno_location().write(get_errno());
+    }
+}

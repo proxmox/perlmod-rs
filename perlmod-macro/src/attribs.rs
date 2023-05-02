@@ -129,6 +129,7 @@ pub struct FunctionAttrs {
     pub cv_variable: Option<Ident>,
     pub prototype: Option<String>,
     pub serialize_error: bool,
+    pub errno: bool,
 }
 
 impl TryFrom<AttributeArgs> for FunctionAttrs {
@@ -160,6 +161,8 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                         attrs.raw_return = true;
                     } else if path.is_ident("serialize_error") {
                         attrs.serialize_error = true;
+                    } else if path.is_ident("errno") {
+                        attrs.errno = true;
                     } else {
                         error!(path => "unknown attribute");
                     }
