@@ -120,3 +120,12 @@ print("Substring test\n");
 my $orig = "OneTwoThree";
 my $sub = RSPM::Foo142::test_substr_return($orig);
 print("[$orig] [$sub]\n");
+
+my $ok = RSPM::Foo142::test_deserialized_error(0);
+die "test_deserialized_error failed to return a value\n" if $ok ne 'worked';
+$ok = eval { RSPM::Foo142::test_deserialized_error(1) };
+die "test_deserialized_error error case returned a value\n" if defined $ok;
+my $err = $@;
+die "test_deserialized_error error is not a hash\n" if ref($err) ne 'HASH';
+die "structured error has invalid fields\n" if join(',', sort(keys(%$err))) ne 'a,b';
+print('error type: { a: ', $err->{a}, ', b: ', $err->{b}, " }\n");

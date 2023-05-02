@@ -52,15 +52,20 @@ impl ArgumentAttrs {
     }
 }
 
-enum Return {
+struct Return {
+    result: bool,
+    value: ReturnValue,
+}
+
+enum ReturnValue {
     /// Return nothing. (This is different from returning an implicit undef!)
-    None(bool),
+    None,
 
     /// Return a single element.
-    Single(bool),
+    Single,
 
     /// We support tuple return types. They act like "list" return types in perl.
-    Tuple(bool, usize),
+    Tuple(usize),
 }
 
 pub fn handle_function(
@@ -203,11 +208,23 @@ pub fn handle_function(
     }
 
     let has_return_value = match &func.sig.output {
-        syn::ReturnType::Default => Return::None(false),
+        syn::ReturnType::Default => Return {
+            result: false,
+            value: ReturnValue::None,
+        },
         syn::ReturnType::Type(_arrow, ty) => match get_result_type(ty) {
-            (syn::Type::Tuple(tuple), result) if tuple.elems.is_empty() => Return::None(result),
-            (syn::Type::Tuple(tuple), result) => Return::Tuple(result, tuple.elems.len()),
-            (_, result) => Return::Single(result),
+            (syn::Type::Tuple(tuple), result) if tuple.elems.is_empty() => Return {
+                result,
+                value: ReturnValue::None,
+            },
+            (syn::Type::Tuple(tuple), result) => Return {
+                result,
+                value: ReturnValue::Tuple(tuple.elems.len()),
+            },
+            (_, result) => Return {
+                result,
+                value: ReturnValue::Single,
+            },
         },
     };
 
@@ -328,24 +345,43 @@ fn handle_return_kind(
         (quote! { _cv }, TokenStream::new())
     };
 
+    let return_error = if ret.result {
+        if attr.serialize_error {
+            quote! {
+                match ::perlmod::to_value(&err) {
+                    Ok(err) => return Err(err.into_mortal().into_raw()),
+                    Err(err) => {
+                        return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                            .into_mortal()
+                            .into_raw());
+                    }
+                }
+            }
+        } else {
+            quote! {
+                return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                    .into_mortal()
+                    .into_raw());
+            }
+        }
+    } else {
+        TokenStream::new()
+    };
+
     let pthx = crate::pthx_param();
-    match ret {
-        Return::None(result) => {
+    match ret.value {
+        ReturnValue::None => {
             return_type = quote! { () };
 
             if attr.raw_return {
                 bail!(&attr.raw_return => "raw_return attribute is illegal without a return value");
             }
 
-            if result {
+            if ret.result {
                 handle_return = quote! {
                     match #name(#passed_arguments) {
                         Ok(()) => (),
-                        Err(err) => {
-                            return Err(::perlmod::Value::new_string(&format!("{}\n", err))
-                                .into_mortal()
-                                .into_raw());
-                        }
+                        Err(err) => { #return_error }
                     }
 
                     Ok(())
@@ -370,18 +406,14 @@ fn handle_return_kind(
                 }
             };
         }
-        Return::Single(result) => {
+        ReturnValue::Single => {
             return_type = quote! { *mut ::perlmod::ffi::SV };
 
-            if result {
+            if ret.result {
                 handle_return = quote! {
                     let result = match #name(#passed_arguments) {
                         Ok(output) => output,
-                        Err(err) => {
-                            return Err(::perlmod::Value::new_string(&format!("{}\n", err))
-                                .into_mortal()
-                                .into_raw());
-                        }
+                        Err(err) => { #return_error }
                     };
                 };
             } else {
@@ -417,7 +449,7 @@ fn handle_return_kind(
                 }
             };
         }
-        Return::Tuple(result, count) => {
+        ReturnValue::Tuple(count) => {
             return_type = {
                 let mut rt = TokenStream::new();
                 for _ in 0..count {
@@ -426,15 +458,11 @@ fn handle_return_kind(
                 quote! { (#rt) }
             };
 
-            if result {
+            if ret.result {
                 handle_return = quote! {
                     let result = match #name(#passed_arguments) {
                         Ok(output) => output,
-                        Err(err) => {
-                            return Err(::perlmod::Value::new_string(&format!("{}\n", err))
-                                .into_mortal()
-                                .into_raw());
-                        }
+                        Err(err) => { #return_error }
                     };
                 };
             } else {

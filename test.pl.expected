@@ -45,3 +45,4 @@ Testing optional parameters
 3, None
 Substring test
 [OneTwoThree] [Two]
+error type: { a: first, b: second }

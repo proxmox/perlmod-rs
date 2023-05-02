@@ -128,6 +128,7 @@ pub struct FunctionAttrs {
     pub raw_return: bool,
     pub cv_variable: Option<Ident>,
     pub prototype: Option<String>,
+    pub serialize_error: bool,
 }
 
 impl TryFrom<AttributeArgs> for FunctionAttrs {
@@ -157,6 +158,8 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                 syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
                     if path.is_ident("raw_return") {
                         attrs.raw_return = true;
+                    } else if path.is_ident("serialize_error") {
+                        attrs.serialize_error = true;
                     } else {
                         error!(path => "unknown attribute");
                     }

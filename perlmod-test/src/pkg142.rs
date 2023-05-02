@@ -85,6 +85,24 @@ mod export {
     fn test_substr_return(#[raw] value: Value) -> Result<Value, Error> {
         Ok(value.substr(3..6)?)
     }
+
+    #[derive(serde::Serialize)]
+    struct MyError {
+        a: String,
+        b: String,
+    }
+
+    #[export(serialize_error)]
+    fn test_deserialized_error(fail: bool) -> Result<&'static str, MyError> {
+        if fail {
+            Err(MyError {
+                a: "first".to_string(),
+                b: "second".to_string(),
+            })
+        } else {
+            Ok("worked")
+        }
+    }
 }
 
 #[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]
