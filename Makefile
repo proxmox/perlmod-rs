@@ -28,6 +28,10 @@ builddeps: $(foreach c,$(CRATES), $c-builddeps)
 .PHONY: check
 check:
 	cargo test
+	cargo build
+	perl test.pl >out.test
+	if diff -up out.test test.pl.expected; then rm out.test; \
+	else echo "Test output mismatch between out.test and test.pl.expected"; fi
 
 # Prints a diff between the current code and the one rustfmt would produce
 .PHONY: fmt
