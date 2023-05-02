@@ -439,7 +439,7 @@ fn handle_return_kind(
                 };
             } else {
                 handle_return = quote! {
-                    let result = match #name(#passed_arguments);
+                    let result = #name(#passed_arguments);
                 };
             }
 
