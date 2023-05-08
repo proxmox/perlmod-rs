@@ -1,0 +1,21 @@
+Source: perlmod-bin
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ perl (>= 5.28.1) <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Homepage: https://www.proxmox.com
+
+Package: perlmod-bin
+Architecture: all
+Depends:
+ ${perl:Depends},
+Recommends:
+ librust-perlmod+perlmod-macro-dev (= ${binary:Version})
+Description: Script to generate perl package files for perlmod libraries.
+ This contains the genpackage.pl helper script to produce a set of perl
+ packages which load cdylibs made with the perlmod crate. The generated files
+ will have a "main" library module which loads the .so file, and a set of
+ package files using the main module as a base, sothey all share the same
+ library descriptor.

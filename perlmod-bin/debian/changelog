@@ -1,0 +1,5 @@
+perlmod-bin (0.1.0-1) stable; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 May 2023 10:11:13 +0200

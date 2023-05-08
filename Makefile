@@ -17,6 +17,12 @@ dinstall:
 	$(MAKE) deb
 	sudo -k dpkg -i build/librust-*.deb
 
+perlmod-bin-deb:
+	mkdir build || true
+	rm -rf build/perlmod-bin-deb
+	git archive --format=tar HEAD perlmod-bin | tar -C build -xf -
+	cd build/perlmod-bin && dpkg-buildpackage --no-sign -b
+
 %-deb:
 	./build.sh $*
 	touch $@

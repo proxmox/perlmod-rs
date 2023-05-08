@@ -1,6 +1,7 @@
 overlay = "."
 crate_src_path = ".."
 whitelist = [ "src/glue.c" ]
+excludes = [ "generators" ]
 
 [source]
 # TODO
