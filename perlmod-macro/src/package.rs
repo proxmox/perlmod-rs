@@ -110,7 +110,7 @@ impl Package {
         quote! {
             #[no_mangle]
             pub extern "C" fn #bootstrap_ident(
-                _cv: &::perlmod::ffi::CV,
+                _cv: Option<&::perlmod::ffi::CV>,
             ) {
                 static ONCE: ::std::sync::Once = ::std::sync::Once::new();
                 ONCE.call_once(|| {
