@@ -8,6 +8,7 @@ pub struct ModuleAttrs {
     pub file_name: Option<String>,
     pub lib_name: Option<String>,
     pub write: Option<bool>,
+    pub boot: Option<Ident>,
 }
 
 fn is_ident_check_dup<T>(path: &syn::Path, var: &Option<T>, what: &'static str) -> bool {
@@ -29,6 +30,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
         let mut file_name = None;
         let mut lib_name = None;
         let mut write = None;
+        let mut boot = None;
 
         for arg in args {
             match arg {
@@ -43,6 +45,8 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                         file_name = Some(expand_env_vars(&litstr)?);
                     } else if is_ident_check_dup(&path, &lib_name, "lib") {
                         lib_name = Some(expand_env_vars(&litstr)?);
+                    } else if is_ident_check_dup(&path, &boot, "boot") {
+                        boot = Some(litstr.parse::<Ident>()?);
                     } else {
                         error!(path => "unknown argument");
                     }
@@ -70,6 +74,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
             file_name,
             lib_name,
             write,
+            boot,
         })
     }
 }

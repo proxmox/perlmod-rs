@@ -107,6 +107,11 @@ impl Package {
         let bootstrap_name = format!("boot_{}", self.attrs.package_name).replace("::", "__");
         let bootstrap_ident = Ident::new(&bootstrap_name, Span::call_site());
 
+        let boot = match &self.attrs.boot {
+            Some(boot) => quote! { #boot(); },
+            None => TokenStream::new(),
+        };
+
         quote! {
             #[no_mangle]
             pub extern "C" fn #bootstrap_ident(
@@ -123,6 +128,8 @@ impl Package {
                         #newxs
                     }
                 });
+
+                #boot
             }
         }
     }
