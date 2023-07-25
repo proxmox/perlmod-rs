@@ -104,8 +104,7 @@ impl Package {
             });
         }
 
-        let bootstrap_name =
-            format!("boot_{}", self.attrs.package_name).replace("::", "__");
+        let bootstrap_name = format!("boot_{}", self.attrs.package_name).replace("::", "__");
         let bootstrap_ident = Ident::new(&bootstrap_name, Span::call_site());
 
         quote! {
@@ -113,14 +112,17 @@ impl Package {
             pub extern "C" fn #bootstrap_ident(
                 _cv: &::perlmod::ffi::CV,
             ) {
-                unsafe {
-                    use ::perlmod::ffi::RSPL_newXS_flags;
+                static ONCE: ::std::sync::Once = ::std::sync::Once::new();
+                ONCE.call_once(|| {
+                    unsafe {
+                        use ::perlmod::ffi::RSPL_newXS_flags;
 
-                    let argmark = ::perlmod::ffi::pop_arg_mark();
-                    argmark.set_stack();
+                        let argmark = ::perlmod::ffi::pop_arg_mark();
+                        argmark.set_stack();
 
-                    #newxs
-                }
+                        #newxs
+                    }
+                });
             }
         }
     }
