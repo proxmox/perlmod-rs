@@ -52,6 +52,15 @@ pub(crate) fn pthx_param() -> TokenStream {
 /// This can be used on an inline module (rust version 1.42 or later), and hopefully in the future
 /// as an inline attribute (`#![package(name = "Some::Package")]`).
 ///
+/// This attribute takes the following parameters:
+/// * `name = "Perl::Packagee::Name"`. Required. The package name in perl.
+/// * `lib = "library_name"`. Optional. The shared library name (without the "lib" prefix or ".so"
+///   suffix) this is found in. Usually just the 'cdylib' name of the rust library.
+/// * `file = "/file/path.pm"`. Optional. The `.pm` file where this module is to be found.
+/// * `write = true`. Optional. Write a `file` at compile time. (Meant for testing only!).
+/// * `boot = "function_name"`. Optional. A function within the package that is executed at *load*
+///   time by the `bootstrap` function.
+///
 /// ```
 /// // 'lib' and 'file' are optional. We use 'file' here to prevent doc tests from writing out the
 /// // file.
