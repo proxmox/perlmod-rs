@@ -21,13 +21,22 @@ enum AnEnum {
     ResultB,
 }
 
-#[perlmod::package(name = "RSPM::Foo142", lib = "perlmod_test", write = true)]
+#[perlmod::package(
+    name = "RSPM::Foo142",
+    lib = "perlmod_test",
+    write = true,
+    boot = "loaded"
+)]
 mod export {
     use anyhow::{bail, Error};
 
     use perlmod::Value;
 
     use super::AnEnum;
+
+    fn loaded() {
+        println!("<loaded>");
+    }
 
     #[export]
     fn foo142(a: u32, b: u32) -> Result<u32, Error> {
