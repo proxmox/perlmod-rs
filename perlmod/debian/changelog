@@ -1,3 +1,10 @@
+rust-perlmod (0.13.3-1) bookworm; urgency=medium
+
+  * add `instantiate_magic_result!` macro for improved error handling over
+    `instantiate_magic!`.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 26 Jul 2023 09:51:34 +0200
+
 rust-perlmod (0.13.2-1) stable; urgency=medium
 
   * clippy fixups & code health

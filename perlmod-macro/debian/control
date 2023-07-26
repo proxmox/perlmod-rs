@@ -32,8 +32,8 @@ Provides:
  librust-perlmod-macro-0+default-dev (= ${binary:Version}),
  librust-perlmod-macro-0.8-dev (= ${binary:Version}),
  librust-perlmod-macro-0.8+default-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8.1-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8.1+default-dev (= ${binary:Version})
+ librust-perlmod-macro-0.8.2-dev (= ${binary:Version}),
+ librust-perlmod-macro-0.8.2+default-dev (= ${binary:Version})
 Description: Perl package macros to create perl package bindings from rust at compile time - Rust source code
  This package contains the source for the Rust perlmod-macro crate, packaged by
  debcargo for use with cargo and dh-cargo.

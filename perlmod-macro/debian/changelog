@@ -1,3 +1,16 @@
+rust-perlmod-macro (0.8.2-1) UNRELEASED; urgency=medium
+
+  * Ensure the XS registration portion of bootstrap functions are only called
+    once.
+
+  * Allow calling bootstrap functions directly more easily by making the
+    unused `cv` parameter optional.
+
+  * Add the `boot` attribute to `#[package]`, which is a path to a function
+    called after the bootstrap function has completed.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 26 Jul 2023 09:53:42 +0200
+
 rust-perlmod-macro (0.8.1-1) stable; urgency=medium
 
   * clippy fixups & code health

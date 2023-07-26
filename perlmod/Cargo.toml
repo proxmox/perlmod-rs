@@ -1,6 +1,6 @@
 [package]
 name = "perlmod"
-version = "0.13.2"
+version = "0.13.3"
 build = "build.rs"
 categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]
@@ -20,7 +20,7 @@ bitflags = "1.2.1"
 libc = "0.2"
 serde = "1.0"
 
-perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.8.1" }
+perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.8.2" }
 
 [features]
 default = ["exporter"]
