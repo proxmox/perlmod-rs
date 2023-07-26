@@ -8,7 +8,7 @@ pub struct ModuleAttrs {
     pub file_name: Option<String>,
     pub lib_name: Option<String>,
     pub write: Option<bool>,
-    pub boot: Option<Ident>,
+    pub boot: Option<syn::Path>,
 }
 
 fn is_ident_check_dup<T>(path: &syn::Path, var: &Option<T>, what: &'static str) -> bool {
@@ -46,7 +46,7 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
                     } else if is_ident_check_dup(&path, &lib_name, "lib") {
                         lib_name = Some(expand_env_vars(&litstr)?);
                     } else if is_ident_check_dup(&path, &boot, "boot") {
-                        boot = Some(litstr.parse::<Ident>()?);
+                        boot = Some(litstr.parse::<syn::Path>()?);
                     } else {
                         error!(path => "unknown argument");
                     }
