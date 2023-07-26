@@ -127,9 +127,9 @@ impl Package {
 
                         #newxs
                     }
-                });
 
-                #boot
+                    #boot
+                });
             }
         }
     }
