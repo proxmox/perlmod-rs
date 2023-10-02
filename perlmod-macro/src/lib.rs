@@ -10,9 +10,9 @@ use std::cell::RefCell;
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 
-use syn::parse_macro_input;
-use syn::AttributeArgs;
-use syn::Error;
+use syn::parse::Parser;
+use syn::punctuated::Punctuated;
+use syn::{Error, Meta, Token};
 
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { Error::new_spanned($span, format!($($msg)*)) };
@@ -86,7 +86,6 @@ pub(crate) fn pthx_param() -> TokenStream {
 #[proc_macro_attribute]
 pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
-    let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
     handle_error(perlmod_impl(attr, item)).into()
 }
@@ -96,12 +95,12 @@ pub fn package(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 #[proc_macro_attribute]
 pub fn export(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
-    let attr = parse_macro_input!(attr as AttributeArgs);
     let item: TokenStream = item.into();
     handle_error(export_impl(attr, item)).into()
 }
 
-fn perlmod_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
+fn perlmod_impl(attr: TokenStream_1, item: TokenStream) -> Result<TokenStream, Error> {
+    let attr = Punctuated::<Meta, Token![,]>::parse_terminated.parse(attr)?;
     let item: syn::Item = syn::parse2(item)?;
 
     match item {
@@ -111,7 +110,8 @@ fn perlmod_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, E
     }
 }
 
-fn export_impl(attr: AttributeArgs, item: TokenStream) -> Result<TokenStream, Error> {
+fn export_impl(attr: TokenStream_1, item: TokenStream) -> Result<TokenStream, Error> {
+    let attr = Punctuated::<Meta, Token![,]>::parse_terminated.parse(attr)?;
     let func: syn::ItemFn = syn::parse2(item)?;
 
     let attr = attribs::FunctionAttrs::try_from(attr)?;

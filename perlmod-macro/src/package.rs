@@ -3,8 +3,8 @@ use std::env;
 use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
-use syn::AttributeArgs;
-use syn::Error;
+use syn::punctuated::Punctuated;
+use syn::{Error, Meta, Token};
 
 use crate::attribs::ModuleAttrs;
 
@@ -55,7 +55,7 @@ pub struct Package {
 }
 
 impl Package {
-    pub fn with_attrs(attr: AttributeArgs) -> Result<Self, Error> {
+    pub fn with_attrs(attr: Punctuated<Meta, Token![,]>) -> Result<Self, Error> {
         Ok(Self {
             attrs: ModuleAttrs::try_from(attr)?,
             exported: Vec::new(),

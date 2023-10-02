@@ -2,13 +2,15 @@ use proc_macro2::TokenStream;
 
 use quote::quote;
 use syn::punctuated::Punctuated;
-use syn::Error;
-use syn::{AttributeArgs, Token};
+use syn::{Error, Meta, Token};
 
 use crate::attribs::FunctionAttrs;
 use crate::package::Package;
 
-pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<TokenStream, Error> {
+pub fn handle_module(
+    attr: Punctuated<Meta, Token![,]>,
+    mut module: syn::ItemMod,
+) -> Result<TokenStream, Error> {
     let mut package = Package::with_attrs(attr)?;
     let mangled_package_name = package.mangle_package_name();
 
@@ -18,27 +20,28 @@ pub fn handle_module(attr: AttributeArgs, mut module: syn::ItemMod) -> Result<To
                 syn::Item::Fn(mut func) => {
                     let mut attribs = None;
                     for attr in std::mem::take(&mut func.attrs) {
-                        if attr.path.is_ident("export") {
-                            if attribs.is_some() {
-                                error!(attr => "multiple 'export' attributes not allowed");
-                                continue;
-                            }
-
-                            let args: AttributeArgs = if attr.tokens.is_empty() {
-                                Default::default()
-                            } else {
-                                attr.parse_args_with(
-                                    Punctuated::<syn::NestedMeta, Token![,]>::parse_terminated,
-                                )?
-                                .into_iter()
-                                .collect()
-                            };
-
-                            attribs = Some(FunctionAttrs::try_from(args)?);
-                        } else {
+                        if !attr.path().is_ident("export") {
                             // retain the attribute
                             func.attrs.push(attr);
+                            continue;
                         }
+                        if attribs.is_some() {
+                            error!(attr => "multiple 'export' attributes not allowed");
+                            continue;
+                        }
+
+                        let args = match attr.meta {
+                            Meta::Path(_) => Default::default(),
+                            Meta::List(list) => list.parse_args_with(
+                                Punctuated::<syn::Meta, Token![,]>::parse_terminated,
+                            )?,
+                            _ => {
+                                error!(attr => "invalid 'export' attribute syntax");
+                                continue;
+                            }
+                        };
+
+                        attribs = Some(FunctionAttrs::try_from(args)?);
                     }
 
                     // if we removed an #[export] macro this is an exported function:

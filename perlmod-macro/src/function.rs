@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
 use syn::spanned::Spanned;
-use syn::Error;
+use syn::{Error, Meta};
 
 use crate::attribs::FunctionAttrs;
 
@@ -39,6 +39,17 @@ impl ArgumentAttrs {
         }
 
         true
+    }
+
+    fn handle_attr(&mut self, attr: &syn::Attribute) -> bool {
+        if self.handle_path(attr.path()) {
+            if !matches!(attr.meta, Meta::Path(_)) {
+                error!(&attr.meta => "attribute does not take any value or parameter");
+            }
+            true
+        } else {
+            false
+        }
     }
 
     fn validate(&self, span: Span) -> Result<(), Error> {
@@ -104,8 +115,7 @@ pub fn handle_function(
         let pat_ty = match arg {
             syn::FnArg::Receiver(_) => bail!(arg => "cannot export self-taking methods as xsubs"),
             syn::FnArg::Typed(ref mut pt) => {
-                pt.attrs
-                    .retain(|attr| !argument_attrs.handle_path(&attr.path));
+                pt.attrs.retain(|attr| !argument_attrs.handle_attr(&attr));
                 argument_attrs.validate(pt.span())?;
                 &*pt
             }

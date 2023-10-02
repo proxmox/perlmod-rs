@@ -1,7 +1,7 @@
 use proc_macro2::{Ident, Span};
 
-use syn::AttributeArgs;
-use syn::Error;
+use syn::punctuated::Punctuated;
+use syn::{Error, Meta, Token};
 
 pub struct ModuleAttrs {
     pub package_name: String,
@@ -22,10 +22,10 @@ fn is_ident_check_dup<T>(path: &syn::Path, var: &Option<T>, what: &'static str) 
     }
 }
 
-impl TryFrom<AttributeArgs> for ModuleAttrs {
+impl TryFrom<Punctuated<Meta, Token![,]>> for ModuleAttrs {
     type Error = Error;
 
-    fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
+    fn try_from(args: Punctuated<Meta, Token![,]>) -> Result<Self, Self::Error> {
         let mut package_name = None;
         let mut file_name = None;
         let mut lib_name = None;
@@ -33,36 +33,31 @@ impl TryFrom<AttributeArgs> for ModuleAttrs {
         let mut boot = None;
 
         for arg in args {
-            match arg {
-                syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
-                    path,
-                    lit: syn::Lit::Str(litstr),
-                    ..
-                })) => {
-                    if is_ident_check_dup(&path, &package_name, "name") {
-                        package_name = Some(expand_env_vars(&litstr)?);
-                    } else if is_ident_check_dup(&path, &file_name, "file") {
-                        file_name = Some(expand_env_vars(&litstr)?);
-                    } else if is_ident_check_dup(&path, &lib_name, "lib") {
-                        lib_name = Some(expand_env_vars(&litstr)?);
-                    } else if is_ident_check_dup(&path, &boot, "boot") {
-                        boot = Some(litstr.parse::<syn::Path>()?);
-                    } else {
-                        error!(path => "unknown argument");
-                    }
+            let (path, value) = match arg {
+                syn::Meta::NameValue(syn::MetaNameValue { path, value, .. }) => (path, value),
+                _ => {
+                    error!(Span::call_site(), "unexpected attribute argument");
+                    continue;
                 }
-                syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
-                    path,
-                    lit: syn::Lit::Bool(litbool),
-                    ..
-                })) => {
-                    if is_ident_check_dup(&path, &write, "write") {
-                        write = Some(litbool.value());
-                    } else {
-                        error!(path => "unknown argument");
-                    }
-                }
-                _ => error!(Span::call_site(), "unexpected attribute argument"),
+            };
+
+            if is_ident_check_dup(&path, &package_name, "name") {
+                let Some(litstr) = expect_lit_str(value) else { continue };
+                package_name = Some(expand_env_vars(&litstr)?);
+            } else if is_ident_check_dup(&path, &file_name, "file") {
+                let Some(litstr) = expect_lit_str(value) else { continue };
+                file_name = Some(expand_env_vars(&litstr)?);
+            } else if is_ident_check_dup(&path, &lib_name, "lib") {
+                let Some(litstr) = expect_lit_str(value) else { continue };
+                lib_name = Some(expand_env_vars(&litstr)?);
+            } else if is_ident_check_dup(&path, &boot, "boot") {
+                let Some(litstr) = expect_lit_str(value) else { continue };
+                boot = Some(litstr.parse::<syn::Path>()?);
+            } else if is_ident_check_dup(&path, &write, "write") {
+                let Some(litbool) = expect_lit_bool(value) else { continue };
+                write = Some(litbool.value());
+            } else {
+                error!(path => "unknown argument");
             }
         }
 
@@ -137,19 +132,16 @@ pub struct FunctionAttrs {
     pub errno: bool,
 }
 
-impl TryFrom<AttributeArgs> for FunctionAttrs {
+impl TryFrom<Punctuated<Meta, Token![,]>> for FunctionAttrs {
     type Error = Error;
 
-    fn try_from(args: AttributeArgs) -> Result<Self, Self::Error> {
+    fn try_from(args: Punctuated<Meta, Token![,]>) -> Result<Self, Self::Error> {
         let mut attrs = FunctionAttrs::default();
 
         for arg in args {
             match arg {
-                syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
-                    path,
-                    lit: syn::Lit::Str(litstr),
-                    ..
-                })) => {
+                syn::Meta::NameValue(syn::MetaNameValue { path, value, .. }) => {
+                    let Some(litstr) = expect_lit_str(value) else { continue };
                     if is_ident_check_dup(&path, &attrs.xs_name, "xs_name") {
                         attrs.xs_name = Some(Ident::new(&litstr.value(), litstr.span()));
                     } else if is_ident_check_dup(&path, &attrs.perl_name, "name") {
@@ -161,7 +153,7 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
                         continue;
                     }
                 }
-                syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
+                syn::Meta::Path(path) => {
                     if path.is_ident("raw_return") {
                         attrs.raw_return = true;
                     } else if path.is_ident("serialize_error") {
@@ -177,5 +169,31 @@ impl TryFrom<AttributeArgs> for FunctionAttrs {
         }
 
         Ok(attrs)
+    }
+}
+
+fn expect_lit_str(value: syn::Expr) -> Option<syn::LitStr> {
+    match value {
+        syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Str(lit),
+            ..
+        }) => Some(lit),
+        _ => {
+            error!(value => "value must be a literal string");
+            None
+        }
+    }
+}
+
+fn expect_lit_bool(value: syn::Expr) -> Option<syn::LitBool> {
+    match value {
+        syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Bool(lit),
+            ..
+        }) => Some(lit),
+        _ => {
+            error!(value => "value must be a literal boolean");
+            None
+        }
     }
 }
