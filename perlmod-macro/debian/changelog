@@ -1,4 +1,10 @@
-rust-perlmod-macro (0.8.2-1) UNRELEASED; urgency=medium
+rust-perlmod-macro (0.8.3-1) stable; urgency=medium
+
+  * Update to syn 2
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 03 Oct 2023 08:34:25 +0200
+
+rust-perlmod-macro (0.8.2-1) stable; urgency=medium
 
   * Ensure the XS registration portion of bootstrap functions are only called
     once.
