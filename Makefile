@@ -63,4 +63,4 @@ update:
 	    dcmd --deb rust-$*_*.changes \
 	    | grep -v '.changes$$' \
 	    | tar -cf- -T- \
-	    | ssh -X repoman@repo.proxmox.com upload --product devel --dist bullseye
+	    | ssh -X repoman@repo.proxmox.com upload --product devel --dist bookworm
