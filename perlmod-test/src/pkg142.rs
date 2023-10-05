@@ -113,6 +113,21 @@ mod export {
             Ok("worked")
         }
     }
+
+    #[export]
+    fn use_safe_putenv(on: bool) {
+        perlmod::ffi::use_safe_putenv(on);
+    }
+
+    #[export]
+    fn set_env(name: &str, value: &str) {
+        std::env::set_var(name, value);
+    }
+
+    #[export]
+    fn unset_env(name: &str) {
+        std::env::remove_var(name);
+    }
 }
 
 #[perlmod::package(name = "RSPM::EnvVarLibrary", lib = "x-${CARGO_PKG_NAME}-y")]
