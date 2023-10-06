@@ -1,3 +1,10 @@
+rust-perlmod (0.13.4-1) bookworm; urgency=medium
+
+  * add perlmod::ffi::use_safe_putenv to deal with perl's broken environ
+    handling
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Oct 2023 13:40:56 +0200
+
 rust-perlmod (0.13.3-1) bookworm; urgency=medium
 
   * add `instantiate_magic_result!` macro for improved error handling over
