@@ -135,20 +135,26 @@ use warnings;
 
 use DynaLoader;
 
-sub library {
-    return '{{LIBRARY}}';
+sub library { '{{LIBRARY}}' }
+
+sub autodirs { map { "$_/auto" } @INC; }
+sub envdirs { grep { length($_) } split(/:+/, $ENV{LD_LIBRARY_PATH} // '') }
+
+sub find_lib {
+    my ($mod_name) = @_;
+    my @dirs = map { "-L$_" } (envdirs(), autodirs());
+    return DynaLoader::dl_findfile(@dirs, $mod_name);
 }
 
-# Keep on a single line, modified by testsuite!
-sub libdirs { return (map "-L$_/auto", @INC); }
+# Keep on a single line, potentially modified by testsuite!
+sub libfile { find_lib() }
 
 sub load : prototype($) {
     my ($pkg) = @_;
 
     my $mod_name = $pkg->library();
 
-    my @dirs = $pkg->libdirs();
-    my $mod_file = DynaLoader::dl_findfile({{DEBUG_LIBPATH}}@dirs, $mod_name);
+    my $mod_file = find_lib($mod_name);
     die "failed to locate shared library for $mod_name (lib${mod_name}.so)\n" if !$mod_file;
 
     my $lib = DynaLoader::dl_load_file($mod_file)
