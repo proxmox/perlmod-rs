@@ -130,6 +130,9 @@ method to load the actual code.
 
 =cut
 
+use strict;
+use warnings;
+
 use DynaLoader;
 
 sub library {
