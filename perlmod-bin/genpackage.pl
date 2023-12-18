@@ -30,6 +30,10 @@ my $opts = {
         'PATH',
         "Path to a debug library, usually ./target/debug.",
     ],
+    'include-file' => [
+        'PATH',
+        "Path to additional perl code to include in the package after the 'use' statements",
+    ],
 };
 
 sub help {
@@ -49,7 +53,9 @@ if (!@ARGV) {
     exit(1);
 }
 
-my $params = {};
+my $params = {
+    'include-file' => [],
+};
 ARGPARSE: while (@ARGV) {
     my $arg = shift @ARGV;
 
@@ -62,17 +68,20 @@ ARGPARSE: while (@ARGV) {
 
     for my $o (keys %$opts) {
         if ($arg =~ /^(?:--\Q$o\E=)(.+)$/) {
-            my $arg = $1;
-            die "multiple --$o options provided\n" if defined($params->{$o});
-            $params->{$o} = $arg;
-            next ARGPARSE;
+            $arg = $1;
         } elsif ($arg =~ /^--\Q$o\E$/) {
             $arg = shift @ARGV;
+        } else {
+            next;
+        };
+        die "--$o requires an argument\n" if !defined($arg);
+        if (ref($params->{$o}) eq 'ARRAY') {
+            push $params->{$o}->@*, $arg;
+        } else {
             die "multiple --$o options provided\n" if defined($params->{$o});
-            die "--$o requires an argument\n" if !defined($arg);
             $params->{$o} = $arg;
-            next ARGPARSE;
         }
+        next ARGPARSE;
     }
 
     if ($arg =~ /^-/) {
@@ -92,6 +101,13 @@ my $lib = $params->{'lib'}
     or die "missing --lib parameter\n";
 my $lib_tag = $params->{'lib-tag'};
 my $debug_libpath = $params->{'debug-libpath'} // '';
+my $extra_code = '';
+for my $file ($params->{'include-file'}->@*) {
+    open(my $fh, '<', $file) or die "failed to open file '$file' - $!\n";
+    my $more = do { local $/ = undef; <$fh> };
+    die "error reading '$file': $!\n" if !defined($more);
+    $extra_code .= $more;
+}
 
 sub pkg2file {
     return ($_[0] =~ s@::@/@gr) . ".pm";
@@ -135,6 +151,7 @@ use warnings;
 
 use DynaLoader;
 
+{{EXTRA_CODE}}
 sub library { '{{LIBRARY}}' }
 
 sub autodirs { map { "$_/auto" } @INC; }
@@ -191,6 +208,7 @@ BEGIN {
 
 1;
 EOF
+$template =~ s/\{\{EXTRA_CODE\}\}/$extra_code/g;
 $template =~ s/\{\{LIBRARY_PACKAGE\}\}/$lib_package/g;
 $template =~ s/\{\{LIBRARY_PREFIX\}\}/$lib_prefix/g;
 $template =~ s/\{\{LIBRARY_TAG\}\}/$lib_tag/g;
