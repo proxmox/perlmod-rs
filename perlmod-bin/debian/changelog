@@ -1,3 +1,9 @@
+perlmod-bin (0.2.0-2) stable; urgency=medium
+
+  * actually use 'libfile()' instead of 'find_lib()'
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 18 Dec 2023 10:37:06 +0100
+
 perlmod-bin (0.2.0-1) stable; urgency=medium
 
   * make generated packages use 'strict' and 'warnings'
