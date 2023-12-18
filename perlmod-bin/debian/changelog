@@ -1,3 +1,16 @@
+perlmod-bin (0.2.0-1) stable; urgency=medium
+
+  * make generated packages use 'strict' and 'warnings'
+
+  * make generated call to 'init' optional
+
+  * replace 'libdirs()' with 'libfile()' which should perform the search if
+    appropriate and return the final file to load
+
+  * search LD_LIBRARY_PATH before the @INC/auto dirs by default
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 18 Dec 2023 09:45:55 +0100
+
 perlmod-bin (0.1.0-1) stable; urgency=medium
 
   * initial packaging
