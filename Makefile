@@ -60,7 +60,7 @@ update:
 
 %-upload: %-deb
 	cd build; \
-	    dcmd --deb rust-$*_*.changes \
+	    dcmd --deb ./*$*_*.changes \
 	    | grep -v '.changes$$' \
 	    | tar -cf- -T- \
 	    | ssh -X repoman@repo.proxmox.com upload --product devel --dist bookworm
