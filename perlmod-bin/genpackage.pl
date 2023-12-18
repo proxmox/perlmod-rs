@@ -164,14 +164,14 @@ sub find_lib {
 }
 
 # Keep on a single line, potentially modified by testsuite!
-sub libfile { find_lib() }
+sub libfile { find_lib($pkg->library()) }
 
 sub load : prototype($) {
     my ($pkg) = @_;
 
     my $mod_name = $pkg->library();
 
-    my $mod_file = find_lib($mod_name);
+    my $mod_file = libfile($mod_name);
     die "failed to locate shared library for $mod_name (lib${mod_name}.so)\n" if !$mod_file;
 
     my $lib = DynaLoader::dl_load_file($mod_file)
