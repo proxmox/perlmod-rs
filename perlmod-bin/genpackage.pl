@@ -180,7 +180,7 @@ sub bootstrap {
 BEGIN {
     __PACKAGE__->load();
     __PACKAGE__->bootstrap();
-    init();
+    init() if __PACKAGE__->can("init");
 }
 
 1;
