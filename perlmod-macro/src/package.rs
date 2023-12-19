@@ -11,12 +11,15 @@ use crate::attribs::ModuleAttrs;
 const MODULE_HEAD: &str = r#"
 require DynaLoader;
 
+sub autodirs { map { "$_/auto" } @INC; }
+sub envdirs { grep { length($_) } split(/:+/, $ENV{LD_LIBRARY_PATH} // '') }
+
 sub bootstrap {
     my ($pkg) = @_;
     my ($mod_name) = {{LIB_NAME}};
     my $bootstrap_name = 'boot_' . ($pkg =~ s/::/__/gr);
 
-    my @dirs = (map "-L$_/auto", @INC);
+    my @dirs = map { "-L$_" } (envdirs(), autodirs());
     my $mod_file = DynaLoader::dl_findfile("#;
 
 #[cfg(debug_assertions)]
