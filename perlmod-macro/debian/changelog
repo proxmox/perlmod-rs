@@ -1,3 +1,10 @@
+rust-perlmod-macro (0.8.4-1) bookworm; urgency=medium
+
+  * search LD_LIBRARY_PATH before @INC/auto in #[package(write = true)]
+    generated code
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 Dec 2023 08:41:49 +0100
+
 rust-perlmod-macro (0.8.3-1) stable; urgency=medium
 
   * Update to syn 2
