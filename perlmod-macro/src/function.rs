@@ -1,6 +1,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
 use quote::quote;
+use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::{Error, Meta};
 
@@ -93,7 +94,7 @@ pub fn handle_function(
         bail!(&func.sig.asyncness => "async fns cannot be exported as xsubs");
     }
 
-    let name = func.sig.ident.clone();
+    let name = func.sig.ident.unraw();
     let export_public = export_public.then_some(&func.vis);
     let xs_name = attr
         .xs_name
