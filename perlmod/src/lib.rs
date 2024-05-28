@@ -87,6 +87,11 @@ pub use perlmod_macro::package;
 /// * `name`: the name the function should be using in perl. This only makes sense with the
 ///   `#[package]` macro, as otherwise the user is responsible for loading the function via perl's
 ///   `DynaLoader` on their own.
+/// * `errno`: copy the value set via [`set_errno`](crate::error::set_errno) to libc's `errno`
+///   location before returning to perl (after all side effects such as destructors) have run, in
+///   order to allow setting perl's `$!` variable.
+/// * `serialize_error`: Instead of stringifying the `Err` part of a `Result` via `Display`,
+///   serialize it into a structured value.
 ///
 /// Additionally, function parameters can also use the following attributes:
 ///
