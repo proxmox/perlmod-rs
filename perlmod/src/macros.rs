@@ -112,8 +112,8 @@ macro_rules! destructor {
 /// it.
 ///
 /// Note that this only makes sense if the used [`MagicSpec`] does not include a `free` method.
-/// This method *is* includded when using its `DEFAULT` or the [`declare_magic!`] macro, so this
-/// macro is only required when using custom magic with a custom `DESTROY` sub.
+/// This method *is* includded when using its `DEFAULT` or the [`crate::declare_magic!`] macro, so
+/// this macro is only required when using custom magic with a custom `DESTROY` sub.
 ///
 /// Due to compiler restrictions, the function itself needs to be written manually, only the
 /// contents can be generated using this macro. This also means that the `this` parameter needs to

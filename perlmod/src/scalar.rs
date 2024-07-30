@@ -601,7 +601,7 @@ impl ScalarRef {
     /// Note that the `Cow` part is not required here.
     ///
     /// If `self` is a UTF-8 scalar and its memory representation covers the borrowed substring,
-    /// this is equivalent to calling [`Scalar::substr`] with the `index` matching the string.
+    /// this is equivalent to calling [`ScalarRef::substr`] with the `index` matching the string.
     ///
     /// Otherwise (if the provided string is unrelated to `self`), this is also equivalent to
     /// calling `[Scalar::new_string]`.

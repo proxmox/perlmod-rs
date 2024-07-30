@@ -3,9 +3,9 @@
 //! This is a safer alternative to directly blessing raw pointer values as it is more difficult to
 //! get the perl side of this wrong.
 //!
-//! For instance, one major downside of using [`Value::bless_box`] is that it is possible to simply
-//! bless invalid values into the same class, or create clones via perl's `Storable::dclone` or
-//! `Clone::clone`, which can easily cause a double-free corruption.
+//! For instance, one major downside of using [`Value::bless_box`](crate::Value::bless_box) is that
+//! it is possible to simply bless invalid values into the same class, or create clones via perl's
+//! `Storable::dclone` or `Clone::clone`, which can easily cause a double-free corruption.
 //!
 //! To avoid this, we can attach a magic value to a perl value (or even multiple magic values if so
 //! desired).

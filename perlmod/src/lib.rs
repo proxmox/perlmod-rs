@@ -104,7 +104,7 @@ pub use perlmod_macro::package;
 ///   Implementing the `TryFrom` trait accordingly can make using blessed references more
 ///   convenient, but at the cost of hiding underlying `unsafe` code.
 ///
-/// * `#[cv]`: This can be used on a single parameter of type [`&CV`](perlmod::ffi::CV) to get
+/// * `#[cv]`: This can be used on a single parameter of type [`&CV`](ffi::CV) to get
 ///   access to the `xsub` value used to call the function.
 ///
 ///   This can be used, for instance, to associate callables with data, or to create attach boxed

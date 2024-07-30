@@ -13,17 +13,17 @@ use crate::scalar::Type;
 use crate::Value;
 use crate::{array, ffi, hash};
 
-/// Perl [`Value`](crate::Value) deserializer.
+/// Perl [`Value`] deserializer.
 struct Deserializer<'de> {
     input: Value,
     option_allowed: bool,
     _lifetime: PhantomData<&'de Value>,
 }
 
-/// Deserialize a perl [`Value`](crate::Value).
+/// Deserialize a perl [`Value`].
 ///
 /// Note that this causes all the underlying data to be copied recursively, except for other
-/// [`Value`](crate::Value) variables, which will be references.
+/// [`Value`] variables, which will be references.
 pub fn from_value<T>(input: Value) -> Result<T, Error>
 where
     T: serde::de::DeserializeOwned,
@@ -34,11 +34,11 @@ where
     Ok(out)
 }
 
-/// Deserialize a reference to a perl [`Value`](crate::Value).
+/// Deserialize a reference to a perl [`Value`].
 ///
 /// Note that this causes all the underlying data to be copied recursively, except for other
-/// [`Value`](crate::Value) variables or `&[u8]` or `&str` types, which will reference the
-/// "original" value (whatever that means for perl).
+/// [`Value`] variables or `&[u8]` or `&str` types, which will reference the "original" value
+/// (whatever that means for perl).
 pub fn from_ref_value<'de, T>(input: &'de Value) -> Result<T, Error>
 where
     T: Deserialize<'de>,
