@@ -15,6 +15,9 @@ exclude = [ "debian" ]
 [badges]
 maintenance = { status = "experimental" }
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [ 'cfg(perlmod, values("multiplicity"))' ] }
+
 [dependencies]
 bitflags = "1.2.1"
 libc = "0.2"
