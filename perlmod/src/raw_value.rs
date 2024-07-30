@@ -15,6 +15,12 @@ thread_local!(static SERIALIZE_RAW: RefCell<bool> = RefCell::new(false));
 
 pub(crate) struct RawGuard(bool);
 
+impl Drop for RawGuard {
+    fn drop(&mut self) {
+        SERIALIZE_RAW.with(|raw| *raw.borrow_mut() = self.0);
+    }
+}
+
 #[inline]
 pub(crate) fn guarded(on: bool) -> RawGuard {
     SERIALIZE_RAW.with(move |raw| RawGuard(raw.replace(on)))
