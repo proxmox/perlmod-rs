@@ -42,19 +42,29 @@ impl TryFrom<Punctuated<Meta, Token![,]>> for ModuleAttrs {
             };
 
             if is_ident_check_dup(&path, &package_name, "name") {
-                let Some(litstr) = expect_lit_str(value) else { continue };
+                let Some(litstr) = expect_lit_str(value) else {
+                    continue;
+                };
                 package_name = Some(expand_env_vars(&litstr)?);
             } else if is_ident_check_dup(&path, &file_name, "file") {
-                let Some(litstr) = expect_lit_str(value) else { continue };
+                let Some(litstr) = expect_lit_str(value) else {
+                    continue;
+                };
                 file_name = Some(expand_env_vars(&litstr)?);
             } else if is_ident_check_dup(&path, &lib_name, "lib") {
-                let Some(litstr) = expect_lit_str(value) else { continue };
+                let Some(litstr) = expect_lit_str(value) else {
+                    continue;
+                };
                 lib_name = Some(expand_env_vars(&litstr)?);
             } else if is_ident_check_dup(&path, &boot, "boot") {
-                let Some(litstr) = expect_lit_str(value) else { continue };
+                let Some(litstr) = expect_lit_str(value) else {
+                    continue;
+                };
                 boot = Some(litstr.parse::<syn::Path>()?);
             } else if is_ident_check_dup(&path, &write, "write") {
-                let Some(litbool) = expect_lit_bool(value) else { continue };
+                let Some(litbool) = expect_lit_bool(value) else {
+                    continue;
+                };
                 write = Some(litbool.value());
             } else {
                 error!(path => "unknown argument");
@@ -141,7 +151,9 @@ impl TryFrom<Punctuated<Meta, Token![,]>> for FunctionAttrs {
         for arg in args {
             match arg {
                 syn::Meta::NameValue(syn::MetaNameValue { path, value, .. }) => {
-                    let Some(litstr) = expect_lit_str(value) else { continue };
+                    let Some(litstr) = expect_lit_str(value) else {
+                        continue;
+                    };
                     if is_ident_check_dup(&path, &attrs.xs_name, "xs_name") {
                         attrs.xs_name = Some(Ident::new(&litstr.value(), litstr.span()));
                     } else if is_ident_check_dup(&path, &attrs.perl_name, "name") {
