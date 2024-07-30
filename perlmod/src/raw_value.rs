@@ -11,7 +11,7 @@ use crate::Value;
 pub(crate) const NAME: &str = "$__perlmod_private_RawValue";
 pub(crate) const VALUE: &str = "$__perlmod_private_raw_value";
 
-thread_local!(static SERIALIZE_RAW: RefCell<bool> = RefCell::new(false));
+thread_local!(static SERIALIZE_RAW: RefCell<bool> = const { RefCell::new(false) });
 
 pub(crate) struct RawGuard(bool);
 

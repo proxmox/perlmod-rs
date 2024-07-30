@@ -225,7 +225,7 @@ impl Value {
     /// The caller must ensure that it is safe to decrease the reference count later on, or use
     /// `into_raw()` instead of letting the `Value` get dropped.
     pub unsafe fn from_raw_move(ptr: *mut SV) -> Self {
-        Self::from_scalar(unsafe { Scalar::from_raw_move(ptr as *mut SV) })
+        Self::from_scalar(unsafe { Scalar::from_raw_move(ptr) })
     }
 
     /// Create a new reference to an existing `SV` value. This will increase the value's reference
@@ -235,7 +235,7 @@ impl Value {
     ///
     /// The caller may still need to decrease the reference count for the `ptr` source value.
     pub unsafe fn from_raw_ref(ptr: *mut SV) -> Self {
-        Self::from_scalar(unsafe { Scalar::from_raw_ref(ptr as *mut SV) })
+        Self::from_scalar(unsafe { Scalar::from_raw_ref(ptr) })
     }
 
     /// Convert a [`Scalar`] to a [`Value`].

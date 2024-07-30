@@ -144,6 +144,7 @@ unsafe impl<T> Send for MagicTag<T> {}
 
 impl<T> MagicTag<T> {
     /// Create a new tag. See [`MagicSpec`] for its usage.
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self(ffi::MGVTBL::zero(), PhantomData)
     }

@@ -111,7 +111,7 @@ impl Hash {
         unsafe {
             ffi::RSPL_hv_store(
                 self.hv(),
-                key.as_ptr() as *const u8 as *const libc::c_char,
+                key.as_ptr() as *const libc::c_char,
                 key.len() as i32,
                 value.into_raw(),
             );

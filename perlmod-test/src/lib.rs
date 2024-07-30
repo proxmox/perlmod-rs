@@ -2,10 +2,12 @@
 /// been stabilized then.
 mod pkg142;
 
+/*
 #[cfg(feature = "rustmuchlater")]
 /// The following is what we ideally want to reach with future rust versions. It is technically
 /// possible on nightly with #![feature(custom_inner_attributes)]
 mod pkginline;
+*/
 
 /// A test for blessed values.
 mod bless;

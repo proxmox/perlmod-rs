@@ -116,7 +116,7 @@ pub fn handle_function(
         let pat_ty = match arg {
             syn::FnArg::Receiver(_) => bail!(arg => "cannot export self-taking methods as xsubs"),
             syn::FnArg::Typed(ref mut pt) => {
-                pt.attrs.retain(|attr| !argument_attrs.handle_attr(&attr));
+                pt.attrs.retain(|attr| !argument_attrs.handle_attr(attr));
                 argument_attrs.validate(pt.span())?;
                 &*pt
             }
@@ -328,6 +328,7 @@ struct ReturnHandling {
     wrapper_func: TokenStream,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn handle_return_kind(
     attr: &FunctionAttrs,
     ret: Return,

@@ -88,7 +88,7 @@ impl fmt::Display for MagicError {
 impl std::error::Error for MagicError {}
 
 thread_local! {
-    static ERRNO: Cell<c_int> = Cell::new(0);
+    static ERRNO: Cell<c_int> = const { Cell::new(0) };
 }
 
 /// Set the perlmod-specific `errno` value. This is *not* libc's `errno`, but a separate storage
@@ -108,6 +108,11 @@ pub fn get_errno() -> c_int {
 /// This is part of the proc-macro API and is of little use to users of this crate directly.
 /// When manually implementing "xsubs" this can be used before returning as a shortcut to copying
 /// the perlmod errno value to libc.
+///
+/// # Safety
+///
+/// This is generally safe, but care should be taken as this manipulates `errno` and any C call
+/// might mess it up again.
 pub unsafe fn copy_errno_to_libc() {
     unsafe {
         libc::__errno_location().write(get_errno());

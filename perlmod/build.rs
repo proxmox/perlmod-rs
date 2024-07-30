@@ -22,7 +22,7 @@ fn main() {
     Command::new("perl")
         .arg("-MDevel::PPPort")
         .arg("-e")
-        .arg(&format!(
+        .arg(format!(
             r#"Devel::PPPort::WriteFile("{ppport_h_file_string_inner}");"#
         ))
         .output()
