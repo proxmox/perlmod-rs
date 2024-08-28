@@ -107,6 +107,9 @@ impl Package {
             });
         }
 
+        let package_name_bytes =
+            syn::LitByteStr::new(self.attrs.package_name.as_bytes(), Span::call_site());
+        let package_name_len = self.attrs.package_name.len();
         let bootstrap_name = format!("boot_{}", self.attrs.package_name).replace("::", "__");
         let bootstrap_ident = Ident::new(&bootstrap_name, Span::call_site());
 
@@ -120,7 +123,13 @@ impl Package {
             pub extern "C" fn #bootstrap_ident(
                 _cv: Option<&::perlmod::ffi::CV>,
             ) {
+                #[used]
+                #[link_section = ".note.perlmod.package"]
+                static PACKAGE_ENTRY: ::perlmod::__private__::ElfNote<{#package_name_len}> =
+                    ::perlmod::__private__::ElfNote::new_package(*#package_name_bytes);
+
                 static ONCE: ::std::sync::Once = ::std::sync::Once::new();
+
                 ONCE.call_once(|| {
                     unsafe {
                         use ::perlmod::ffi::RSPL_newXS_flags;

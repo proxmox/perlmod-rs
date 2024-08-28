@@ -113,3 +113,12 @@ pub use perlmod_macro::package;
 ///
 /// For an example on making blessed objects, see [`Value::bless_box`](Value::bless_box()).
 pub use perlmod_macro::export;
+
+mod elf_notes;
+
+#[doc(hidden)]
+pub mod __private__ {
+    //! This is private and not meant to be a public API and thus semver exempt.
+
+    pub use super::elf_notes::ElfNote;
+}
