@@ -21,6 +21,13 @@ enum AnEnum {
     ResultB,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum TaggedEnum {
+    Something(String),
+    Another(i32, i32),
+}
+
 #[perlmod::package(
     name = "RSPM::Foo142",
     lib = "perlmod_test",
@@ -33,6 +40,7 @@ mod export {
     use perlmod::Value;
 
     use super::AnEnum;
+    use super::TaggedEnum;
 
     fn loaded() {
         println!("<loaded>");
@@ -78,6 +86,14 @@ mod export {
             AnEnum::Another => AnEnum::ResultB,
             _ => bail!("invalid"),
         })
+    }
+
+    #[export]
+    fn test_enums2(data: TaggedEnum) -> TaggedEnum {
+        match data {
+            TaggedEnum::Something(word) => TaggedEnum::Something(format!("{word}.")),
+            TaggedEnum::Another(n, m) => TaggedEnum::Another(n + 1, m * 2),
+        }
     }
 
     #[export]

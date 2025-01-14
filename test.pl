@@ -130,3 +130,7 @@ my $err = $@;
 die "test_deserialized_error error is not a hash\n" if ref($err) ne 'HASH';
 die "structured error has invalid fields\n" if join(',', sort(keys(%$err))) ne 'a,b';
 print('error type: { a: ', $err->{a}, ', b: ', $err->{b}, " }\n");
+
+my $a = RSPM::Foo142::test_enums2({ something => "hello" });
+print(join(', ', keys %$a), "\n");
+print($a->{something}, "\n");
