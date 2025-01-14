@@ -167,7 +167,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         let value = value.serialize(&mut Serializer)?;
         let hash = hash::Hash::new();
         hash.insert(variant, value);
-        Ok(Value::from(hash))
+        Ok(Value::new_ref(&hash))
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Error> {
@@ -554,7 +554,7 @@ impl ser::SerializeTupleVariant for SerVariant<SerArray> {
     }
 
     fn end(self) -> Result<Value, Error> {
-        Ok(Value::new_ref(&self.inner.array))
+        Ok(Value::new_ref(&self.hash))
     }
 }
 
