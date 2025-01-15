@@ -51,7 +51,7 @@ struct SerVariant<T> {
     inner: T,
 }
 
-impl<'a> ser::Serializer for &'a mut Serializer {
+impl ser::Serializer for &mut Serializer {
     type Ok = Value;
     type Error = Error;
 
