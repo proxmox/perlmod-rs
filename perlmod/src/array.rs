@@ -183,7 +183,7 @@ pub struct Iter<'a> {
     _phantom: PhantomData<&'a Array>,
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter<'_> {
     type Item = Value;
 
     fn next(&mut self) -> Option<Self::Item> {

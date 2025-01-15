@@ -614,7 +614,7 @@ impl<'de> Deserialize<'de> for Value {
                     }
                 }
 
-                impl<'de> Visitor<'de> for KeyClassifier {
+                impl Visitor<'_> for KeyClassifier {
                     type Value = KeyClass;
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

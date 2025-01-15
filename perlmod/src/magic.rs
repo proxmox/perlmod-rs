@@ -239,10 +239,10 @@ pub struct MagicSpec<'o, 'v, T> {
 }
 
 /// It doesn't actually contain a `T`
-unsafe impl<'o, 'v, T> Sync for MagicSpec<'o, 'v, T> {}
+unsafe impl<T> Sync for MagicSpec<'_, '_, T> {}
 
 /// It doesn't actually contain a `T`
-unsafe impl<'o, 'v, T> Send for MagicSpec<'o, 'v, T> {}
+unsafe impl<T> Send for MagicSpec<'_, '_, T> {}
 
 impl<T> MagicSpec<'static, 'static, T> {
     /// Create a new static magic specification from a tag.

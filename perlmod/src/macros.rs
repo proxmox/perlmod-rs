@@ -1,4 +1,4 @@
-/// Convenience macros.
+//! Convenience macros.
 
 /// Create a standard destructor for a boxed type.
 ///

@@ -49,7 +49,7 @@ where
     Ok(out)
 }
 
-impl<'deserializer> Deserializer<'deserializer> {
+impl Deserializer<'_> {
     pub fn from_value(input: Value) -> Self {
         Deserializer {
             input,
@@ -188,7 +188,7 @@ unsafe fn str_set_wrong_lifetime<'a>(s: &'_ str) -> &'a str {
     unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(s.as_ptr(), s.len())) }
 }
 
-impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
+impl<'de> de::Deserializer<'de> for &mut Deserializer<'de> {
     type Error = Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -559,7 +559,7 @@ struct EnumDeserializer<'a> {
     value: Option<Value>,
 }
 
-impl<'a, 'de> de::EnumAccess<'de> for EnumDeserializer<'a> {
+impl<'de> de::EnumAccess<'de> for EnumDeserializer<'_> {
     type Error = Error;
     type Variant = VariantDeserializer;
 
@@ -578,7 +578,7 @@ struct EnumDeserializerByteVariant<'a> {
     value: Option<Value>,
 }
 
-impl<'a, 'de> de::EnumAccess<'de> for EnumDeserializerByteVariant<'a> {
+impl<'de> de::EnumAccess<'de> for EnumDeserializerByteVariant<'_> {
     type Error = Error;
     type Variant = VariantDeserializer;
 
@@ -671,7 +671,7 @@ impl<'a> HashAccess<'a> {
     }
 }
 
-impl<'de, 'a> MapAccess<'de> for HashAccess<'a> {
+impl<'de> MapAccess<'de> for HashAccess<'_> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>
@@ -732,7 +732,7 @@ impl<'a> ArrayAccess<'a> {
     }
 }
 
-impl<'de, 'a> SeqAccess<'de> for ArrayAccess<'a> {
+impl<'de> SeqAccess<'de> for ArrayAccess<'_> {
     type Error = Error;
 
     fn next_element_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>
@@ -750,7 +750,7 @@ struct RawDeserializer<'a> {
     value: Option<&'a Value>,
 }
 
-impl<'de, 'a> MapAccess<'de> for RawDeserializer<'a> {
+impl<'de> MapAccess<'de> for RawDeserializer<'_> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>

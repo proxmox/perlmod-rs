@@ -93,8 +93,8 @@ impl Scalar {
         if s.as_bytes().iter().any(|&b| b >= 0x80) {
             unsafe {
                 Self::from_raw_move(ffi::RSPL_newSVpvn_utf8(
-                    s.as_bytes().as_ptr() as *const libc::c_char,
-                    s.as_bytes().len() as libc::size_t,
+                    s.as_ptr() as *const libc::c_char,
+                    s.len() as libc::size_t,
                 ))
             }
         } else {
