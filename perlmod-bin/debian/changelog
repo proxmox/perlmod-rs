@@ -1,3 +1,9 @@
+perlmod-bin (0.2.1-1) bookworm; urgency=medium
+
+  * add support for packages listed in a .notes.perlmod.package ELF section
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Jan 2025 13:39:42 +0100
+
 perlmod-bin (0.2.0-3) stable; urgency=medium
 
   * fix generated libfile invocation

@@ -11,6 +11,7 @@ Package: perlmod-bin
 Architecture: all
 Depends:
  ${perl:Depends},
+ binutils,
 Recommends:
  librust-perlmod+perlmod-macro-dev (= ${binary:Version})
 Description: Script to generate perl package files for perlmod libraries.

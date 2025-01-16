@@ -242,10 +242,14 @@ if ($from_notes) {
     die "missing library file to read packages from\n" if !@ARGV;
     die "--from-notes requires exactly one library\n" if @ARGV > 1;
 
-    open my $fh, '<', $ARGV[0] or die "failed to open $ARGV[0] for reading: $!\n";
-    my $fd = fileno($fh);
-    my $data = `objcopy -O binary --only-section .note.perlmod.package $ARGV[0] /dev/stdout`;
-    close($fh);
+    open my $cmd, '-|', qw(objcopy -O binary --only-section .note.perlmod.package), $ARGV[0], '/dev/stdout'
+        or die "failed to run objcopy: $!\n";
+    my $data = do {
+        local $/ = undef;
+        <$cmd>
+    };
+    close $cmd;
+    die "objcopy exited with errors\n" if $?;
 
     my @packages;
     while (length($data)) {
