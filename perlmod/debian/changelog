@@ -1,3 +1,15 @@
+rust-perlmod (0.13.5-1) bookworm; urgency=medium
+
+  * document 'errno' and 'serializ_error' parameters for `#[export]`
+
+  * add missing drop handler for `RawGuard`
+
+  * fix serialization of newtype and tuple enum variants
+
+  * add private module to generate ELF notes for packages
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Jan 2025 13:37:31 +0100
+
 rust-perlmod (0.13.4-1) bookworm; urgency=medium
 
   * add perlmod::ffi::use_safe_putenv to deal with perl's broken environ
