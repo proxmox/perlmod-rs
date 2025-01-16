@@ -1,6 +1,6 @@
 [package]
 name = "perlmod-macro"
-version = "0.8.4"
+version = "0.9.0"
 build = "build.rs"
 categories = [ "API bindings" ]
 keywords = [ "ffi", "perl" ]

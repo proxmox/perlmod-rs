@@ -1,3 +1,11 @@
+rust-perlmod-macro (0.9.0-1) bookworm; urgency=medium
+
+  * 'unraw' function names, so exported subs can be named 'r#type' etc.
+
+  * create a .notes.perlmod.package ELF section for every #[package]
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Jan 2025 13:35:26 +0100
+
 rust-perlmod-macro (0.8.4-1) bookworm; urgency=medium
 
   * search LD_LIBRARY_PATH before @INC/auto in #[package(write = true)]

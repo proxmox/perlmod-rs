@@ -1,8 +1,8 @@
 Source: rust-perlmod-macro
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 12),
  librust-syn-2+default-dev <!nocheck>,
  librust-syn-2+full-dev <!nocheck>
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
-Standards-Version: 4.6.1
+Standards-Version: 4.7.0
 Vcs-Git: 
 Vcs-Browser: 
 X-Cargo-Crate: perlmod-macro
@@ -30,10 +30,9 @@ Provides:
  librust-perlmod-macro+default-dev (= ${binary:Version}),
  librust-perlmod-macro-0-dev (= ${binary:Version}),
  librust-perlmod-macro-0+default-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8+default-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8.3-dev (= ${binary:Version}),
- librust-perlmod-macro-0.8.3+default-dev (= ${binary:Version})
+ librust-perlmod-macro-0.9-dev (= ${binary:Version}),
+ librust-perlmod-macro-0.9+default-dev (= ${binary:Version}),
+ librust-perlmod-macro-0.9.0-dev (= ${binary:Version}),
+ librust-perlmod-macro-0.9.0+default-dev (= ${binary:Version})
 Description: Perl package macros to create perl package bindings from rust at compile time - Rust source code
- This package contains the source for the Rust perlmod-macro crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "perlmod-macro"
