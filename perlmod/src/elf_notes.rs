@@ -10,7 +10,7 @@ pub struct Info {
 }
 */
 
-#[repr(C, packed)]
+#[repr(C, align(4))]
 pub struct ElfNote<const N: usize> {
     pub name_size: u32,
     pub desc_size: u32,

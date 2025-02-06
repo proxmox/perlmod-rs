@@ -260,6 +260,9 @@ if ($from_notes) {
         my $desc = substr($data, 0, $desc_size, '');
         print("Found package '$name'\n");
         push @packages, $name;
+        # notes are 4-byte aligned, the header is already a multiple of 4 bytes, so:
+        my $skip = 3 & (4 - (3 & ($name_size + $desc_size)));
+        substr($data, 0, $skip, '');
     }
     die "trailing data in notes section\n" if length($data);
     @ARGV = @packages;
