@@ -1,3 +1,12 @@
+perlmod-bin (0.2.2-1) bookworm; urgency=medium
+
+  * add support to list packages from the ELF notes sections without
+    generating the package files
+
+  * fix byte alignment handling for the notes section
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 06 Feb 2025 17:29:31 +0100
+
 perlmod-bin (0.2.1-1) bookworm; urgency=medium
 
   * add support for packages listed in a .notes.perlmod.package ELF section
