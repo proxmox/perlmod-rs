@@ -1,3 +1,9 @@
+rust-perlmod (0.13.6-1) bookworm; urgency=medium
+
+  * fix byte alignment of ELF notes entries
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 06 Feb 2025 17:28:25 +0100
+
 rust-perlmod (0.13.5-1) bookworm; urgency=medium
 
   * document 'errno' and 'serializ_error' parameters for `#[export]`
