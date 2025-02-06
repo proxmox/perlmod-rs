@@ -51,7 +51,7 @@ sub help : prototype($) ($fd) {
     for my $o (sort keys %$opts) {
         my ($arg, $desc) = $opts->{$o}->@*;
         my $p = defined($arg) ? "--$o=$arg" : "--$o";
-        printf {$fd} "  %20s   %s\n", $p, $desc;
+        printf {$fd} "  %-22s   %s\n", $p, $desc;
     }
 }
 
