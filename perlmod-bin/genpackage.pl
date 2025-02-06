@@ -4,6 +4,7 @@
 
 use strict;
 use warnings;
+use v5.36;
 
 use File::Path qw(make_path);
 
@@ -38,11 +39,13 @@ my $opts = {
         undef,
         "Read the package list from ELF notes sections",
     ],
+    'list-from-notes' => [
+        'FILE',
+        "List the package list from an ELF notes section and exit",
+    ],
 };
 
-sub help {
-    my ($fd) = @_;
-
+sub help : prototype($) ($fd) {
     print {$fd} "usage: $0 OPTIONS <packages...>\n";
     print {$fd} "mandatory OPTIONS are:\n";
     for my $o (sort keys %$opts) {
@@ -50,6 +53,34 @@ sub help {
         my $p = defined($arg) ? "--$o=$arg" : "--$o";
         printf {$fd} "  %20s   %s\n", $p, $desc;
     }
+}
+
+sub package_list_from_notes : prototype($) ($file) {
+    open my $cmd, '-|', qw(objcopy -O binary --only-section .note.perlmod.package), $file, '/dev/stdout'
+        or die "failed to run objcopy: $!\n";
+    my $data = do {
+        local $/ = undef;
+        <$cmd>
+    };
+    close $cmd;
+    die "objcopy exited with errors\n" if $?;
+
+    my @packages;
+
+    while (length($data)) {
+        my ($name_size, $desc_size, $ty) = unpack('LLL', substr($data, 0, 3*4, ''));
+        die "unexpected description in package note - incompatible perlmod version?\n"
+            if $desc_size;
+        my $name = substr($data, 0, $name_size, '');
+        my $desc = substr($data, 0, $desc_size, '');
+        push @packages, $name;
+        # notes are 4-byte aligned, the header is already a multiple of 4 bytes, so:
+        my $skip = 3 & (4 - (3 & ($name_size + $desc_size)));
+        substr($data, 0, $skip, '');
+    }
+    die "trailing data in notes section\n" if length($data);
+
+    return @packages;
 }
 
 if (!@ARGV) {
@@ -104,6 +135,11 @@ ARGPARSE: while (@ARGV) {
     last;
 }
 
+if (defined(my $list_from_notes = $params->{'list-from-notes'})) {
+    print("$_\n") for (package_list_from_notes($list_from_notes));
+    exit(0);
+}
+
 my $lib_package = $params->{'lib-package'}
     or die "missing --lib-package parameter\n";
 my $lib_prefix = $params->{'lib-prefix'}
@@ -122,15 +158,15 @@ for my $file ($params->{'include-file'}->@*) {
 }
 my $from_notes = $params->{'from-notes'};
 
-sub pkg2file {
-    return ($_[0] =~ s@::@/@gr) . ".pm";
+sub pkg2file : prototype($) ($pkg) {
+    return ($pkg =~ s@::@/@gr) . ".pm";
 }
 
-sub parentdir {
-    if ($_[0] =~ m@^(.*)/[^/]+@) {
+sub parentdir : prototype($) ($path) {
+    if ($path =~ m@^(.*)/[^/]+@) {
         return $1
     } else {
-        die "bad path: '$_[0]', try adding a directory\n";
+        die "bad path: '$path', try adding a directory\n";
     }
 }
 
@@ -242,30 +278,8 @@ if ($from_notes) {
     die "missing library file to read packages from\n" if !@ARGV;
     die "--from-notes requires exactly one library\n" if @ARGV > 1;
 
-    open my $cmd, '-|', qw(objcopy -O binary --only-section .note.perlmod.package), $ARGV[0], '/dev/stdout'
-        or die "failed to run objcopy: $!\n";
-    my $data = do {
-        local $/ = undef;
-        <$cmd>
-    };
-    close $cmd;
-    die "objcopy exited with errors\n" if $?;
-
-    my @packages;
-    while (length($data)) {
-        my ($name_size, $desc_size, $ty) = unpack('LLL', substr($data, 0, 3*4, ''));
-        die "unexpected description in package note - incompatible perlmod version?\n"
-            if $desc_size;
-        my $name = substr($data, 0, $name_size, '');
-        my $desc = substr($data, 0, $desc_size, '');
-        print("Found package '$name'\n");
-        push @packages, $name;
-        # notes are 4-byte aligned, the header is already a multiple of 4 bytes, so:
-        my $skip = 3 & (4 - (3 & ($name_size + $desc_size)));
-        substr($data, 0, $skip, '');
-    }
-    die "trailing data in notes section\n" if length($data);
-    @ARGV = @packages;
+    @ARGV = package_list_from_notes($ARGV[0]);
+    print("Found package '$_'\n") for @ARGV;
 }
 
 for my $package (@ARGV) {
