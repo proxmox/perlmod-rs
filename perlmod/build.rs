@@ -66,7 +66,8 @@ fn main() {
         cc.flag(flag);
     }
 
-    // now build the static library:
+    // now build the static library, and tell cargo that a change to `glue.c` requires a rebuild:
+    println!("cargo::rerun-if-changed=src/glue.c");
     cc.file("src/glue.c").compile("libglue.a");
 
     // get perl's MULTIPLICITY flag:
