@@ -290,7 +290,15 @@ pub fn handle_function(
                 argmark.set_stack();
             }
 
-            #handle_return
+            let res = std::panic::catch_unwind(move || {
+                #handle_return
+            });
+            match res {
+                Ok(res) => res,
+                Err(_panic) => Err(::perlmod::Value::new_string("rust function panicked")
+                    .into_mortal()
+                    .into_raw()),
+            }
         }
     };
 
