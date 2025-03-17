@@ -137,12 +137,12 @@ mod export {
 
     #[export]
     fn set_env(name: &str, value: &str) {
-        std::env::set_var(name, value);
+        unsafe { std::env::set_var(name, value) };
     }
 
     #[export]
     fn unset_env(name: &str) {
-        std::env::remove_var(name);
+        unsafe { std::env::remove_var(name) };
     }
 }
 

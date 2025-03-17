@@ -119,12 +119,12 @@ impl Package {
         };
 
         quote! {
-            #[no_mangle]
+            #[unsafe(no_mangle)]
             pub extern "C" fn #bootstrap_ident(
                 _cv: Option<&::perlmod::ffi::CV>,
             ) {
                 #[used]
-                #[link_section = ".note.perlmod.package"]
+                #[unsafe(link_section = ".note.perlmod.package")]
                 static PACKAGE_ENTRY: ::perlmod::__private__::ElfNote<{#package_name_len}> =
                     ::perlmod::__private__::ElfNote::new_package(*#package_name_bytes);
 

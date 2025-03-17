@@ -296,7 +296,7 @@ impl MGVTBL {
 
 // in our glue:
 #[link(name = "glue", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     pub fn RSPL_StackMark_count(this: usize) -> usize;
 
     pub fn RSPL_stack_get(offset: usize) -> *mut SV;

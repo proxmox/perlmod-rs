@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = [
     "perlmod",
     "perlmod-macro",
@@ -11,6 +11,6 @@ exclude = [
 
 [workspace.package]
 authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0 OR MIT"
 repository = "https://git.proxmox.com/?p=perlmod.git"

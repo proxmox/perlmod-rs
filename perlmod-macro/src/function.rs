@@ -115,7 +115,7 @@ pub fn handle_function(
 
         let pat_ty = match arg {
             syn::FnArg::Receiver(_) => bail!(arg => "cannot export self-taking methods as xsubs"),
-            syn::FnArg::Typed(ref mut pt) => {
+            syn::FnArg::Typed(pt) => {
                 pt.attrs.retain(|attr| !argument_attrs.handle_attr(attr));
                 argument_attrs.validate(pt.span())?;
                 &*pt
@@ -352,7 +352,7 @@ fn handle_return_kind(
     let wrapper_func;
 
     let vis = match export_public {
-        Some(vis) => quote! { #[no_mangle] #vis },
+        Some(vis) => quote! { #[unsafe(no_mangle)] #vis },
         None => quote! { #[allow(non_snake_case)] },
     };
 
