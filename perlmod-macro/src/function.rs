@@ -191,7 +191,7 @@ pub fn handle_function(
                     match ::std::convert::TryFrom::try_from(&#extracted_name) {
                         Ok(arg) => arg,
                         Err(err) => {
-                            return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                            return Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                                 .into_mortal()
                                 .into_raw());
                         }
@@ -203,7 +203,7 @@ pub fn handle_function(
                     match ::perlmod::from_ref_value(&#extracted_name) {
                         Ok(data) => data,
                         Err(err) => {
-                            return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                            return Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                                 .into_mortal()
                                 .into_raw());
                         }
@@ -371,7 +371,7 @@ fn handle_return_kind(
                 match ::perlmod::to_value(&err) {
                     Ok(err) => return Err(err.into_mortal().into_raw()),
                     Err(err) => {
-                        return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                        return Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                             .into_mortal()
                             .into_raw());
                     }
@@ -379,7 +379,7 @@ fn handle_return_kind(
             }
         } else {
             quote! {
-                return Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                return Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                     .into_mortal()
                     .into_raw());
             }
@@ -458,7 +458,7 @@ fn handle_return_kind(
                 handle_return.extend(quote! {
                     match ::perlmod::to_value(&result) {
                         Ok(value) => Ok(value.into_mortal().into_raw()),
-                        Err(err) => Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                        Err(err) => Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                             .into_mortal()
                             .into_raw()),
                     }
@@ -514,7 +514,7 @@ fn handle_return_kind(
                         match ::perlmod::to_value(&result.#i) {
                             Ok(value) => value.into_mortal().into_raw(),
                             Err(err) => return
-                                Err(::perlmod::Value::new_string(&format!("{}\n", err))
+                                Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                                     .into_mortal()
                                     .into_raw()),
                         },
