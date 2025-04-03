@@ -23,7 +23,7 @@ bitflags = "1.2.1"
 libc = "0.2"
 serde = "1.0"
 
-perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.9" }
+perlmod-macro = { path = "../perlmod-macro", optional = true, version = "0.9.1" }
 
 [features]
 default = ["exporter"]
