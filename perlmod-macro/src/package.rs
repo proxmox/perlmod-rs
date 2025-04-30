@@ -119,6 +119,7 @@ impl Package {
         };
 
         quote! {
+            /// Generated bootstrap function used to initialize the module.
             #[unsafe(no_mangle)]
             pub extern "C" fn #bootstrap_ident(
                 _cv: Option<&::perlmod::ffi::CV>,
