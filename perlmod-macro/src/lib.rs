@@ -30,6 +30,7 @@ macro_rules! error {
 }
 
 mod attribs;
+mod config;
 mod function;
 mod module;
 mod package;

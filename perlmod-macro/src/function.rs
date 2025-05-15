@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::{Error, Meta};
@@ -263,6 +263,8 @@ pub fn handle_function(
         !cv_arg_param.is_empty(),
     )?;
 
+    let visibility_action = check_visibility(&func);
+
     let tokens = quote! {
         #func
 
@@ -271,6 +273,8 @@ pub fn handle_function(
         #[inline(never)]
         #[allow(non_snake_case)]
         fn #impl_xs_name(#cv_arg_param) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
+            #visibility_action
+
             let argmark = unsafe { ::perlmod::ffi::pop_arg_mark() };
             let mut args = argmark.iter();
 
@@ -643,4 +647,32 @@ pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
         }
     }
     None
+}
+
+fn check_visibility(func: &syn::ItemFn) -> TokenStream {
+    use crate::config::Action;
+
+    if !matches!(func.vis, syn::Visibility::Inherited) {
+        return TokenStream::new();
+    }
+
+    match crate::config::non_pub_exports() {
+        Action::Allow => TokenStream::new(),
+        Action::Warn => {
+            quote_spanned! {
+                func.sig.ident.span() =>
+                {
+                    non_pub_export();
+                    #[deprecated = "exported function must be public"]
+                    fn non_pub_export() {}
+                }
+            }
+        }
+        Action::Deny => {
+            quote_spanned! {
+                func.sig.ident.span() =>
+                    compile_error!("exported function must be public");
+            }
+        }
+    }
 }
