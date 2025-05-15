@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
-use quote::{quote, quote_spanned};
+use quote::quote_spanned;
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::{Error, Meta};
@@ -86,6 +86,8 @@ pub fn handle_function(
     mangled_package_name: Option<&str>,
     export_public: bool,
 ) -> Result<XSub, Error> {
+    let span = func.sig.ident.span();
+
     if !func.sig.generics.params.is_empty() {
         bail!(&func.sig.generics => "generic functions cannot be exported as xsubs");
     }
@@ -141,11 +143,11 @@ pub fn handle_function(
             if !cv_arg_param.is_empty() {
                 bail!(cv_span, "only 1 'cv' parameter allowed");
             }
-            cv_arg_param = quote! { #arg_name: #arg_type };
+            cv_arg_param = quote_spanned! { span=> #arg_name: #arg_type };
             if passed_arguments.is_empty() {
-                passed_arguments.extend(quote! { #arg_name });
+                passed_arguments.extend(quote_spanned! { span=> #arg_name });
             } else {
-                passed_arguments.extend(quote! {, #arg_name });
+                passed_arguments.extend(quote_spanned! { span=> , #arg_name });
             }
             continue;
         }
@@ -161,11 +163,11 @@ pub fn handle_function(
 
         let none_handling = if is_option_type(arg_type).is_some() {
             trailing_options += 1;
-            quote! { ::perlmod::Value::new_undef(), }
+            quote_spanned! { span=> ::perlmod::Value::new_undef(), }
         } else {
             // only cound the trailing options;
             trailing_options = 0;
-            quote! {
+            quote_spanned! { span=>
                 {
                     return Err(::perlmod::Value::new_string(#missing_message)
                         .into_mortal()
@@ -174,7 +176,7 @@ pub fn handle_function(
             }
         };
 
-        extract_arguments.extend(quote! {
+        extract_arguments.extend(quote_spanned! { span=>
             let #extracted_name: ::perlmod::Value = match args.next() {
                 Some(arg) => ::perlmod::Value::from(arg),
                 None => #none_handling
@@ -182,11 +184,11 @@ pub fn handle_function(
         });
 
         if argument_attrs.raw {
-            deserialized_arguments.extend(quote! {
+            deserialized_arguments.extend(quote_spanned! { span=>
                 let #deserialized_name = #extracted_name;
             });
         } else if argument_attrs.try_from_ref {
-            deserialized_arguments.extend(quote! {
+            deserialized_arguments.extend(quote_spanned! { span=>
                 let #deserialized_name: #arg_type =
                     match ::std::convert::TryFrom::try_from(&#extracted_name) {
                         Ok(arg) => arg,
@@ -198,7 +200,7 @@ pub fn handle_function(
                     };
             });
         } else {
-            deserialized_arguments.extend(quote! {
+            deserialized_arguments.extend(quote_spanned! { span=>
                 let #deserialized_name: #arg_type =
                     match ::perlmod::from_ref_value(&#extracted_name) {
                         Ok(data) => data,
@@ -212,9 +214,9 @@ pub fn handle_function(
         }
 
         if passed_arguments.is_empty() {
-            passed_arguments.extend(quote! { #deserialized_name });
+            passed_arguments.extend(quote_spanned! { span=> #deserialized_name });
         } else {
-            passed_arguments.extend(quote! {, #deserialized_name });
+            passed_arguments.extend(quote_spanned! { span=> , #deserialized_name });
         }
     }
 
@@ -265,11 +267,13 @@ pub fn handle_function(
 
     let visibility_action = check_visibility(&func);
 
-    let tokens = quote! {
+    let mut tokens = quote::quote! {
         #func
 
         #wrapper_func
+    };
 
+    tokens.extend(quote_spanned! { span=>
         #[inline(never)]
         #[allow(non_snake_case)]
         fn #impl_xs_name(#cv_arg_param) -> Result<#return_type, *mut ::perlmod::ffi::SV> {
@@ -304,7 +308,7 @@ pub fn handle_function(
                     .into_raw()),
             }
         }
-    };
+    });
 
     Ok(XSub {
         rust_name: name,
@@ -351,27 +355,29 @@ fn handle_return_kind(
     export_public: Option<&syn::Visibility>,
     cv_arg: bool,
 ) -> Result<ReturnHandling, Error> {
+    let span = name.span();
+
     let return_type;
     let mut handle_return;
     let wrapper_func;
 
     let vis = match export_public {
-        Some(vis) => quote! { #[unsafe(no_mangle)] #vis },
-        None => quote! { #[allow(non_snake_case)] },
+        Some(vis) => quote_spanned! { span=> #[unsafe(no_mangle)] #vis },
+        None => quote_spanned! { span=> #[allow(non_snake_case)] },
     };
 
     let (cv_arg_name, cv_arg_passed) = if cv_arg {
         (
-            quote! { cv },
-            quote! { ::perlmod::Value::from_raw_ref(cv as *mut ::perlmod::ffi::SV) },
+            quote_spanned! { span=> cv },
+            quote_spanned! { span=> ::perlmod::Value::from_raw_ref(cv as *mut ::perlmod::ffi::SV) },
         )
     } else {
-        (quote! { _cv }, TokenStream::new())
+        (quote_spanned! { span=> _cv }, TokenStream::new())
     };
 
     let return_error = if ret.result {
         if attr.serialize_error {
-            quote! {
+            quote_spanned! { span=>
                 match ::perlmod::to_value(&err) {
                     Ok(err) => return Err(err.into_mortal().into_raw()),
                     Err(err) => {
@@ -382,7 +388,7 @@ fn handle_return_kind(
                 }
             }
         } else {
-            quote! {
+            quote_spanned! { span=>
                 return Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                     .into_mortal()
                     .into_raw());
@@ -393,7 +399,7 @@ fn handle_return_kind(
     };
 
     let copy_errno = if attr.errno {
-        quote! { ::perlmod::error::copy_errno_to_libc(); }
+        quote_spanned! { span=> ::perlmod::error::copy_errno_to_libc(); }
     } else {
         TokenStream::new()
     };
@@ -401,14 +407,14 @@ fn handle_return_kind(
     let pthx = crate::pthx_param();
     match ret.value {
         ReturnValue::None => {
-            return_type = quote! { () };
+            return_type = quote_spanned! { span=> () };
 
             if attr.raw_return {
                 bail!(&attr.raw_return => "raw_return attribute is illegal without a return value");
             }
 
             if ret.result {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     match #name(#passed_arguments) {
                         Ok(()) => (),
                         Err(err) => { #return_error }
@@ -417,14 +423,14 @@ fn handle_return_kind(
                     Ok(())
                 };
             } else {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     #name(#passed_arguments);
 
                     Ok(())
                 };
             }
 
-            wrapper_func = quote! {
+            wrapper_func = quote_spanned! { span=>
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
@@ -439,27 +445,27 @@ fn handle_return_kind(
             };
         }
         ReturnValue::Single => {
-            return_type = quote! { *mut ::perlmod::ffi::SV };
+            return_type = quote_spanned! { span=> *mut ::perlmod::ffi::SV };
 
             if ret.result {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     let result = match #name(#passed_arguments) {
                         Ok(output) => output,
                         Err(err) => { #return_error }
                     };
                 };
             } else {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     let result = #name(#passed_arguments);
                 };
             }
 
             if attr.raw_return {
-                handle_return.extend(quote! {
+                handle_return.extend(quote_spanned! { span=>
                     Ok(result.into_mortal().into_raw())
                 });
             } else {
-                handle_return.extend(quote! {
+                handle_return.extend(quote_spanned! { span=>
                     match ::perlmod::to_value(&result) {
                         Ok(value) => Ok(value.into_mortal().into_raw()),
                         Err(err) => Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
@@ -469,7 +475,7 @@ fn handle_return_kind(
                 });
             };
 
-            wrapper_func = quote! {
+            wrapper_func = quote_spanned! { span=>
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
@@ -487,20 +493,20 @@ fn handle_return_kind(
             return_type = {
                 let mut rt = TokenStream::new();
                 for _ in 0..count {
-                    rt.extend(quote! { *mut ::perlmod::ffi::SV, });
+                    rt.extend(quote_spanned! { span=> *mut ::perlmod::ffi::SV, });
                 }
-                quote! { (#rt) }
+                quote_spanned! { span=> (#rt) }
             };
 
             if ret.result {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     let result = match #name(#passed_arguments) {
                         Ok(output) => output,
                         Err(err) => { #return_error }
                     };
                 };
             } else {
-                handle_return = quote! {
+                handle_return = quote_spanned! { span=>
                     let result = #name(#passed_arguments);
                 };
             }
@@ -509,12 +515,12 @@ fn handle_return_kind(
             if attr.raw_return {
                 for i in 0..count {
                     let i = simple_usize(i, Span::call_site());
-                    rt.extend(quote! { (result.#i).into_mortal().into_raw(), });
+                    rt.extend(quote_spanned! { span=> (result.#i).into_mortal().into_raw(), });
                 }
             } else {
                 for i in 0..count {
                     let i = simple_usize(i, Span::call_site());
-                    rt.extend(quote! {
+                    rt.extend(quote_spanned! { span=>
                         match ::perlmod::to_value(&result.#i) {
                             Ok(value) => value.into_mortal().into_raw(),
                             Err(err) => return
@@ -525,14 +531,14 @@ fn handle_return_kind(
                     });
                 }
             }
-            handle_return.extend(quote! {
+            handle_return.extend(quote_spanned! { span=>
                 Ok((#rt))
             });
             drop(rt);
 
             let icount = simple_usize(count, Span::call_site());
             let sp_offset = simple_usize(count - 1, Span::call_site());
-            let mut push = quote! {
+            let mut push = quote_spanned! { span=>
                 ::perlmod::ffi::RSPL_stack_resize_by(#icount);
                 let mut sp = ::perlmod::ffi::RSPL_stack_sp().sub(#sp_offset);
                 *sp = sv.0;
@@ -540,7 +546,7 @@ fn handle_return_kind(
 
             for i in 1..count {
                 let i = simple_usize(i, Span::call_site());
-                push.extend(quote! {
+                push.extend(quote_spanned! { span=>
                     sp = sp.add(1);
                     *sp = sv.#i;
                 });
@@ -548,12 +554,12 @@ fn handle_return_kind(
             //let mut push = TokenStream::new();
             //for i in 0..count {
             //    let i = simple_usize(i, Span::call_site());
-            //    push.extend(quote! {
+            //    push.extend(quote_spanned! { span=>
             //        ::perlmod::ffi::stack_push_raw(sv.#i);
             //    });
             //}
 
-            wrapper_func = quote! {
+            wrapper_func = quote_spanned! { span=>
                 #[doc(hidden)]
                 #vis extern "C" fn #xs_name(#pthx #cv_arg_name: *mut ::perlmod::ffi::CV) {
                     unsafe {
@@ -659,8 +665,9 @@ fn check_visibility(func: &syn::ItemFn) -> TokenStream {
     match crate::config::non_pub_exports() {
         Action::Allow => TokenStream::new(),
         Action::Warn => {
+            let span = func.sig.ident.span();
             quote_spanned! {
-                func.sig.ident.span() =>
+                span=>
                 {
                     non_pub_export();
                     #[deprecated = "exported function must be public"]
@@ -669,9 +676,9 @@ fn check_visibility(func: &syn::ItemFn) -> TokenStream {
             }
         }
         Action::Deny => {
+            let span = func.sig.ident.span();
             quote_spanned! {
-                func.sig.ident.span() =>
-                    compile_error!("exported function must be public");
+                span=> compile_error!("exported function must be public");
             }
         }
     }
