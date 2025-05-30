@@ -65,7 +65,7 @@ doc:
 .PHONY: clean
 clean:
 	cargo clean
-	rm -rf build *-deb
+	rm -rf build *-deb *-dsc
 
 .PHONY: update
 update:
