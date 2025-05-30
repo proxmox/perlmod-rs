@@ -10,4 +10,4 @@ vcs_browser = ""
 maintainer = "Proxmox Support Team <support@proxmox.com>"
 
 [packages.lib]
-depends = [ "perl (>= 5.28.1)" ]
+depends = [ "perl (>= 5.38~)" ]

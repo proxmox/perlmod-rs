@@ -412,8 +412,6 @@ unsafe extern "C" {
     pub fn RSPL_substr(orig: *mut SV, off: usize, len: usize) -> *mut SV;
 
     pub fn RSPL_defstash() -> *mut HV;
-
-    pub fn RSPL_set_use_safe_putenv(on: libc::c_int);
 }
 
 /// Argument marker for the stack.
@@ -578,10 +576,4 @@ where
     }
 
     res
-}
-
-/// Tell perl to use a "safe" `putenv` call instead of manually manipulating the `environ`
-/// variable. Without this, changing environment variables can lead to crashes.
-pub fn use_safe_putenv(on: bool) {
-    unsafe { RSPL_set_use_safe_putenv(on as _) }
 }

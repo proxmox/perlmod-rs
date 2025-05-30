@@ -11,7 +11,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-libc-0.2+default-dev <!nocheck>,
  librust-perlmod-macro-0.10+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- perl (>= 5.28.1) <!nocheck>
+ perl (>= 5.38~) <!nocheck>
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Standards-Version: 4.7.0
 Vcs-Git: 
@@ -29,7 +29,7 @@ Depends:
  librust-cc-1+default-dev (>= 1.2-~~),
  librust-libc-0.2+default-dev,
  librust-serde-1+default-dev,
- perl (>= 5.28.1)
+ perl (>= 5.38~)
 Recommends:
  librust-perlmod+perlmod-macro-dev (= ${binary:Version})
 Provides:

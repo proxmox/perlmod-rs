@@ -131,11 +131,6 @@ mod export {
     }
 
     #[export]
-    fn use_safe_putenv(on: bool) {
-        perlmod::ffi::use_safe_putenv(on);
-    }
-
-    #[export]
     fn set_env(name: &str, value: &str) {
         unsafe { std::env::set_var(name, value) };
     }
