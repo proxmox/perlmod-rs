@@ -1,3 +1,9 @@
+rust-perlmod-macro (0.10.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 30 May 2025 19:00:26 +0200
+
 rust-perlmod-macro (0.9.2-1) bookworm; urgency=medium
 
   * add a #[doc] to the generated bootstrap functions so perlmod libraries can
