@@ -520,7 +520,7 @@ pub fn stack_push(value: crate::Mortal) {
 ///
 /// # fn code_to_extract_parameters() {}
 /// # fn actual_rust_function(_arg: ()) -> Result<Output, String> { Ok(Output) }
-/// #[no_mangle]
+/// #[unsafe(no_mangle)]
 /// pub extern "C" fn exported_name(/* pTHX parameter, */ cv: &::perlmod::ffi::CV) {
 ///     unsafe {
 ///         match private_implementation_name(cv) {
