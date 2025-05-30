@@ -2,20 +2,21 @@ Source: rust-perlmod
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-bitflags-1+default-dev (>= 1.2.1-~~) <!nocheck>,
- librust-cc-1+default-dev (>= 1.0.46-~~) <!nocheck>,
+ librust-bitflags-1+default-dev <!nocheck>,
+ librust-cc-1+default-dev (>= 1.2-~~) <!nocheck>,
  librust-libc-0.2+default-dev <!nocheck>,
- librust-perlmod-macro-0.9+default-dev <!nocheck>,
+ librust-perlmod-macro-0.10+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  perl (>= 5.28.1) <!nocheck>
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Standards-Version: 4.7.0
 Vcs-Git: 
 Vcs-Browser: 
+Homepage: https://git.proxmox.com/?p=perlmod.git
 X-Cargo-Crate: perlmod
 Rules-Requires-Root: no
 
@@ -24,8 +25,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-bitflags-1+default-dev (>= 1.2.1-~~),
- librust-cc-1+default-dev (>= 1.0.46-~~),
+ librust-bitflags-1+default-dev,
+ librust-cc-1+default-dev (>= 1.2-~~),
  librust-libc-0.2+default-dev,
  librust-serde-1+default-dev,
  perl (>= 5.28.1)
@@ -44,7 +45,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-perlmod-dev (= ${binary:Version}),
- librust-perlmod-macro-0.9+default-dev
+ librust-perlmod-macro-0.10+default-dev
 Provides:
  librust-perlmod+default-dev (= ${binary:Version}),
  librust-perlmod+exporter-dev (= ${binary:Version}),
