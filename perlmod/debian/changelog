@@ -1,3 +1,16 @@
+rust-perlmod (0.14.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * upgrade to bitflags 2.
+
+  * drop bindings for making setenv/putenv safe(r) to call from rust code, as
+    the opt-in behavior is the default one since Perl 5.38. Note that changing
+    the environment is still inherently hairy, especially once any thread
+    started.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 30 May 2025 19:27:18 +0200
+
 rust-perlmod (0.13.6-1) bookworm; urgency=medium
 
   * fix byte alignment of ELF notes entries
