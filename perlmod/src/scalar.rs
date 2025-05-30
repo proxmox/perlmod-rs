@@ -231,6 +231,7 @@ bitflags! {
     /// contains something, not what it is originally meant to be!
     ///
     /// NOTE: The values must be the same as in our c glue code!
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct Flags: u8 {
         const INTEGER = 1;
         const DOUBLE = 2;

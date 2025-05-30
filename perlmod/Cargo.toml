@@ -19,7 +19,7 @@ maintenance = { status = "experimental" }
 unexpected_cfgs = { level = "warn", check-cfg = [ 'cfg(perlmod, values("multiplicity"))' ] }
 
 [dependencies]
-bitflags = "1.2.1"
+bitflags = "2"
 libc = "0.2"
 serde = "1.0"
 
