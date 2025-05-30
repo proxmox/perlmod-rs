@@ -6,7 +6,7 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-bitflags-1+default-dev <!nocheck>,
+ librust-bitflags-2+default-dev <!nocheck>,
  librust-cc-1+default-dev (>= 1.2-~~) <!nocheck>,
  librust-libc-0.2+default-dev <!nocheck>,
  librust-perlmod-macro-0.10+default-dev <!nocheck>,
@@ -25,7 +25,7 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-bitflags-1+default-dev,
+ librust-bitflags-2+default-dev,
  librust-cc-1+default-dev (>= 1.2-~~),
  librust-libc-0.2+default-dev,
  librust-serde-1+default-dev,
