@@ -93,7 +93,7 @@ impl Array {
     }
 
     /// Create an iterator over this array's values.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter {
             array: self.clone_ref(),
             at: 0,

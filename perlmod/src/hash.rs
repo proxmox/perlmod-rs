@@ -130,7 +130,7 @@ impl Hash {
     /// Note that this uses the hash's internal iterator, so any other iterator as well as `each`
     /// statement within perl code is affected by it, and it is usually a bad idea to have multiple
     /// iterators over the same hash simultaneously.
-    pub fn shared_iter(&self) -> Iter {
+    pub fn shared_iter(&self) -> Iter<'_> {
         unsafe {
             ffi::RSPL_hv_iterinit(self.hv());
         }
