@@ -389,6 +389,7 @@ impl ScalarRef {
     /// # Safety
     ///
     /// The user is responsible for making sure the underlying pointer is correct.
+    #[allow(clippy::mut_from_ref)]
     pub unsafe fn pv_mut_ref<T>(&self) -> Result<&mut T, Error> {
         self.pv_raw().map(|p| unsafe { &mut *p })
     }
