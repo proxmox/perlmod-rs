@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::Value;
 use crate::{array, hash, raw_value};
 
-/// Perl [`Value`](crate::Value) serializer.
+/// Perl [`Value`] serializer.
 struct Serializer;
 
 /// Check if the `perlmod::Serializer` is currently being used for serialization.
