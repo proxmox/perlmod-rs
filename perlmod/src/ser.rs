@@ -6,6 +6,9 @@ use crate::Value;
 use crate::error::Error;
 use crate::{array, hash, raw_value};
 
+//#[doc(hidden)]
+//mod return_value;
+
 /// Perl [`Value`] serializer.
 struct Serializer;
 
@@ -26,7 +29,7 @@ where
     T: Serialize,
 {
     let _guard = raw_value::guarded(true);
-    value.serialize(&mut Serializer)
+    value.serialize(Serializer)
 }
 
 enum SerHashMode {
@@ -51,7 +54,7 @@ struct SerVariant<T> {
     inner: T,
 }
 
-impl ser::Serializer for &mut Serializer {
+impl ser::Serializer for Serializer {
     type Ok = Value;
     type Error = Error;
 
@@ -164,7 +167,7 @@ impl ser::Serializer for &mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        let value = value.serialize(&mut Serializer)?;
+        let value = value.serialize(self)?;
         let hash = hash::Hash::new();
         hash.insert(variant, value);
         Ok(Value::new_ref(&hash))
@@ -241,7 +244,7 @@ impl ser::SerializeSeq for SerArray {
     where
         T: ?Sized + Serialize,
     {
-        self.array.push(value.serialize(&mut Serializer)?);
+        self.array.push(value.serialize(Serializer)?);
         Ok(())
     }
 
@@ -258,7 +261,7 @@ impl ser::SerializeTuple for SerArray {
     where
         T: ?Sized + Serialize,
     {
-        self.array.push(value.serialize(&mut Serializer)?);
+        self.array.push(value.serialize(Serializer)?);
         Ok(())
     }
 
@@ -275,7 +278,7 @@ impl ser::SerializeTupleStruct for SerArray {
     where
         T: ?Sized + Serialize,
     {
-        self.array.push(value.serialize(&mut Serializer)?);
+        self.array.push(value.serialize(Serializer)?);
         Ok(())
     }
 
@@ -318,7 +321,7 @@ impl ser::SerializeMap for SerHash {
         if self.key.is_some() {
             Error::fail("serialize_key called twice")
         } else {
-            self.key = Some(value.serialize(&mut Serializer)?);
+            self.key = Some(value.serialize(Serializer)?);
             Ok(())
         }
     }
@@ -330,7 +333,7 @@ impl ser::SerializeMap for SerHash {
         match self.key.take() {
             None => Error::fail("serialize_value called without key"),
             Some(key) => {
-                let value = value.serialize(&mut Serializer)?;
+                let value = value.serialize(Serializer)?;
                 self.as_mut_hash()
                     .ok_or_else(|| Error::new("serialize_value called in raw perl value context"))?
                     .insert_by_value(&key, value);
@@ -512,7 +515,7 @@ impl ser::SerializeStruct for SerHash {
         T: ?Sized + Serialize,
     {
         match &mut self.mode {
-            SerHashMode::Hash(hash) => hash.insert(field, value.serialize(&mut Serializer)?),
+            SerHashMode::Hash(hash) => hash.insert(field, value.serialize(Serializer)?),
             SerHashMode::Raw(raw) => {
                 if raw.is_some() {
                     return Error::fail("serialize_field called twice in raw context");
@@ -549,7 +552,7 @@ impl ser::SerializeTupleVariant for SerVariant<SerArray> {
     where
         T: ?Sized + Serialize,
     {
-        self.inner.array.push(value.serialize(&mut Serializer)?);
+        self.inner.array.push(value.serialize(Serializer)?);
         Ok(())
     }
 
@@ -583,7 +586,7 @@ impl ser::SerializeStructVariant for SerVariant<SerHash> {
     {
         match &self.inner.mode {
             SerHashMode::Hash(hash) => {
-                hash.insert(field, value.serialize(&mut Serializer)?);
+                hash.insert(field, value.serialize(Serializer)?);
                 Ok(())
             }
             _ => unreachable!(),
