@@ -31,6 +31,8 @@ mod macros;
 
 #[macro_use]
 pub mod ffi;
+#[doc(inline)]
+pub use ffi::Gimme;
 
 pub mod de;
 pub mod ser;
@@ -121,4 +123,9 @@ pub mod __private__ {
     //! This is private and not meant to be a public API and thus semver exempt.
 
     pub use super::elf_notes::ElfNote;
+}
+
+/// Shortcut for `Gimme::get() == Gimme::List`.
+pub fn wantarray() -> bool {
+    Gimme::get() == Gimme::List
 }

@@ -454,6 +454,15 @@ extern HV* RSPL_defstash() {
     return PL_defstash;
 }
 
+extern uint8_t RSPL_gimme_v() {
+    switch (GIMME_V) {
+        case G_VOID: return 1;
+        case G_LIST: return 3;
+        case G_SCALAR: return 2;
+        default: return 2;
+    }
+}
+
 /*
 These make are convoluted brainfarts:
         SVt_NULL                 undef

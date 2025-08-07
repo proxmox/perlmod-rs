@@ -412,6 +412,8 @@ unsafe extern "C" {
     pub fn RSPL_substr(orig: *mut SV, off: usize, len: usize) -> *mut SV;
 
     pub fn RSPL_defstash() -> *mut HV;
+
+    pub fn RSPL_gimme_v() -> Gimme;
 }
 
 /// Argument marker for the stack.
@@ -576,4 +578,54 @@ where
     }
 
     res
+}
+
+/// Context a function is called in.
+///
+/// This is equivalent to perl's `wantarray`, but additionally has a "void" case.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
+pub enum Gimme {
+    Void = 1,
+    Scalar = 2,
+    List = 3,
+}
+
+impl Gimme {
+    /// Get the current `wantarray` state.
+    pub fn get() -> Self {
+        unsafe { RSPL_gimme_v() }
+    }
+
+    /// Conditionally execute closures based on the context, producing a
+    /// [`Return`](crate::ser::Return) value.
+    pub fn map<T, U, FT, FU>(scalar: FT, list: FU) -> crate::ser::Return<T, U>
+    where
+        FT: FnOnce() -> T,
+        FU: FnOnce() -> U,
+    {
+        use crate::ser::Return;
+
+        match Self::get() {
+            Self::Void => Return::Void,
+            Self::Scalar => Return::Single(scalar()),
+            Self::List => Return::List(list()),
+        }
+    }
+
+    /// Conditionally execute closures, which can fail, based on the context, producing a
+    /// [`Return`](crate::ser::Return) value.
+    pub fn try_map<T, U, FT, FU, E>(scalar: FT, list: FU) -> Result<crate::ser::Return<T, U>, E>
+    where
+        FT: FnOnce() -> Result<T, E>,
+        FU: FnOnce() -> Result<U, E>,
+    {
+        use crate::ser::Return;
+
+        Ok(match Self::get() {
+            Self::Void => Return::Void,
+            Self::Scalar => Return::Single(scalar()?),
+            Self::List => Return::List(list()?),
+        })
+    }
 }
