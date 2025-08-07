@@ -72,10 +72,12 @@ sub package_list_from_notes : prototype($) ($file) {
         die "unexpected description in package note - incompatible perlmod version?\n"
             if $desc_size;
         my $name = substr($data, 0, $name_size, '');
+        my $skip = 3 & (4 - (3 & $name_size));
+        substr($data, 0, $skip, '');
         my $desc = substr($data, 0, $desc_size, '');
         push @packages, $name;
         # notes are 4-byte aligned, the header is already a multiple of 4 bytes, so:
-        my $skip = 3 & (4 - (3 & ($name_size + $desc_size)));
+        $skip = 3 & (4 - (3 & $desc_size));
         substr($data, 0, $skip, '');
     }
     die "trailing data in notes section\n" if length($data);
