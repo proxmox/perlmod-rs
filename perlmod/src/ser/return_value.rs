@@ -78,6 +78,26 @@ pub enum ReturnValue {
     List(Vec<Value>),
 }
 
+impl ReturnValue {
+    #[doc(hidden)]
+    pub fn __private_push_to_stack(self) {
+        use crate::ffi;
+        match self {
+            Self::Single(value) => unsafe {
+                ffi::stack_push_raw(value.into_mortal().into_raw());
+            },
+            Self::List(list) => unsafe {
+                ffi::RSPL_stack_resize_by(isize::try_from(list.len()).expect("huge list returned"));
+                let mut sp = ffi::RSPL_stack_sp().sub(list.len());
+                for value in list {
+                    sp = sp.add(1);
+                    *sp = value.into_mortal().into_raw();
+                }
+            },
+        }
+    }
+}
+
 /// A serializer producing a [`ReturnValue`].
 pub(super) struct ReturnValueSerializer;
 

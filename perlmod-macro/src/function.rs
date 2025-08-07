@@ -445,7 +445,7 @@ fn handle_return_kind(
             };
         }
         ReturnValue::Single => {
-            return_type = quote_spanned! { span=> *mut ::perlmod::ffi::SV };
+            return_type = quote_spanned! { span=> () };
 
             if ret.result {
                 handle_return = quote_spanned! { span=>
@@ -462,12 +462,15 @@ fn handle_return_kind(
 
             if attr.raw_return {
                 handle_return.extend(quote_spanned! { span=>
-                    Ok(result.into_mortal().into_raw())
+                    unsafe {
+                        ::perlmod::ffi::stack_push_raw(result.into_mortal().into_raw());
+                    }
+                    Ok(())
                 });
             } else {
                 handle_return.extend(quote_spanned! { span=>
-                    match ::perlmod::to_value(&result) {
-                        Ok(value) => Ok(value.into_mortal().into_raw()),
+                    match ::perlmod::ser::to_return_value(&result) {
+                        Ok(rv) => Ok(rv.__private_push_to_stack()),
                         Err(err) => Err(::perlmod::Value::new_string(&format!("{err:#}\n"))
                             .into_mortal()
                             .into_raw()),
@@ -482,7 +485,7 @@ fn handle_return_kind(
                         let res = #impl_xs_name(#cv_arg_passed);
                         #copy_errno
                         match res {
-                            Ok(sv) => ::perlmod::ffi::stack_push_raw(sv),
+                            Ok(()) => (),
                             Err(sv) => ::perlmod::ffi::croak(sv),
                         }
                     }
