@@ -6,8 +6,9 @@ use crate::Value;
 use crate::error::Error;
 use crate::{array, hash, raw_value};
 
-//#[doc(hidden)]
-//mod return_value;
+#[doc(hidden)]
+mod return_value;
+pub use return_value::{Return, ReturnValue};
 
 /// Perl [`Value`] serializer.
 struct Serializer;
@@ -30,6 +31,20 @@ where
 {
     let _guard = raw_value::guarded(true);
     value.serialize(Serializer)
+}
+
+/// Serialize data into a [`ReturnValue`].
+///
+/// This is used for exported functions to provide a way to decide at runtime whether to return a
+/// list of multiple values, to support the `wantarray` mechanic.
+///
+/// This is mainly used by the macro crate's generated code.
+pub fn to_return_value<T>(value: &T) -> Result<ReturnValue, Error>
+where
+    T: Serialize,
+{
+    let _guard = raw_value::guarded(true);
+    value.serialize(return_value::ReturnValueSerializer)
 }
 
 enum SerHashMode {
