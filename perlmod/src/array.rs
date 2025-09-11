@@ -2,11 +2,11 @@
 
 use std::marker::PhantomData;
 
+use crate::Value;
 use crate::error::CastError;
 use crate::ffi::{self, AV, SV};
 use crate::raw_value;
 use crate::scalar::{Scalar, ScalarRef};
-use crate::Value;
 
 /// An owned reference to a perl array value (AV).
 ///

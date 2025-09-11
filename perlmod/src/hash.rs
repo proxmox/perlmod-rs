@@ -1,10 +1,10 @@
 //! Module dealing with perl [`Hash`](struct@crate::Hash)es. ([`HV`] pointers).
 
+use crate::Value;
 use crate::error::CastError;
 use crate::ffi::{self, HV, SV};
 use crate::raw_value;
 use crate::scalar::{Scalar, ScalarRef};
-use crate::Value;
 
 /// An owned reference to a perl hash value (HV).
 ///

@@ -1,9 +1,9 @@
 //! Serde serializer for perl values.
 
-use serde::{ser, Serialize};
+use serde::{Serialize, ser};
 
-use crate::error::Error;
 use crate::Value;
+use crate::error::Error;
 use crate::{array, hash, raw_value};
 
 /// Perl [`Value`] serializer.

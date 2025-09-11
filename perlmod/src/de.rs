@@ -7,10 +7,10 @@ use serde::de::{
     self, Deserialize, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor,
 };
 
+use crate::Value;
 use crate::error::Error;
 use crate::raw_value;
 use crate::scalar::Type;
-use crate::Value;
 use crate::{array, ffi, hash};
 
 /// Perl [`Value`] deserializer.
