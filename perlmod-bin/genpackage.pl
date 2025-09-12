@@ -285,6 +285,7 @@ if ($from_notes) {
 }
 
 for my $package (@ARGV) {
+    next if $package eq $lib_package;
     my $path = ($package =~ s@::@/@gr) . ".pm";
 
     print "Generating $path\n";
