@@ -1,0 +1,20 @@
+[package]
+name = "testlib-perl-tests"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[build-dependencies]
+anyhow = "1"
+
+[dev-dependencies]
+anyhow = "1"
+# We need this as a dependency, even though we don't actually use it as a
+# dependency, we build it in a nested target dir via build.rs.
+# BUT! The nested `cargo build` otherwise just rebuilds the library unchanged
+# for some reason.
+testlib.path = "../testlib"
+
+[[test]]
+name = "run_tests"
+path = "run_tests.rs"
