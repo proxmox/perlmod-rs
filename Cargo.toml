@@ -4,7 +4,6 @@ members = [
     "perlmod",
     "perlmod-macro",
 
-    "perlmod-test",
     "testlib",
     "testlib-tests",
 ]
