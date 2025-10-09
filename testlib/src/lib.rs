@@ -5,6 +5,7 @@ pub mod bless_magic;
 pub mod digest;
 pub mod errors;
 pub mod refs;
+pub mod ret;
 
 #[perlmod::package(name = "TestLib::Lib", lib = "testlib")]
 mod main_lib {}
