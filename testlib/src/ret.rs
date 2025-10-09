@@ -21,6 +21,11 @@ mod export {
     fn try_maybe_many(
         fail: Option<&str>,
     ) -> Result<Return<&'static str, Vec<&'static str>>, Error> {
+        if Gimme::get() == Gimme::Void {
+            if let Some(fail) = fail {
+                bail!("failed in void context ({fail})");
+            }
+        }
         Gimme::try_map(
             || {
                 if let Some(fail) = fail {

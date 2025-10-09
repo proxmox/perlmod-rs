@@ -74,6 +74,7 @@ where
 
 /// This type encodes whether a returned value is a single value or a list.
 pub enum ReturnValue {
+    Void,
     Single(Value),
     List(Vec<Value>),
 }
@@ -83,6 +84,7 @@ impl ReturnValue {
     pub fn __private_push_to_stack(self) {
         use crate::ffi;
         match self {
+            Self::Void => (),
             Self::Single(value) => unsafe {
                 ffi::stack_push_raw(value.into_mortal().into_raw());
             },
@@ -194,7 +196,7 @@ impl ser::Serializer for ReturnValueSerializer {
     }
 
     fn serialize_unit(self) -> Result<ReturnValue, Error> {
-        Serializer.serialize_unit().map(ReturnValue::Single)
+        Ok(ReturnValue::Void)
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<ReturnValue, Error> {

@@ -1,6 +1,6 @@
 use v5.36;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use TestLib::Ret;
 
@@ -28,4 +28,11 @@ is(
     $@,
     "failed in scalar context (errS)\n",
     'try_maybe_many("errS") in scalar context fails with correct error message',
+);
+
+eval { TestLib::Ret::try_maybe_many("VOID") };
+is(
+    $@,
+    "failed in void context (VOID)\n",
+    'try_maybe_many("VOID") in void context fails with correct error message',
 );
